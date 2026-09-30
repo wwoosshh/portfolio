@@ -30,4 +30,8 @@ describe('움직임 토큰은 CSS와 TS가 같다', () => {
   test('곡선 경로는 CustomEase가 읽는 SVG 경로다', () => {
     expect(curvePath(CURVE.out)).toBe('M0,0 C0.2,0.8 0.2,1 1,1');
   });
+
+  test('--topbar-h는 px 값이다(layout.ts가 숫자로 읽는다)', () => {
+    expect(value('topbar-h')).toMatch(/^\d+(\.\d+)?px$/);
+  });
 });

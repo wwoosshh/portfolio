@@ -12,7 +12,7 @@ describe('motionMode', () => {
   });
   test('미디어 쿼리는 서로 겹치지 않게 경계를 나눈다', () => {
     expect(MEDIA.full).toContain('(min-width: 768px)');
-    expect(MEDIA.lite).toContain('(max-width: 767px)');
+    expect(MEDIA.lite).toContain('(max-width: 767.98px)');
     expect(MEDIA.static).toBe('(prefers-reduced-motion: reduce)');
     expect(MEDIA.full).toContain('no-preference');
     expect(MEDIA.lite).toContain('no-preference');

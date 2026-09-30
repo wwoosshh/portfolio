@@ -11,13 +11,15 @@ export function revealRemaining(root: ParentNode): void {
   root.querySelectorAll<HTMLElement>('[data-reveal]:not([data-reveal-claimed])').forEach((el) => {
     gsap.fromTo(
       el,
-      { autoAlpha: 0, y: 16 },
+      // visibility는 건드리지 않는다: 숨은 동안에도 키보드 초점과 보조 기술이 내용에 닿아야 한다.
+      { opacity: 0, y: 16 },
       {
-        autoAlpha: 1,
+        opacity: 1,
         y: 0,
         duration: DURATION.base,
         ease: EASE.out,
-        scrollTrigger: { trigger: el, start: 'top 90%', once: true },
+        // clamp: 문서 끝에 너무 가까워 90% 지점까지 스크롤할 수 없는 요소도 맨 아래에서 등장한다.
+        scrollTrigger: { trigger: el, start: 'clamp(top 90%)', once: true },
       },
     );
   });
