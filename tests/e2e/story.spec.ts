@@ -15,6 +15,16 @@ test.describe('경력·일하는 방식(움직임 줄임)', () => {
     await expect(page.locator('#how-i-work .principle')).toHaveCount(profile.howIWork.principles.length);
     await expect(page.locator('#how-i-work .evidence-list a[target="_blank"]')).toHaveCount(profile.howIWork.evidence.length);
   });
+
+  // 흐름도는 좁은 화면에서 옆으로 스크롤된다. 키보드로 닿고 이름이 있어야 한다.
+  test('흐름도 영역은 키보드가 닿고 이름이 있다', async ({ page }) => {
+    await page.goto('/');
+    const panel = page.locator('#how-i-work .how__flow');
+    await expect(panel).toHaveAttribute('tabindex', '0');
+    await expect(panel).toHaveAccessibleName('작업 흐름도(가로로 스크롤)');
+    await panel.focus();
+    await expect(panel).toBeFocused();
+  });
 });
 
 test.describe('경력 타임라인(움직임 켬)', () => {

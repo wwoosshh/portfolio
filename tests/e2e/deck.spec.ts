@@ -159,6 +159,28 @@ test.describe('2장 가로 구간(모바일)', () => {
     await expect(page.locator('.pin-spacer')).toHaveCount(0);
     await expect(page.locator('[data-deck-skip]')).toBeHidden();
   });
+
+  // 도면을 폭에 맞추면 글자가 7px 안팎이 된다. 읽을 만한 폭을 지키고 옆으로 스크롤하며, 그 영역은 이름이 있고 키보드가 닿는다.
+  test('도면은 480px 폭을 지키고, 옆으로 스크롤되는 영역은 이름과 초점을 가진다', async ({ page }) => {
+    await page.goto('/');
+    await ready(page);
+    const figures = await page.locator('.deck__figure').evaluateAll((els) =>
+      els.map((el) => ({
+        svg: el.querySelector('svg.dg')!.getBoundingClientRect().width,
+        scrolls: el.scrollWidth > el.clientWidth,
+        overflowX: getComputedStyle(el).overflowX,
+        tabindex: el.getAttribute('tabindex'),
+        role: el.getAttribute('role'),
+        label: el.getAttribute('aria-label') ?? '',
+      })),
+    );
+    expect(figures).toHaveLength(4);
+    for (const f of figures) {
+      expect(f.svg).toBeGreaterThanOrEqual(480);
+      expect(f).toMatchObject({ scrolls: true, overflowX: 'auto', tabindex: '0', role: 'group' });
+      expect(f.label).toContain('구조도');
+    }
+  });
 });
 
 test.describe('2장 도면(움직임 줄임)', () => {

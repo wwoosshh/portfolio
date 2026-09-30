@@ -28,6 +28,25 @@ test('콘텐츠 완성도: 기술 스택의 모든 항목이 프로젝트로 연
   }
 });
 
+// 묶음 높이가 제각각이라 행을 맞추면 짧은 묶음 아래가 크게 빈다. 데스크톱은 단으로 흘리고 1023px 이하는 한 단이다.
+test('기술 스택: 넓은 화면은 두 단으로 흐르고, 1023px 이하는 한 단이다', async ({ page }) => {
+  const columns = () => page.locator('.skills').evaluate((el) => getComputedStyle(el).columnCount);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  expect(await columns()).toBe('2');
+  await page.setViewportSize({ width: 1023, height: 900 });
+  expect(await columns()).toBe('1');
+});
+
+test('기술 스택: 키보드 초점이 닿은 항목의 칩도 마우스를 올린 것처럼 강조된다', async ({ page }) => {
+  await page.goto('/');
+  const chip = page.locator('#skills a.skill__chip').first();
+  const background = () => chip.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(await background()).toBe('rgba(0, 0, 0, 0)');
+  await chip.focus();
+  await expect.poll(background).toBe('rgb(255, 224, 102)');
+});
+
 test('콘텐츠 완성도: 서버가 꺼진 서비스는 운영 중으로 표시되지 않는다', async ({ page }) => {
   await page.goto('/');
   for (const id of ['barun-order', 'mzcube']) {

@@ -5,6 +5,7 @@ import { DURATION, EASE } from './tokens';
 export function enableTilt(root: ParentNode): () => void {
   const offs = Array.from(root.querySelectorAll<HTMLElement>('[data-tilt]')).map((card) => {
     gsap.set(card, { transformPerspective: 800 });
+    card.style.willChange = 'transform'; // 기울기가 켜진 동안만 합성 계층을 미리 만든다
     const rx = gsap.quickTo(card, 'rotationX', { duration: DURATION.base, ease: EASE.out });
     const ry = gsap.quickTo(card, 'rotationY', { duration: DURATION.base, ease: EASE.out });
     const move = (e: PointerEvent) => {
@@ -23,6 +24,7 @@ export function enableTilt(root: ParentNode): () => void {
       card.removeEventListener('pointermove', move);
       card.removeEventListener('pointerleave', leave);
       gsap.set(card, { clearProps: 'transform' });
+      card.style.willChange = '';
     };
   });
   return () => {

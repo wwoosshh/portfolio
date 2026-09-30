@@ -7,6 +7,9 @@ import { playOnEnter } from '../trigger';
 
 /** full에서 판정 장면이 이어지는 시각(초). 글·오라클 위쪽은 0초에 시작하고, 결과 행은 0.8초에 나타난다. */
 const VERDICT_AT = 0.8;
+/** 소개 글(문단·버튼)이 나타나기 시작하는 시각(초)과 차례 사이 간격(초). 판정의 설명은 이 묶음의 다음 차례로 나타난다. */
+const LEAD_AT = 1.0;
+const LEAD_STAGGER = 0.08;
 
 /**
  * 히어로 연출은 세 부분으로 나뉜다(P1-R19).
@@ -45,7 +48,7 @@ registerScene('hero', (root, { mode }) => {
       .fromTo(kicker, { opacity: 0, y: 12 }, { opacity: 1, y: 0 }, 0)
       .fromTo(split.words, { opacity: 0, yPercent: 60 }, { opacity: 1, yPercent: 0, stagger: 0.05, duration: DURATION.slow }, 0.3)
       .fromTo(root.querySelector('.hero__title .mark'), { backgroundSize: '0% 100%' }, { backgroundSize: '100% 100%', duration: DURATION.slow }, 0.9)
-      .fromTo(lead, { opacity: 0, y: 12 }, { opacity: 1, y: 0, stagger: 0.08 }, 1.0);
+      .fromTo(lead, { opacity: 0, y: 12 }, { opacity: 1, y: 0, stagger: LEAD_STAGGER }, LEAD_AT);
   };
 
   const addTop = (tl: gsap.core.Timeline) => {
@@ -57,10 +60,11 @@ registerScene('hero', (root, { mode }) => {
     if (counter) tl.add(counter, 0);
   };
 
-  // 결과 행 → (0.44초) 설명 → (0.6초) 불일치 표시와 흔들림 → (0.9초) 판정 표지
+  // 결과 행 → (소개 글의 다음 차례: 문단 둘과 버튼이면 0.44초) 설명 → (0.6초) 불일치 표시와 흔들림 → (0.9초) 판정 표지
+  const captionDelay = LEAD_AT - VERDICT_AT + lead.length * LEAD_STAGGER;
   const addVerdict = (tl: gsap.core.Timeline, at: number) => {
     tl.fromTo(rows, { opacity: 0, y: 12 }, { opacity: 1, y: 0, stagger: 0.15 }, at)
-      .fromTo(caption, { opacity: 0, y: 12 }, { opacity: 1, y: 0 }, at + 0.44)
+      .fromTo(caption, { opacity: 0, y: 12 }, { opacity: 1, y: 0 }, at + captionDelay)
       .add(() => mismatch.classList.add('is-flagged'), at + 0.6)
       .add(shake(mismatch), at + 0.6)
       .fromTo(flag, { opacity: 0, y: 6 }, { opacity: 1, y: 0 }, at + 0.9);

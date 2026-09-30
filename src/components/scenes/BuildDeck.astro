@@ -41,7 +41,7 @@ const { projects } = Astro.props;
                   ))}
                 </ul>
               </div>
-              <figure class="deck__figure panel">
+              <figure class="deck__figure panel" tabindex="0" role="group" aria-label={`${p.data.title} 구조도(가로로 스크롤)`}>
                 <Diagram id={p.id} />
               </figure>
             </li>
@@ -155,6 +155,13 @@ const { projects } = Astro.props;
     padding-inline: max(var(--sp-6), calc((100cqw - var(--w-wide)) / 2 + var(--sp-6)));
   }
   @media (max-width: 767px) {
+    /* 좁은 화면에서 도면을 폭에 맞추면 글자가 7px 안팎이 된다. 읽을 만한 크기를 지키고 옆으로 스크롤한다. */
+    .deck__figure {
+      overflow-x: auto;
+    }
+    .deck__figure :global(.dg) {
+      min-width: 480px;
+    }
     .deck__track {
       padding-inline: var(--sp-4);
     }

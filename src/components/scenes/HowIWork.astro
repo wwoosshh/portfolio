@@ -15,7 +15,7 @@ const GAP = 22;
 ---
 <section id="how-i-work" class="container container--wide" aria-labelledby="how-i-work-title" data-scene="how">
   <SectionHeader id="how-i-work" title="일하는 방식" />
-  <figure class="how__flow panel">
+  <figure class="how__flow panel" tabindex="0" role="group" aria-label="작업 흐름도(가로로 스크롤)">
     <svg class="dg" viewBox={`0 0 ${STEPS.length * W + (STEPS.length - 1) * GAP + 20} 90`} role="img" aria-labelledby="dg-how-t">
       <title id="dg-how-t">설계 문서 → 구현 계획 → 테스트 먼저 → 구현 → 측정·검증</title>
       {

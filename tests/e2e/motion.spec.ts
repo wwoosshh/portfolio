@@ -143,6 +143,9 @@ test.describe('움직임 켬(데스크톱 기본)', () => {
     await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
     await page.locator('#ml').evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY));
     await expect(page.locator('[data-chapter-link="ml"]')).toHaveAttribute('aria-current', 'location');
+    // 현재 장은 색뿐 아니라 밑줄로도 구분한다(WCAG 1.4.1).
+    await expect(page.locator('[data-chapter-link="ml"]')).toHaveCSS('text-decoration-line', 'underline');
+    await expect(page.locator('[data-chapter-link="experience"]')).toHaveCSS('text-decoration-line', 'none');
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     await expect(page.locator('[data-chapter-link="contact"]')).toHaveAttribute('aria-current', 'location');
     await expect(page.locator('[aria-current="location"]')).toHaveCount(1);
