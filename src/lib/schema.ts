@@ -1,7 +1,7 @@
 import { z } from 'astro/zod';
 
 const yearMonth = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'YYYY-MM 형식이어야 합니다');
-const httpUrl = z.url({ protocol: /^https?$/ });
+export const httpUrl = z.url({ protocol: /^https?$/ });
 
 export const periodSchema = z
   .strictObject({ start: yearMonth, end: yearMonth.optional() })
