@@ -1,16 +1,16 @@
 ---
-import ProjectCard from '../components/ProjectCard.astro';
-import ProjectLine from '../components/ProjectLine.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import Timeline from '../components/Timeline.astro';
 import BuildDeck from '../components/scenes/BuildDeck.astro';
 import ChapterCard from '../components/scenes/ChapterCard.astro';
+import Closing from '../components/scenes/Closing.astro';
 import Hero from '../components/scenes/Hero.astro';
 import Highlights from '../components/scenes/Highlights.astro';
 import HowIWork from '../components/scenes/HowIWork.astro';
+import More from '../components/scenes/More.astro';
 import ProjectScene from '../components/scenes/ProjectScene.astro';
+import Skills from '../components/scenes/Skills.astro';
 import Base from '../layouts/Base.astro';
-import { projectHref } from '../lib/links';
 import { loadSite } from '../lib/site';
 import { buildTimeline } from '../lib/timeline';
 
@@ -21,93 +21,25 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
 ---
 <Base title={title} description={profile.intro[0]} bare>
   <Hero profile={profile} pdfName={pdfName} />
-
   <Highlights profile={profile} />
-
   <section id="ml" class="container container--wide" aria-labelledby="ml-title">
     <ChapterCard id="ml" num="1장" title="정확성" lead="AI/ML 시스템과 컴파일러" />
     {site.ml.map((p, i) => <ProjectScene project={p} num={`1-${i + 1}`} />)}
   </section>
-
   <section id="agent-product" aria-labelledby="agent-product-title">
     <div class="container container--wide">
       <ChapterCard id="agent-product" num="2장" title="만들고 운영한다" lead="AI 에이전트와 제품" />
     </div>
     <BuildDeck projects={site.agentProduct} />
   </section>
-
   <section id="experience" class="container" aria-labelledby="experience-title">
     <SectionHeader id="experience" title="경력 · 활동" />
     <Timeline items={buildTimeline(profile)} />
   </section>
-
   <HowIWork profile={profile} />
-
-  <section id="more" class="container" aria-labelledby="more-title">
-    <SectionHeader id="more" title="그 밖의 프로젝트" />
-    <div class="grid">{site.cards.map((p) => <ProjectCard project={p} />)}</div>
-    {site.lines.length > 0 && <ul class="lines">{site.lines.map((p) => <ProjectLine project={p} />)}</ul>}
-  </section>
-
-  <section id="skills" class="container" aria-labelledby="skills-title">
-    <SectionHeader id="skills" title="기술 스택" note="프로젝트로 증명된 것만" />
-    <dl class="skills">
-      {
-        profile.skills.map((group) => (
-          <div class="skills__group">
-            <dt>{group.group}</dt>
-            <dd>
-              <ul>
-                {group.items.map((item) => (
-                  <li class="skill">
-                    <span class="skill__name">{item.name}</span>
-                    <span class="skill__projects">
-                      {item.projects.map((id) => {
-                        const p = site.byId.get(id)!;
-                        const target = projectHref(p);
-                        return target ? (
-                          <a
-                            href={target.href}
-                            target={target.external ? '_blank' : undefined}
-                            rel={target.external ? 'noopener noreferrer' : undefined}
-                          >
-                            {p.data.title}
-                            {target.external && <span aria-hidden="true"> ↗</span>}
-                          </a>
-                        ) : (
-                          <span>{p.data.title}</span>
-                        );
-                      })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </dd>
-          </div>
-        ))
-      }
-    </dl>
-  </section>
-
-  <section id="contact" class="container" aria-labelledby="contact-title">
-    <SectionHeader id="contact" title="연락처" />
-    <ul class="contact">
-      {
-        profile.contact.email && (
-          <li>
-            <span class="contact__label">이메일</span>
-            <a href={`mailto:${profile.contact.email}`}>{profile.contact.email}</a>
-          </li>
-        )
-      }
-      <li>
-        <span class="contact__label">GitHub</span>
-        <a href={profile.contact.github} target="_blank" rel="noopener noreferrer">
-          {profile.contact.github.replace('https://', '')} <span aria-hidden="true">↗</span>
-        </a>
-      </li>
-    </ul>
-  </section>
+  <More site={site} />
+  <Skills site={site} />
+  <Closing profile={profile} pdfName={pdfName} />
 </Base>
 
 <style>
@@ -119,61 +51,9 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
   #ml {
     overflow-x: clip;
   }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--sp-2);
-  }
-  .lines {
-    margin-top: var(--sp-4);
-    border-top: 1px solid var(--line);
-  }
-  .skills {
-    display: grid;
-    gap: var(--sp-4);
-  }
-  .skills__group dt {
-    font-weight: 700;
-    margin-bottom: var(--sp-1);
-  }
-  .skill {
-    display: grid;
-    grid-template-columns: 16rem minmax(0, 1fr);
-    gap: var(--sp-3);
-    padding-block: var(--sp-1);
-    border-bottom: 1px solid var(--line);
-    font-size: var(--fs-small);
-  }
-  .skill__projects {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-1) var(--sp-3);
-  }
-  .contact {
-    display: grid;
-    gap: var(--sp-2);
-  }
-  .contact li {
-    display: flex;
-    align-items: baseline;
-    gap: var(--sp-3);
-  }
-  .contact__label {
-    width: 5rem;
-    font-family: var(--font-mono);
-    font-size: var(--fs-mono);
-    color: var(--text-3);
-  }
   @media (max-width: 767px) {
     :global(main > section + section) {
       margin-top: var(--sp-12);
-    }
-    .grid {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .skill {
-      grid-template-columns: minmax(0, 1fr);
-      gap: var(--sp-1);
     }
   }
 </style>

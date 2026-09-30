@@ -1,0 +1,76 @@
+---
+import type { Profile } from '../../lib/schema';
+import Button from '../Button.astro';
+
+interface Props {
+  profile: Profile;
+  pdfName: string;
+}
+
+const { profile, pdfName } = Astro.props;
+---
+<section id="contact" class="closing container container--wide" aria-labelledby="contact-title">
+  <p class="closing__line" data-reveal>끝까지 봐 주셔서 감사합니다.</p>
+  <h2 id="contact-title" class="closing__title mono" data-reveal>연락처</h2>
+  <ul class="closing__contact" data-reveal>
+    {
+      profile.contact.email && (
+        <li>
+          <span class="closing__label mono">이메일</span>{' '}
+          <a href={`mailto:${profile.contact.email}`}>{profile.contact.email}</a>
+        </li>
+      )
+    }
+    <li>
+      <span class="closing__label mono">GitHub</span>{' '}
+      <a href={profile.contact.github} target="_blank" rel="noopener noreferrer">
+        {profile.contact.github.replace('https://', '')} <span aria-hidden="true">↗</span>
+      </a>
+    </li>
+  </ul>
+  <div class="closing__actions" data-reveal>
+    <Button href={profile.contact.github} label="GitHub" external />
+    {profile.contact.email && <Button href={`mailto:${profile.contact.email}`} label="이메일" />}
+    <Button href="/portfolio.pdf" label="PDF" download={pdfName} />
+  </div>
+</section>
+
+<style>
+  .closing {
+    display: grid;
+    gap: var(--sp-4);
+    padding-block: var(--sp-16);
+    min-height: 60vh;
+    align-content: center;
+  }
+  .closing__line {
+    font-size: var(--fs-chapter);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+  .closing__title {
+    font-size: var(--fs-mono);
+    font-weight: 400;
+    color: var(--text-3);
+  }
+  .closing__contact {
+    display: grid;
+    gap: var(--sp-2);
+  }
+  .closing__contact li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-3);
+  }
+  .closing__label {
+    width: 5rem;
+    font-size: var(--fs-mono);
+    color: var(--text-3);
+  }
+  .closing__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+</style>

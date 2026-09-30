@@ -6,3 +6,4 @@ import './project';
 import './deck';
 import './timeline';
 import './how';
+import './more';

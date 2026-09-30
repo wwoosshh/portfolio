@@ -1,0 +1,40 @@
+---
+import type { Site } from '../../lib/site';
+import ProjectCard from '../ProjectCard.astro';
+import ProjectLine from '../ProjectLine.astro';
+import SectionHeader from '../SectionHeader.astro';
+
+interface Props {
+  site: Site;
+}
+
+const { site } = Astro.props;
+---
+<section id="more" class="container container--wide" aria-labelledby="more-title" data-scene="more">
+  <SectionHeader id="more" title="그 밖의 프로젝트" />
+  <div class="more__cards">{site.cards.map((p) => <ProjectCard project={p} />)}</div>
+  {site.lines.length > 0 && <ul class="more__lines" data-reveal>{site.lines.map((p) => <ProjectLine project={p} />)}</ul>}
+</section>
+
+<style>
+  .more__cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-3);
+    perspective: 1000px;
+  }
+  .more__lines {
+    margin-top: var(--sp-6);
+    border-top: 1px solid var(--line);
+  }
+  @media (max-width: 1023px) {
+    .more__cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 767px) {
+    .more__cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
