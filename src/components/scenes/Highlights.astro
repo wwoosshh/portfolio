@@ -19,7 +19,7 @@ const { profile } = Astro.props;
       profile.highlights.map((h) => (
         <li class="hl__item" data-reveal>
           <p class="hl__figure">
-            <span class="hl__num" data-figure>{h.figure.value}</span>
+            <span class="hl__num" data-figure>{h.figure.value}</span>{' '}
             <span class="hl__unit">{h.figure.unit}</span>
           </p>
           <Status view={view(h.status, h.statusText)} />
@@ -47,20 +47,22 @@ const { profile } = Astro.props;
   }
   .hl__figure {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     gap: var(--sp-1);
   }
   .hl__num {
-    display: inline-block;
     font-size: var(--fs-figure);
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.03em;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .hl__unit {
     font-size: var(--fs-small);
     color: var(--text-2);
+    white-space: nowrap;
   }
   .hl__label {
     font-weight: 700;

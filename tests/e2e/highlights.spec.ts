@@ -14,6 +14,14 @@ test.describe('핵심 성과(움직임 줄임)', () => {
       await expect(items.nth(i).locator('a.evidence')).toHaveCount(1);
     }
   });
+
+  // 큰 숫자와 단위는 flex 줄이라 눈에는 gap으로 벌어진다. 글자(textContent)로 읽어 가는 쪽이 "194/194통과"로 붙여 읽지 않도록 글자 사이 공백을 지킨다.
+  test('큰 숫자와 단위 사이에 공백이 있다', async ({ page }) => {
+    await page.goto('/');
+    for (const [i, h] of profile.highlights.entries()) {
+      await expect(page.locator('#highlights .hl__figure').nth(i)).toHaveText(`${h.figure.value} ${h.figure.unit}`);
+    }
+  });
 });
 
 test.describe('핵심 성과(움직임 켬)', () => {
@@ -106,5 +114,22 @@ test.describe('핵심 성과(움직임 켬)', () => {
     expect(await figures()).toEqual(finals);
     await page.waitForTimeout(500); // 세던 연출이 남아 있다면 이 사이에 다시 쓴다
     expect(await figures()).toEqual(finals);
+  });
+});
+
+// P1-R27: 항목이 여러 줄로 나뉘는 폭에서는 숫자마다 화면에 들어올 때 튕긴다. 한꺼번에 재생하면 접힌 선 아래의 숫자는 보이기 전에 끝난다.
+test.describe('핵심 성과(모바일 폭: 숫자마다 보일 때 재생)', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('화면 밖 숫자는 기다렸다가, 화면에 들어오면 튕기며 세어 올라간다', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
+    await page.locator('#highlights').evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 60));
+    await page.waitForTimeout(1500);
+    const last = page.locator('#highlights [data-figure]').last();
+    expect(await last.evaluate((el) => Number(getComputedStyle(el).opacity))).toBe(0);
+    await last.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await expect.poll(() => last.evaluate((el) => Number(getComputedStyle(el).opacity)), { timeout: 4000 }).toBe(1);
+    await expect(last).toHaveText('81', { timeout: 4000 });
   });
 });

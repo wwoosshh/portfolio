@@ -201,11 +201,19 @@ describe('profileSchema', () => {
   });
 
   test('핵심 성과의 큰 숫자는 숫자 또는 숫자/숫자 형식이다', () => {
-    const bad = {
+    const withFigure = (figure: { value: string; unit: string }) => ({
       ...validProfile,
-      highlights: validProfile.highlights.map((h) => ({ ...h, figure: { value: '여섯', unit: '건' } })),
-    };
-    expect(profileSchema.safeParse(bad).success).toBe(false);
+      highlights: validProfile.highlights.map((h) => ({ ...h, figure })),
+    });
+    const accepts = (value: string, unit = '건') => profileSchema.safeParse(withFigure({ value, unit })).success;
+    // 형식이 아닌 값: 한글, 단위가 붙은 값
+    expect(accepts('여섯'), '여섯').toBe(false);
+    expect(accepts('6건'), '6건').toBe(false);
+    // 단위는 비어 있을 수 없다
+    expect(accepts('6', ''), '빈 단위').toBe(false);
+    // 천 단위 쉼표와 분수 형식은 통과한다
+    expect(accepts('1,000'), '1,000').toBe(true);
+    expect(accepts('3/4'), '3/4').toBe(true);
   });
 
   test('이메일 형식이 아니면 실패한다', () => {
