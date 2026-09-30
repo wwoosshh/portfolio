@@ -1,6 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { hero } from '../../src/data/hero';
 
+// 연출 스크립트를 붙잡아 두는 시간. 3초 대체 동작(연출 시작 실패로 간주)까지 여유를 두어, 느린 환경에서도 대체 동작이 먼저 끼어들지 않게 한다.
+const SCRIPT_DELAY_MS = 1200;
+
 test.describe('히어로(움직임 줄임: 최종 상태)', () => {
   test.use({ reducedMotion: 'reduce' });
 
@@ -70,7 +73,7 @@ test.describe('히어로(연출 도중 움직임 줄임으로 바뀜)', () => {
 test.describe('히어로(스크립트가 시작되기 전)', () => {
   test('실행 수와 눈금은 연출이 시작되기 전까지 최종 값으로 보이지 않는다', async ({ page }) => {
     await page.route('**/_astro/*.js', async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, SCRIPT_DELAY_MS));
       await route.continue();
     });
     await page.goto('/', { waitUntil: 'commit' });
@@ -91,7 +94,7 @@ test.describe('히어로(스크립트가 시작되기 전)', () => {
 test.describe('히어로(스크립트가 시작되기 전: 빈 틀)', () => {
   const holdScript = async (page: Page) => {
     await page.route('**/_astro/*.js', async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, SCRIPT_DELAY_MS));
       await route.continue();
     });
     await page.goto('/', { waitUntil: 'commit' });

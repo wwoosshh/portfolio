@@ -3,9 +3,10 @@ import { expect, test, type Page } from '@playwright/test';
 const hasClass = (page: Page, name: string) =>
   page.evaluate((n) => document.documentElement?.classList.contains(n) ?? false, name);
 
+// 본문([data-reveal])뿐 아니라 도면·흐름도 부품([data-pop], [data-fade])도 숨은 채 남지 않아야 한다.
 const hiddenReveals = (page: Page) =>
   page
-    .locator('[data-reveal]')
+    .locator('[data-reveal], [data-pop], [data-fade]')
     .evaluateAll((els) => els.filter((e) => Number(getComputedStyle(e).opacity) < 1).map((e) => e.outerHTML.slice(0, 80)));
 
 async function scrollThrough(page: Page) {

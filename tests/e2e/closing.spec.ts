@@ -15,15 +15,21 @@ test.describe('카드 기울기(움직임 켬)', () => {
     await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
     const card = page.locator('#more [data-tilt]').first();
     await card.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(800);
+    // 등장이 끝나기 전에는 이동·투명도 변화가 섞이므로 불투명해질 때까지 기다린다.
+    await expect.poll(() => card.evaluate((el) => Number(getComputedStyle(el).opacity))).toBe(1);
     const box = await card.boundingBox();
     if (!box) throw new Error('카드가 보이지 않습니다');
+    // 기울기만 잰다: 3차원 행렬의 m13(좌우 회전)·m23(상하 회전). 등장의 위치 이동(이동 행렬)에는 0이다.
+    const tilt = () =>
+      card.evaluate((el) => {
+        const m = new DOMMatrix(getComputedStyle(el).transform);
+        return Math.abs(m.m13) + Math.abs(m.m23);
+      });
+    expect(await tilt()).toBeLessThan(0.01);
     await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.1);
-    await expect.poll(() => card.evaluate((el) => getComputedStyle(el).transform)).not.toBe('none');
+    await expect.poll(tilt).toBeGreaterThan(0.05);
     await page.mouse.move(0, 0);
-    await expect
-      .poll(() => card.evaluate((el) => { const m = new DOMMatrix(getComputedStyle(el).transform); return Math.abs(m.m13) + Math.abs(m.m23); }), { timeout: 3000 })
-      .toBeLessThan(0.01);
+    await expect.poll(tilt, { timeout: 3000 }).toBeLessThan(0.01);
   });
 });
 
