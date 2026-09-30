@@ -1,7 +1,7 @@
 import { z } from 'astro/zod';
 
 const yearMonth = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'YYYY-MM 형식이어야 합니다');
-const httpUrl = z.url({ protocol: /^https?$/ });
+export const httpUrl = z.url({ protocol: /^https?$/ });
 
 export const periodSchema = z
   .strictObject({ start: yearMonth, end: yearMonth.optional() })
@@ -159,6 +159,11 @@ const highlightSchema = z.strictObject({
   status: statusToneSchema,
   statusText: z.string().min(1),
   evidence: httpUrl,
+  // 큰 숫자. 라벨·설명에 이미 있는 사실만 쓴다.
+  figure: z.strictObject({
+    value: z.string().regex(/^\d[\d,]*(\/\d[\d,]*)?$/, '숫자 또는 숫자/숫자 형식이어야 합니다'),
+    unit: z.string().min(1),
+  }),
 });
 
 const skillGroupSchema = z.strictObject({

@@ -18,7 +18,7 @@ const target = projectHref(project);
 const isDetail = d.tier === 'featured';
 const lead = d.metrics[0];
 ---
-<article class="card surface surface--interactive" data-project={project.id}>
+<article class="card surface surface--interactive" data-project={project.id} data-tilt data-reveal>
   <h3 class="card__title">
     {
       target ? (

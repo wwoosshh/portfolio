@@ -30,10 +30,13 @@
 
 ## 디자인 규칙
 
-- 그림자, transform, 전환 효과, 애니메이션을 쓰지 않습니다. 구분은 1px 선과 배경색으로만 합니다.
-- 색은 `src/styles/tokens.css`에서만 정의합니다.
+- 바탕은 종이색이고, 다이어그램·시연 장면에만 모눈 패널(`.panel`)을 씁니다. 그림자는 쓰지 않습니다.
+- 색은 `src/styles/tokens.css`에서만 정의합니다. 글씨 색은 바탕·표면·패널 모두에서 대비 4.5:1 이상입니다(`src/lib/contrast.test.ts`).
 - 모서리는 `var(--r-sm)`, `var(--r-md)`와 원형 점(타임라인 점)에 쓰는 `50%`만 씁니다.
-- 위 규칙은 `src/lib/style-rules.test.ts`와 `tests/e2e/design.spec.ts`가 검사합니다.
+- 움직임은 GSAP으로 얹습니다(`src/motion/`). CSS의 `transition`·`animation`은 움직임 토큰(`--dur-*`, `--ease-*`)만 씁니다.
+- 큰 동작(3D 전환, 튕김, 흔들림, 기울기)은 장 전환·핵심 성과 숫자·불일치 순간·2장 슬라이드·프로젝트 카드에서만 씁니다.
+- 움직임을 줄이도록 설정한 사용자와 자바스크립트가 없는 경우에도 모든 내용이 보입니다. 인쇄와 PDF에는 움직임이 없습니다.
+- 위 규칙은 `src/lib/style-rules.test.ts`, `tests/e2e/design.spec.ts`, `tests/e2e/motion.spec.ts`가 검사합니다.
 
 ## 배포 (Vercel)
 

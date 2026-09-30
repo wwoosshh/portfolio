@@ -1,0 +1,41 @@
+---
+interface Props {
+  id: string;
+  num: string;
+  title: string;
+  lead: string;
+}
+
+const { id, num, title, lead } = Astro.props;
+---
+<header class="chapter" data-scene="chapter">
+  <p class="chapter__num mono" data-reveal>{num}</p>
+  <h2 id={`${id}-title`} class="chapter__title" data-reveal><span class="mark">{title}</span></h2>
+  <p class="chapter__lead" data-reveal>{lead}</p>
+</header>
+
+<style>
+  .chapter {
+    display: grid;
+    align-content: center;
+    gap: var(--sp-3);
+    min-height: 60vh;
+    padding-block: var(--sp-16);
+    perspective: 1200px;
+  }
+  .chapter__num {
+    font-size: var(--fs-mono);
+    color: var(--link);
+  }
+  .chapter__title {
+    font-size: var(--fs-chapter);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+  .chapter__lead {
+    max-width: var(--w-text);
+    font-size: var(--fs-h3);
+    color: var(--text-2);
+  }
+</style>

@@ -1,0 +1,173 @@
+---
+import type { ProjectEntry } from '../../lib/site';
+import { deploymentStatus } from '../../lib/status';
+import Diagram from '../diagrams/Diagram.astro';
+import Evidence from '../Evidence.astro';
+import Status from '../Status.astro';
+
+interface Props {
+  projects: ProjectEntry[];
+}
+
+const { projects } = Astro.props;
+---
+<div class="deck" data-scene="deck">
+  <button type="button" class="deck__skip mono" data-deck-skip aria-label="건너뛰기: 2장 가로 구간">건너뛰기 ↓</button>
+  <div class="deck__viewport">
+    <ol class="deck__track">
+      {
+        projects.map((p, i) => {
+          const deploy = deploymentStatus(p.data.deployment);
+          return (
+            <li class="deck__slide" data-project={p.id}>
+              <div class="deck__text">
+                <p class="deck__num mono" data-reveal>2-{i + 1}</p>
+                <h3 class="deck__title" data-reveal>
+                  <a href={`/projects/${p.id}/`} data-detail-link>{p.data.title}</a>
+                </h3>
+                {deploy && (
+                  <p data-reveal>
+                    <Status view={deploy} />
+                  </p>
+                )}
+                <p class="deck__tagline" data-reveal>{p.data.tagline}</p>
+                <ul class="deck__metrics" data-reveal>
+                  {p.data.metrics.slice(0, 2).map((m) => (
+                    <li class="deck__metric">
+                      <span class="deck__metric-label">{m.label}</span>
+                      <strong class="mono">{m.value}</strong>
+                      <Evidence evidence={m.evidence} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <figure class="deck__figure panel" tabindex="0" role="group" aria-label={`${p.data.title} 구조도(가로로 스크롤)`}>
+                <Diagram id={p.id} />
+              </figure>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </div>
+</div>
+
+<style>
+  .deck {
+    position: relative;
+  }
+  .deck__skip {
+    display: none;
+    position: absolute;
+    top: var(--sp-4);
+    right: var(--sp-6);
+    z-index: 2;
+    align-items: center;
+    gap: var(--sp-1);
+    padding: var(--sp-1) var(--sp-3);
+    font-size: var(--fs-mono);
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+  }
+  :global(html.motion) .deck[data-pinned] .deck__skip {
+    display: inline-flex;
+  }
+  .deck__viewport {
+    /* clip은 프로그램이 옆으로 스크롤하는 일(초점·scrollIntoView)도 막는다. 지원하지 않는 브라우저는 hidden으로 자른다. */
+    overflow: hidden;
+    overflow: clip;
+    /* 슬라이드 폭의 기준. 100vw는 세로 스크롤바 폭까지 포함해 보이는 폭보다 넓다. */
+    container-type: inline-size;
+  }
+  .deck__track {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-12);
+    max-width: var(--w-wide);
+    margin-inline: auto;
+    padding-inline: var(--sp-6);
+  }
+  .deck__slide {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--sp-8);
+    align-items: center;
+  }
+  .deck__text {
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .deck__num {
+    font-size: var(--fs-mono);
+    color: var(--link);
+  }
+  .deck__title {
+    font-size: var(--fs-h2);
+    font-weight: 800;
+    line-height: 1.3;
+  }
+  .deck__title a {
+    color: var(--text);
+  }
+  .deck__tagline {
+    color: var(--text-2);
+  }
+  .deck__metrics {
+    display: grid;
+    gap: var(--sp-2);
+  }
+  .deck__metric {
+    display: grid;
+    gap: var(--sp-1);
+    font-size: var(--fs-small);
+  }
+  .deck__metric-label {
+    color: var(--text-2);
+  }
+  .deck__figure {
+    padding: var(--sp-4);
+  }
+  /*
+   * full 모드: 한 화면에 한 장씩 가로로 넘긴다.
+   * html.motion이 있을 때만 적용한다. 연출이 실패하면 motion을 먼저 지우므로, 되돌리기가 data-pinned를 남겨도 고정 배치가 이어지지 않는다.
+   */
+  :global(html.motion) .deck[data-pinned] .deck__viewport {
+    height: calc(100vh - var(--topbar-h));
+    height: calc(100svh - var(--topbar-h));
+    display: flex;
+    align-items: center;
+  }
+  :global(html.motion) .deck[data-pinned] .deck__track {
+    flex-direction: row;
+    gap: 0;
+    width: max-content;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+  :global(html.motion) .deck[data-pinned] .deck__slide {
+    width: 100vw;
+    width: 100cqw;
+    padding-inline: var(--sp-6);
+    padding-inline: max(var(--sp-6), calc((100cqw - var(--w-wide)) / 2 + var(--sp-6)));
+  }
+  @media (max-width: 767px) {
+    /* 좁은 화면에서 도면을 폭에 맞추면 글자가 7px 안팎이 된다. 읽을 만한 크기를 지키고 옆으로 스크롤한다. */
+    .deck__figure {
+      overflow-x: auto;
+    }
+    .deck__figure :global(.dg) {
+      min-width: 480px;
+    }
+    .deck__track {
+      padding-inline: var(--sp-4);
+    }
+    .deck__slide {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--sp-4);
+    }
+  }
+</style>

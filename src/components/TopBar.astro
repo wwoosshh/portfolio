@@ -1,0 +1,102 @@
+---
+import type { Chapter } from '../lib/chapters';
+
+interface Props {
+  name: string;
+  chapters: Chapter[];
+}
+
+const { name, chapters } = Astro.props;
+---
+<header class="topbar">
+  <div class="container container--wide topbar__inner">
+    <a class="site-header__home mono" href="/">~/{name}</a>
+    <nav aria-label="장 목차">
+      <ol class="topbar__chapters">
+        {
+          chapters.map((c, i) => (
+            <li>
+              <a href={`/#${c.id}`} data-chapter-link={c.id}>
+                <span class="topbar__num mono">{String(i + 1).padStart(2, '0')}</span>{' '}
+                <span class="topbar__label">{c.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+  </div>
+  <div class="topbar__progress" aria-hidden="true"><span class="topbar__bar" data-progress-bar></span></div>
+</header>
+
+<style>
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    min-height: calc(var(--topbar-h) - 1px);
+  }
+  .site-header__home {
+    font-size: var(--fs-mono);
+    color: var(--text-2);
+  }
+  .topbar__chapters {
+    display: flex;
+    gap: var(--sp-4);
+    font-size: var(--fs-small);
+  }
+  .topbar__chapters a {
+    color: var(--text-2);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .topbar__chapters a[aria-current] {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .topbar__num {
+    font-size: var(--fs-tag);
+    color: var(--text-3);
+  }
+  .topbar__progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    overflow: hidden;
+  }
+  .topbar__bar {
+    display: block;
+    height: 100%;
+    background: var(--blue);
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+  }
+  @media (max-width: 767px) {
+    .topbar__chapters {
+      gap: var(--sp-3);
+    }
+    .topbar__chapters a {
+      display: inline-block;
+      padding: var(--sp-2);
+    }
+    .topbar__label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  }
+</style>

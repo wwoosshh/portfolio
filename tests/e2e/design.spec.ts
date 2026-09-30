@@ -4,7 +4,7 @@ test('바탕색과 글꼴이 토큰대로 적용된다', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
   const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(background).toBe('rgb(250, 250, 249)');
+  expect(background).toBe('rgb(251, 251, 248)');
   const loaded = await page.evaluate(() => {
     const families: string[] = [];
     document.fonts.forEach((f) => {

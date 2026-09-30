@@ -1,0 +1,55 @@
+/* 2장 도면 공통 스타일. 색은 토큰만 쓴다. */
+.dg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--font-mono);
+}
+.dg-line {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 2;
+}
+.dg-line--bad {
+  stroke: var(--bad-line);
+}
+.dg-line--ok {
+  stroke: var(--ok-line);
+}
+.dg-head {
+  fill: var(--blue);
+}
+.dg-node rect {
+  fill: var(--surface);
+  stroke: var(--text);
+  stroke-width: 1.2;
+}
+.dg-node--accent rect {
+  stroke: var(--blue);
+}
+.dg-title {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--text);
+}
+.dg-sub {
+  font-size: 10.5px;
+  fill: var(--text-3);
+}
+.dg-label {
+  font-size: 10.5px;
+  fill: var(--text-2);
+}
+.dg-block {
+  fill: var(--surface);
+  stroke: var(--text);
+  stroke-width: 1;
+}
+.dg-block--fixed {
+  fill: var(--text-3);
+  stroke: var(--text-3);
+}
+.dg-block--after {
+  fill: var(--ok-bg);
+  stroke: var(--ok-line);
+}

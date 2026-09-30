@@ -1,0 +1,84 @@
+---
+import { formatDate } from '../../lib/format';
+import type { Profile } from '../../lib/schema';
+import { view } from '../../lib/status';
+import Evidence from '../Evidence.astro';
+import SectionHeader from '../SectionHeader.astro';
+import Status from '../Status.astro';
+
+interface Props {
+  profile: Profile;
+}
+
+const { profile } = Astro.props;
+---
+<section id="highlights" class="container container--wide" aria-labelledby="highlights-title" data-scene="highlights">
+  <SectionHeader id="highlights" title="핵심 성과" note={`${formatDate(profile.asOf)} 기준`} />
+  <ul class="hl">
+    {
+      profile.highlights.map((h) => (
+        <li class="hl__item" data-reveal>
+          <p class="hl__figure">
+            <span class="hl__num" data-figure>{h.figure.value}</span>{' '}
+            <span class="hl__unit">{h.figure.unit}</span>
+          </p>
+          <Status view={view(h.status, h.statusText)} />
+          <p class="hl__label">{h.label}</p>
+          <p class="hl__detail">{h.detail}</p>
+          <Evidence evidence={h.evidence} />
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .hl {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-6);
+  }
+  .hl__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    padding-top: var(--sp-3);
+    border-top: 2px solid var(--text);
+  }
+  .hl__figure {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-1);
+  }
+  .hl__num {
+    font-size: var(--fs-figure);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .hl__unit {
+    font-size: var(--fs-small);
+    color: var(--text-2);
+    white-space: nowrap;
+  }
+  .hl__label {
+    font-weight: 700;
+  }
+  .hl__detail {
+    font-size: var(--fs-small);
+    color: var(--text-2);
+  }
+  @media (max-width: 1023px) {
+    .hl {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 767px) {
+    .hl {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

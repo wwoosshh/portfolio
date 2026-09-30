@@ -7,33 +7,58 @@ interface Props {
 
 const { items } = Astro.props;
 ---
-<ol class="timeline">
-  {
-    items.map((it) => (
-      <li class="timeline__item">
-        <p class="timeline__when">{it.when}</p>
-        <h3 class="timeline__title">{it.title}</h3>
-        {it.subtitle && <p class="timeline__subtitle">{it.subtitle}</p>}
-        {it.bullets.length > 0 && (
-          <ul class="timeline__bullets">
-            {it.bullets.map((b) => (
-              <li>{b}</li>
-            ))}
-          </ul>
-        )}
-      </li>
-    ))
-  }
-</ol>
+<div class="timeline" data-scene="timeline">
+  <span class="timeline__rail" aria-hidden="true"></span>
+  <span class="timeline__progress" aria-hidden="true"></span>
+  <ol class="timeline__list">
+    {
+      items.map((it) => (
+        <li class="timeline__item" data-reveal>
+          <p class="timeline__when">{it.when}</p>
+          <h3 class="timeline__title">{it.title}</h3>
+          {it.subtitle && <p class="timeline__subtitle">{it.subtitle}</p>}
+          {it.bullets.length > 0 && (
+            <ul class="timeline__bullets">
+              {it.bullets.map((b) => (
+                <li>{b}</li>
+              ))}
+            </ul>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</div>
 
 <style>
   .timeline {
-    border-left: 1px solid var(--line-strong);
-    padding-left: var(--sp-4);
+    position: relative;
+    padding-left: var(--sp-6);
+  }
+  .timeline__rail,
+  .timeline__progress {
+    position: absolute;
+    left: 3px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+  }
+  .timeline__rail {
+    background: var(--line-strong);
+  }
+  .timeline__progress {
+    width: 2px;
+    left: 2.5px;
+    background: var(--blue);
+    transform-origin: 50% 0;
+    transform: scaleY(0);
+  }
+  :global(html:not(.motion)) .timeline__progress {
+    transform: scaleY(1);
   }
   .timeline__item {
     position: relative;
-    padding-bottom: var(--sp-6);
+    padding-bottom: var(--sp-8);
   }
   .timeline__item:last-child {
     padding-bottom: 0;
@@ -41,8 +66,8 @@ const { items } = Astro.props;
   .timeline__item::before {
     content: '';
     position: absolute;
-    left: calc(-1 * var(--sp-4) - 4px);
-    top: 6px;
+    left: calc(-1 * var(--sp-6));
+    top: 7px;
     width: 7px;
     height: 7px;
     border-radius: 50%;
@@ -54,7 +79,7 @@ const { items } = Astro.props;
     color: var(--text-3);
   }
   .timeline__title {
-    font-size: var(--fs-body);
+    font-size: var(--fs-h3);
     font-weight: 700;
   }
   .timeline__subtitle {
