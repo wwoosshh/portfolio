@@ -135,6 +135,17 @@ test.describe('움직임 켬(데스크톱 기본)', () => {
     await expect.poll(() => hasClass(page, 'motion')).toBe(false);
     expect(await hiddenReveals(page)).toEqual([]);
   });
+
+  // P1-R14: 짧은 마지막 장(연락처)도 맨 아래에서는 현재 장이 된다.
+  test('현재 장이 목차에 표시되고, 맨 아래에서는 연락처가 현재 장이다', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
+    await page.locator('#ml').evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY));
+    await expect(page.locator('[data-chapter-link="ml"]')).toHaveAttribute('aria-current', 'location');
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect(page.locator('[data-chapter-link="contact"]')).toHaveAttribute('aria-current', 'location');
+    await expect(page.locator('[aria-current="location"]')).toHaveCount(1);
+  });
 });
 
 test.describe('움직임 줄임', () => {
@@ -162,6 +173,23 @@ test.describe('연출 시작 실패', () => {
     await expect(page.locator('html')).toHaveAttribute('data-motion', 'failed');
     expect(await hasClass(page, 'motion')).toBe(false);
     expect(await hasClass(page, 'motion-failed')).toBe(true);
+    expect(await hiddenReveals(page)).toEqual([]);
+  });
+});
+
+// P1-R6b: 글꼴이 늦어 3초 안에 시작하지 못하면 대체 동작이 내용을 보이고, 늦게 시작해도 다시 숨기지 않는다.
+test.describe('느린 글꼴', () => {
+  test('3초 안에 시작하지 못하면 내용을 보이고, 늦게 시작해도 다시 숨기지 않는다', async ({ page }) => {
+    await page.addInitScript(() => {
+      const late = new Promise((resolve) => setTimeout(resolve, 4500));
+      Object.defineProperty(document, 'fonts', { configurable: true, get: () => ({ ready: late }) });
+    });
+    await page.goto('/');
+    await expect.poll(() => hasClass(page, 'motion-failed'), { timeout: 4000 }).toBe(true);
+    expect(await hasClass(page, 'motion')).toBe(false);
+    expect(await hiddenReveals(page)).toEqual([]);
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'fallback', { timeout: 8000 });
+    expect(await hasClass(page, 'motion')).toBe(false);
     expect(await hiddenReveals(page)).toEqual([]);
   });
 });

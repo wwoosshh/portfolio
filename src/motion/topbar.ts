@@ -1,4 +1,5 @@
 import { gsap, ScrollTrigger } from './gsap';
+import { reachableStart } from './reveal';
 
 /** 진행 막대와 현재 장 표시. 움직임이 아니라 위치 표시이므로 모든 모드에서 쓴다. */
 export function startTopbar(): void {
@@ -12,7 +13,7 @@ export function startTopbar(): void {
     if (!section) return;
     ScrollTrigger.create({
       trigger: section,
-      start: 'top center',
+      start: reachableStart(section, 0.5),
       end: 'bottom center',
       onToggle: (self) => {
         if (self.isActive) link.setAttribute('aria-current', 'location');

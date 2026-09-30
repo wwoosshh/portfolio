@@ -13,12 +13,17 @@ declare global {
 
 export async function start(): Promise<void> {
   const html = document.documentElement;
-  if (window.__motionFallback !== undefined) window.clearTimeout(window.__motionFallback);
-  html.classList.remove('motion-failed');
   const mm = gsap.matchMedia();
 
   try {
     await document.fonts.ready;
+    // 3초 안에 시작하지 못해 대체 동작이 이미 내용을 보였다면, 이번 방문은 움직임 없이 그대로 둔다(설계 §5.1).
+    if (html.classList.contains('motion-failed')) {
+      startTopbar();
+      html.dataset.motion = 'fallback';
+      return;
+    }
+    if (window.__motionFallback !== undefined) window.clearTimeout(window.__motionFallback);
 
     for (const mode of Object.keys(MEDIA) as MotionMode[]) {
       mm.add(MEDIA[mode], () => {
@@ -45,6 +50,7 @@ export async function start(): Promise<void> {
   } catch (error) {
     // 연출이 실패해도 내용은 보여야 한다(설계 §5.1): 만든 연출을 모두 되돌리고 움직임을 끈다.
     console.error('[motion] 연출을 시작하지 못했습니다', error);
+    if (window.__motionFallback !== undefined) window.clearTimeout(window.__motionFallback);
     mm.revert();
     html.classList.remove('motion');
     html.classList.add('motion-failed');
