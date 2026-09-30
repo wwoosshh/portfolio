@@ -132,20 +132,34 @@ test.describe('2장 가로 구간(낮은 화면)', () => {
     });
   }
 
-  test('높이가 600px 밑으로 내려가면 고정이 풀리고, 다시 올라가면 고정된다', async ({ page }) => {
+  test('높이가 600px 밑으로 내려가면 고정이 풀리고, 다시 올라가면 고정된다(읽던 자리는 그대로)', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
+    const experienceAtTop = () =>
+      expect
+        .poll(async () => {
+          const top = await experienceTop(page);
+          return top >= 0 && top < 150 ? 'top' : Math.round(top);
+        })
+        .toBe('top');
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     await ready(page);
     await expect(page.locator('.deck')).toHaveAttribute('data-pinned', '');
     await expect(page.locator('.pin-spacer')).toHaveCount(1);
+    // 덱 아래(경력)를 읽는 중에 높이가 바뀌어도 읽던 곳이 그대로다. 두 프레임을 기다려 읽던 곳 기록이 따라오게 한다.
+    await page.locator('#experience').evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 57));
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await experienceAtTop();
     await page.setViewportSize({ width: 1280, height: 500 });
     await expect(page.locator('.pin-spacer')).toHaveCount(0);
     await expect(page.locator('.deck')).not.toHaveAttribute('data-pinned');
+    await experienceAtTop();
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
     await page.setViewportSize({ width: 1280, height: 800 });
     await expect(page.locator('.deck')).toHaveAttribute('data-pinned', '');
     await expect(page.locator('.pin-spacer')).toHaveCount(1);
+    await experienceAtTop();
     expect(errors).toEqual([]);
   });
 });
