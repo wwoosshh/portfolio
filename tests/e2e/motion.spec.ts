@@ -146,6 +146,25 @@ test.describe('움직임 켬(데스크톱 기본)', () => {
     await expect(page.locator('[data-chapter-link="contact"]')).toHaveAttribute('aria-current', 'location');
     await expect(page.locator('[aria-current="location"]')).toHaveCount(1);
   });
+
+  // P1-R16: 고정 상단 바가 이동한 섹션 위쪽을 가리지 않는다. scroll-padding과 scroll-margin이 겹치면(114px) 실패한다.
+  test('장 링크로 이동하면 섹션 위쪽이 상단 바에 가리지 않는다', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
+    await page.locator('[data-chapter-link="experience"]').click();
+    await expect
+      .poll(() => page.locator('#experience').evaluate((el) => Math.round(el.getBoundingClientRect().top)))
+      .toBeGreaterThanOrEqual(56);
+    expect(await page.locator('#experience').evaluate((el) => el.getBoundingClientRect().top)).toBeLessThan(90);
+  });
+
+  // P1-R16: 상세 페이지에는 section[id]가 없으므로 건너뛰기 링크의 도착점도 루트의 scroll-padding이 맡는다.
+  test('상세 페이지에서 본문 건너뛰기를 하면 본문이 상단 바에 가리지 않는다', async ({ page }) => {
+    await page.goto('/projects/asahi/');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Enter');
+    expect(await page.locator('#content').evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThanOrEqual(56);
+  });
 });
 
 test.describe('움직임 줄임', () => {
@@ -177,20 +196,62 @@ test.describe('연출 시작 실패', () => {
   });
 });
 
-// P1-R6b: 글꼴이 늦어 3초 안에 시작하지 못하면 대체 동작이 내용을 보이고, 늦게 시작해도 다시 숨기지 않는다.
+// P1-R6d: 실패 처리는 되돌리기가 성공하는 데 기대지 않는다. 운영 코드에 훅을 두지 않고, 초기화 스크립트가
+// 페이지 주 세계의 Document.prototype을 고친다(Playwright 선택자는 격리된 세계에서 돌아 영향받지 않는다).
+test.describe('연출 실패 중 되돌리기도 실패', () => {
+  test('되돌리기가 실패해도 움직임을 끄고 내용을 보인다', async ({ page }) => {
+    await page.addInitScript(() => {
+      const qs = Document.prototype.querySelector;
+      const qsa = Document.prototype.querySelectorAll;
+      Document.prototype.querySelector = function (this: Document, sel: string) {
+        if (sel === '[data-progress-bar]') throw new Error('테스트: 상단 바 실패');
+        return qs.call(this, sel);
+      } as typeof qs;
+      Document.prototype.querySelectorAll = function (this: Document, sel: string) {
+        if (sel === '[data-reveal-claimed]') throw new Error('테스트: 되돌리기 실패');
+        return qsa.call(this, sel);
+      } as typeof qsa;
+    });
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'failed');
+    expect(await hasClass(page, 'motion')).toBe(false);
+    expect(await hasClass(page, 'motion-failed')).toBe(true);
+    expect(await hiddenReveals(page)).toEqual([]);
+  });
+});
+
+// P1-R6c: 3초 대체 동작은 "연출 스크립트가 시작하지 못함"만 맡는다. 글꼴은 최대 1초만 기다린다.
 test.describe('느린 글꼴', () => {
-  test('3초 안에 시작하지 못하면 내용을 보이고, 늦게 시작해도 다시 숨기지 않는다', async ({ page }) => {
+  test('글꼴이 늦어도 오래 기다리지 않고 연출을 시작한다', async ({ page }) => {
     await page.addInitScript(() => {
       const late = new Promise((resolve) => setTimeout(resolve, 4500));
       Object.defineProperty(document, 'fonts', { configurable: true, get: () => ({ ready: late }) });
     });
     await page.goto('/');
-    await expect.poll(() => hasClass(page, 'motion-failed'), { timeout: 4000 }).toBe(true);
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready', { timeout: 2500 });
+    await page.waitForTimeout(3500); // 3초 대체 동작과 늦은 글꼴 도착을 모두 지난 뒤
+    expect(await hasClass(page, 'motion-failed')).toBe(false);
+    expect(await hasClass(page, 'motion')).toBe(true);
+  });
+});
+
+test.describe('늦은 연출 스크립트', () => {
+  test('스크립트가 3초 안에 시작하지 못하면 내용을 보이고, 늦게 시작해도 다시 숨기지 않는다', async ({ page }) => {
+    await page.route('**/_astro/*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+      await route.continue();
+    });
+    await page.goto('/', { waitUntil: 'commit' });
+    await expect.poll(() => hasClass(page, 'motion-failed'), { timeout: 4500 }).toBe(true);
     expect(await hasClass(page, 'motion')).toBe(false);
     expect(await hiddenReveals(page)).toEqual([]);
     await expect(page.locator('html')).toHaveAttribute('data-motion', 'fallback', { timeout: 8000 });
     expect(await hasClass(page, 'motion')).toBe(false);
     expect(await hiddenReveals(page)).toEqual([]);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect
+      .poll(() => page.locator('[data-progress-bar]').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a))
+      .toBeGreaterThan(0.95);
   });
 });
 
@@ -202,5 +263,30 @@ test.describe('자바스크립트 없음', () => {
     expect(await page.evaluate(() => document.documentElement.className)).not.toContain('js');
     await expect(page.locator('h1')).toBeVisible();
     expect(await hiddenReveals(page)).toEqual([]);
+  });
+});
+
+// P1-R17: 전역 제약 "인쇄 페이지와 PDF에는 움직임 스크립트를 싣지 않는다".
+test('인쇄 페이지는 움직임 스크립트를 싣지 않는다', async ({ request }) => {
+  const html = await (await request.get('/print/')).text();
+  expect(html).not.toMatch(/<script\b/);
+});
+
+// P1-R17: 좁은 폭에서 처음부터 열어도(lite) 끝까지 스크롤하면 모두 보이고, 목차 링크는 24px 이상이다(WCAG 2.5.8).
+test.describe('모바일 폭(lite)', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('처음부터 좁은 폭으로 열어도 끝까지 스크롤하면 모두 보이고, 목차 링크는 24px 이상이다', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
+    await scrollThrough(page);
+    expect(await hiddenReveals(page)).toEqual([]);
+    const boxes = await page
+      .locator('[data-chapter-link]')
+      .evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => ({ w: r.width, h: r.height })));
+    for (const box of boxes) {
+      expect(box.w).toBeGreaterThanOrEqual(24);
+      expect(box.h).toBeGreaterThanOrEqual(24);
+    }
   });
 });

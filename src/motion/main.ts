@@ -11,19 +11,22 @@ declare global {
   }
 }
 
+/** 글꼴을 기다리는 최대 시간. 늦으면 대체 글꼴로 시작하고, 다 받은 뒤 위치를 다시 잰다. */
+const FONT_WAIT_MS = 1000;
+
 export async function start(): Promise<void> {
   const html = document.documentElement;
+  // 3초 안에 시작하지 못해 대체 동작이 이미 내용을 보였다면, 이번 방문은 움직임 없이 그대로 둔다(설계 §5.1).
+  if (html.classList.contains('motion-failed')) {
+    startTopbar();
+    html.dataset.motion = 'fallback';
+    return;
+  }
+  if (window.__motionFallback !== undefined) window.clearTimeout(window.__motionFallback);
   const mm = gsap.matchMedia();
 
   try {
-    await document.fonts.ready;
-    // 3초 안에 시작하지 못해 대체 동작이 이미 내용을 보였다면, 이번 방문은 움직임 없이 그대로 둔다(설계 §5.1).
-    if (html.classList.contains('motion-failed')) {
-      startTopbar();
-      html.dataset.motion = 'fallback';
-      return;
-    }
-    if (window.__motionFallback !== undefined) window.clearTimeout(window.__motionFallback);
+    await Promise.race([document.fonts.ready, new Promise((resolve) => window.setTimeout(resolve, FONT_WAIT_MS))]);
 
     for (const mode of Object.keys(MEDIA) as MotionMode[]) {
       mm.add(MEDIA[mode], () => {
@@ -47,13 +50,18 @@ export async function start(): Promise<void> {
     startTopbar();
     ScrollTrigger.refresh();
     html.dataset.motion = 'ready';
+    // 글꼴이 늦게 도착해 줄바꿈이 달라지면 스크롤 위치를 다시 잰다.
+    document.fonts.ready.then(() => ScrollTrigger.refresh());
   } catch (error) {
-    // 연출이 실패해도 내용은 보여야 한다(설계 §5.1): 만든 연출을 모두 되돌리고 움직임을 끈다.
+    // 연출이 실패해도 내용은 보여야 한다(설계 §5.1). 먼저 움직임을 끄고, 그다음 만든 연출을 되돌린다.
     console.error('[motion] 연출을 시작하지 못했습니다', error);
-    if (window.__motionFallback !== undefined) window.clearTimeout(window.__motionFallback);
-    mm.revert();
     html.classList.remove('motion');
     html.classList.add('motion-failed');
     html.dataset.motion = 'failed';
+    try {
+      mm.revert();
+    } catch (revertError) {
+      console.error('[motion] 연출을 되돌리지 못했습니다', revertError);
+    }
   }
 }
