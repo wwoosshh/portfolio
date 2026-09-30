@@ -125,6 +125,12 @@ img {
   opacity: 1 !important;
 }
 
+/* 연출이 실패한 방문에서는 남은 인라인 상태와 상관없이 내용을 보인다(설계 §5.1). */
+.motion-failed [data-reveal] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

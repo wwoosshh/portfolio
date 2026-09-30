@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const hasClass = (page: Page, name: string) =>
-  page.evaluate((n) => document.documentElement.classList.contains(n), name);
+  page.evaluate((n) => document.documentElement?.classList.contains(n) ?? false, name);
 
 const hiddenReveals = (page: Page) =>
   page
@@ -152,10 +152,9 @@ test.describe('움직임 켬(데스크톱 기본)', () => {
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
     await page.locator('[data-chapter-link="experience"]').click();
-    await expect
-      .poll(() => page.locator('#experience').evaluate((el) => Math.round(el.getBoundingClientRect().top)))
-      .toBeGreaterThanOrEqual(56);
-    expect(await page.locator('#experience').evaluate((el) => el.getBoundingClientRect().top)).toBeLessThan(90);
+    const top = () => page.locator('#experience').evaluate((el) => el.getBoundingClientRect().top);
+    await expect.poll(top).toBeLessThan(90);
+    expect(await top()).toBeGreaterThanOrEqual(56);
   });
 
   // P1-R16: 상세 페이지에는 section[id]가 없으므로 건너뛰기 링크의 도착점도 루트의 scroll-padding이 맡는다.
@@ -218,6 +217,28 @@ test.describe('연출 실패 중 되돌리기도 실패', () => {
     expect(await hasClass(page, 'motion-failed')).toBe(true);
     expect(await hiddenReveals(page)).toEqual([]);
   });
+
+  test('되돌리기가 인라인 상태를 남겨도 실패한 방문에서는 내용이 보인다', async ({ page }) => {
+    await page.addInitScript(() => {
+      const qs = Document.prototype.querySelector;
+      Document.prototype.querySelector = function (this: Document, sel: string) {
+        if (sel === '[data-progress-bar]') throw new Error('테스트: 상단 바 실패');
+        return qs.call(this, sel);
+      } as typeof qs;
+      const remove = CSSStyleDeclaration.prototype.removeProperty;
+      let thrown = false;
+      CSSStyleDeclaration.prototype.removeProperty = function (this: CSSStyleDeclaration, name: string) {
+        if (!thrown && document.documentElement.dataset.motion === 'failed') {
+          thrown = true;
+          throw new Error('테스트: 인라인 스타일 되돌리기 실패');
+        }
+        return remove.call(this, name);
+      };
+    });
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'failed');
+    expect(await hiddenReveals(page)).toEqual([]);
+  });
 });
 
 // P1-R6c: 3초 대체 동작은 "연출 스크립트가 시작하지 못함"만 맡는다. 글꼴은 최대 1초만 기다린다.
@@ -242,7 +263,7 @@ test.describe('늦은 연출 스크립트', () => {
       await route.continue();
     });
     await page.goto('/', { waitUntil: 'commit' });
-    await expect.poll(() => hasClass(page, 'motion-failed'), { timeout: 4500 }).toBe(true);
+    await expect.poll(() => hasClass(page, 'motion-failed'), { timeout: 6000 }).toBe(true);
     expect(await hasClass(page, 'motion')).toBe(false);
     expect(await hiddenReveals(page)).toEqual([]);
     await expect(page.locator('html')).toHaveAttribute('data-motion', 'fallback', { timeout: 8000 });

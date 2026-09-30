@@ -22,8 +22,8 @@ export async function start(): Promise<void> {
     html.dataset.motion = 'fallback';
     return;
   }
-  if (window.__motionFallback !== undefined) window.clearTimeout(window.__motionFallback);
   const mm = gsap.matchMedia();
+  if (window.__motionFallback !== undefined) window.clearTimeout(window.__motionFallback);
 
   try {
     await Promise.race([document.fonts.ready, new Promise((resolve) => window.setTimeout(resolve, FONT_WAIT_MS))]);
