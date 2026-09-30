@@ -1,0 +1,103 @@
+---
+import { formatPeriod } from '../lib/format';
+import type { Project } from '../lib/schema';
+import { deploymentStatus } from '../lib/status';
+import Evidence from './Evidence.astro';
+import Status from './Status.astro';
+
+interface Props {
+  project: { id: string; data: Project };
+  size: 'half' | 'quarter';
+}
+
+const { project, size } = Astro.props;
+const d = project.data;
+const deploy = deploymentStatus(d.deployment);
+const metrics = d.metrics.slice(0, size === 'half' ? 2 : 1);
+---
+<article class:list={['brief', `brief--${size}`]} data-project={project.id}>
+  <header class="brief__head">
+    <h3 class="brief__title">{d.title}</h3>
+    {deploy && <Status view={deploy} />}
+    <p class="brief__meta">{formatPeriod(d.period)} · {d.role} · {d.stack.slice(0, 5).join(', ')}</p>
+  </header>
+  {
+    d.brief && (
+      <dl class="brief__body">
+        <div>
+          <dt>문제</dt>
+          <dd>{d.brief.problem}</dd>
+        </div>
+        <div>
+          <dt>접근</dt>
+          <dd>{d.brief.approach}</dd>
+        </div>
+        <div>
+          <dt>결과</dt>
+          <dd>{d.brief.result}</dd>
+        </div>
+      </dl>
+    )
+  }
+  <ul class="brief__metrics">
+    {
+      metrics.map((m) => (
+        <li>
+          <span>{m.label}</span> <strong class="mono">{m.value}</strong> <Evidence evidence={m.evidence} />
+        </li>
+      ))
+    }
+  </ul>
+</article>
+
+<style>
+  .brief {
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: var(--sp-3);
+    break-inside: avoid;
+  }
+  .brief__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-1) var(--sp-2);
+  }
+  .brief__title {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .brief__meta {
+    flex-basis: 100%;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+  }
+  .brief__body {
+    display: grid;
+    gap: var(--sp-1);
+    margin-top: var(--sp-2);
+  }
+  .brief__body > div {
+    display: grid;
+    grid-template-columns: 10mm minmax(0, 1fr);
+    gap: var(--sp-2);
+  }
+  .brief__body dt {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+  }
+  .brief__metrics {
+    display: grid;
+    gap: var(--sp-1);
+    margin-top: var(--sp-2);
+    font-size: 11px;
+  }
+  .brief__metrics li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--sp-2);
+  }
+</style>

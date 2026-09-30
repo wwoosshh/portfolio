@@ -1,0 +1,108 @@
+---
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/600.css';
+import '../styles/tokens.css';
+import '../styles/global.css';
+import { profile } from '../data/profile';
+
+interface Props {
+  title: string;
+  description: string;
+  noindex?: boolean;
+}
+
+const { title, description, noindex = false } = Astro.props;
+---
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip" href="#content">본문으로 건너뛰기</a>
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a class="site-header__home mono" href="/">~/{profile.name}</a>
+        <nav aria-label="주요 섹션">
+          <ul class="site-nav">
+            <li><a href="/#ml">프로젝트</a></li>
+            <li><a href="/#experience">경력</a></li>
+            <li><a href="/#contact">연락처</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="content" class="container">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <span>© 2026 {profile.name}</span>
+        <span>
+          이 사이트는 AI 코딩 에이전트와 함께 만들었습니다 ·{' '}
+          <a href="https://github.com/wwoosshh/portfolio" target="_blank" rel="noopener noreferrer">소스 ↗</a>
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: -9999px;
+  }
+  .skip:focus {
+    left: var(--sp-4);
+    top: var(--sp-4);
+    background: var(--surface);
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+  }
+  .site-header {
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    min-height: 56px;
+  }
+  .site-header__home {
+    font-size: var(--fs-mono);
+    color: var(--text-2);
+  }
+  .site-nav {
+    display: flex;
+    gap: var(--sp-4);
+    font-size: var(--fs-small);
+  }
+  .site-nav a {
+    color: var(--text-2);
+  }
+  .site-footer {
+    border-top: 1px solid var(--line);
+    margin-top: var(--sp-16);
+  }
+  .site-footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    padding-block: var(--sp-6);
+    font-size: var(--fs-small);
+    color: var(--text-3);
+  }
+</style>

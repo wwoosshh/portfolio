@@ -1,0 +1,81 @@
+---
+import type { TimelineItem } from '../lib/timeline';
+
+interface Props {
+  items: TimelineItem[];
+}
+
+const { items } = Astro.props;
+---
+<ol class="timeline">
+  {
+    items.map((it) => (
+      <li class="timeline__item">
+        <p class="timeline__when">{it.when}</p>
+        <h3 class="timeline__title">{it.title}</h3>
+        {it.subtitle && <p class="timeline__subtitle">{it.subtitle}</p>}
+        {it.bullets.length > 0 && (
+          <ul class="timeline__bullets">
+            {it.bullets.map((b) => (
+              <li>{b}</li>
+            ))}
+          </ul>
+        )}
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .timeline {
+    border-left: 1px solid var(--line-strong);
+    padding-left: var(--sp-4);
+  }
+  .timeline__item {
+    position: relative;
+    padding-bottom: var(--sp-6);
+  }
+  .timeline__item:last-child {
+    padding-bottom: 0;
+  }
+  .timeline__item::before {
+    content: '';
+    position: absolute;
+    left: calc(-1 * var(--sp-4) - 4px);
+    top: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text);
+  }
+  .timeline__when {
+    font-family: var(--font-mono);
+    font-size: var(--fs-tag);
+    color: var(--text-3);
+  }
+  .timeline__title {
+    font-size: var(--fs-body);
+    font-weight: 700;
+  }
+  .timeline__subtitle {
+    font-size: var(--fs-small);
+    color: var(--text-2);
+  }
+  .timeline__bullets {
+    display: grid;
+    gap: var(--sp-1);
+    margin-top: var(--sp-2);
+    font-size: var(--fs-small);
+    color: var(--text-2);
+  }
+  .timeline__bullets li {
+    position: relative;
+    padding-left: var(--sp-3);
+  }
+  .timeline__bullets li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: var(--text-3);
+  }
+</style>

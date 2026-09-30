@@ -1,0 +1,22 @@
+---
+interface Props {
+  id: string;
+  title: string;
+  note?: string;
+}
+
+const { id, title, note } = Astro.props;
+---
+<h2 class="section-header" id={`${id}-title`}>
+  <span aria-hidden="true">// </span>{title}{note && <span class="section-header__note"> — {note}</span>}
+</h2>
+
+<style>
+  .section-header {
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    font-weight: 400;
+    color: var(--text-3);
+    margin-bottom: var(--sp-3);
+  }
+</style>

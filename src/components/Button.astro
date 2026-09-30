@@ -1,0 +1,38 @@
+---
+interface Props {
+  href: string;
+  label: string;
+  external?: boolean;
+  download?: string;
+}
+
+const { href, label, external = false, download } = Astro.props;
+---
+<a
+  class="btn"
+  href={href}
+  download={download}
+  target={external ? '_blank' : undefined}
+  rel={external ? 'noopener noreferrer' : undefined}
+>
+  {label}{external && <span aria-hidden="true">↗</span>}{download && <span aria-hidden="true">↓</span>}
+</a>
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    padding: var(--sp-1) var(--sp-3);
+  }
+  .btn:hover {
+    border-color: var(--line-hover);
+    text-decoration: none;
+  }
+</style>

@@ -1,0 +1,23 @@
+---
+title: monney
+tagline: 실제 한국 주식 시세에 동기화되는 자체 가상 거래소. AI 에이전트와 사람을 같은 자본·같은 도구로 비교하려는 실험 환경이며, 거래소 코어와 사람용 브라우저 화면까지 구현했고 AI 에이전트 실행기는 아직 없습니다
+tier: card
+track: other
+order: 22
+period:
+  start: "2026-09"
+role: 1인 개발 · AI 코딩 에이전트 협업
+stack: [Python, FastAPI, SQLite, pytest]
+repo:
+  visibility: public
+  url: "https://github.com/wwoosshh/monney"
+deployment:
+  state: none
+asOf: 2026-09-29
+metrics:
+  - label: 체결 규칙 (주문 접수 이후 도착한 틱으로만 체결해 미래 참조 편향 차단)
+    value: 다음 틱 체결 + 시장가 슬리피지
+    evidence: "https://github.com/wwoosshh/monney/blob/338761c44cdcb0c16ef1a7ab8e3df80737605597/src/vstock/exchange/fill.py#L23-L73"
+aiCollab: 방향과 판단은 직접 했고, 구현과 문서 작업은 AI 코딩 에이전트(Claude Code)와 함께 했습니다. 커밋 60개(머지 커밋 2개 포함) 모두에 Claude 공동 작성 표기가 있습니다.
+tags: [fintech, simulation]
+---

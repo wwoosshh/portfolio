@@ -1,0 +1,77 @@
+---
+import { formatDate } from '../lib/format';
+import type { Metric } from '../lib/schema';
+import { TONE_TEXT, view } from '../lib/status';
+import Evidence from './Evidence.astro';
+import Status from './Status.astro';
+
+interface Props {
+  metrics: Metric[];
+  asOf: Date;
+}
+
+const { metrics, asOf } = Astro.props;
+---
+<div class="metrics surface">
+  <p class="metrics__asof">{formatDate(asOf)} 기준</p>
+  <ul>
+    {
+      metrics.map((m) => (
+        <li class="metric">
+          <div class="metric__row">
+            <span class="metric__label">{m.label}</span>
+            <span class="metric__value">{m.value}</span>
+          </div>
+          <div class="metric__meta">
+            {m.status && <Status view={view(m.status, TONE_TEXT[m.status])} />}
+            <Evidence evidence={m.evidence} />
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .metrics__asof {
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    color: var(--text-3);
+    margin-bottom: var(--sp-2);
+  }
+  .metric {
+    padding-block: var(--sp-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .metric:last-child {
+    border-bottom: 0;
+  }
+  .metric__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--sp-3);
+    font-size: var(--fs-small);
+  }
+  .metric__value {
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    text-align: right;
+  }
+  .metric__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    margin-top: var(--sp-1);
+  }
+  @media (max-width: 767px) {
+    .metric__row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--sp-1);
+    }
+    .metric__value {
+      text-align: left;
+    }
+  }
+</style>

@@ -1,0 +1,280 @@
+---
+import Button from '../components/Button.astro';
+import Evidence from '../components/Evidence.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import ProjectLine from '../components/ProjectLine.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import Status from '../components/Status.astro';
+import Timeline from '../components/Timeline.astro';
+import Base from '../layouts/Base.astro';
+import { formatDate } from '../lib/format';
+import { projectHref } from '../lib/links';
+import { loadSite } from '../lib/site';
+import { view } from '../lib/status';
+import { buildTimeline } from '../lib/timeline';
+
+const site = await loadSite();
+const { profile } = site;
+const title = `${profile.name} · ${profile.headline.mark} ${profile.headline.rest}`;
+const pdfName = `${profile.name}_포트폴리오.pdf`;
+---
+<Base title={title} description={profile.intro[0]}>
+  <section id="intro" class="intro" aria-labelledby="intro-title">
+    <p class="intro__kicker">~/{profile.name} · {profile.nameEn}</p>
+    <h1 id="intro-title" class="intro__title">
+      <span class="mark">{profile.headline.mark}</span>{' '}
+      {profile.headline.rest}
+    </h1>
+    <div class="intro__lead">{profile.intro.map((text) => <p>{text}</p>)}</div>
+    <div class="intro__actions">
+      <Button href={profile.contact.github} label="GitHub" external />
+      {profile.contact.email && <Button href={`mailto:${profile.contact.email}`} label="이메일" />}
+      <Button href="/portfolio.pdf" label="PDF" download={pdfName} />
+    </div>
+  </section>
+
+  <section id="highlights" aria-labelledby="highlights-title">
+    <SectionHeader id="highlights" title="핵심 성과" note={`${formatDate(profile.asOf)} 기준`} />
+    <ul class="grid">
+      {
+        profile.highlights.map((h) => (
+          <li class="surface highlight">
+            <Status view={view(h.status, h.statusText)} />
+            <p class="highlight__label">{h.label}</p>
+            <p class="highlight__detail">{h.detail}</p>
+            <Evidence evidence={h.evidence} />
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section id="ml" aria-labelledby="ml-title">
+    <SectionHeader id="ml" title="대표 프로젝트 · AI/ML 시스템과 컴파일러" />
+    <div class="grid">{site.ml.map((p) => <ProjectCard project={p} />)}</div>
+  </section>
+
+  <section id="agent-product" aria-labelledby="agent-product-title">
+    <SectionHeader id="agent-product" title="AI 에이전트 · 제품" />
+    <div class="grid">{site.agentProduct.map((p) => <ProjectCard project={p} />)}</div>
+  </section>
+
+  <section id="experience" aria-labelledby="experience-title">
+    <SectionHeader id="experience" title="경력 · 활동" />
+    <Timeline items={buildTimeline(profile)} />
+  </section>
+
+  <section id="how-i-work" aria-labelledby="how-i-work-title">
+    <SectionHeader id="how-i-work" title="일하는 방식" />
+    <ul class="grid">
+      {
+        profile.howIWork.principles.map((p) => (
+          <li class="surface principle">
+            <h3 class="principle__title">{p.title}</h3>
+            <p class="principle__body">{p.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+    <ul class="evidence-list">
+      {
+        profile.howIWork.evidence.map((l) => (
+          <li>
+            <a href={l.url} target="_blank" rel="noopener noreferrer">
+              {l.label} <span aria-hidden="true">↗</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section id="more" aria-labelledby="more-title">
+    <SectionHeader id="more" title="그 밖의 프로젝트" />
+    <div class="grid">{site.cards.map((p) => <ProjectCard project={p} />)}</div>
+    {site.lines.length > 0 && <ul class="lines">{site.lines.map((p) => <ProjectLine project={p} />)}</ul>}
+  </section>
+
+  <section id="skills" aria-labelledby="skills-title">
+    <SectionHeader id="skills" title="기술 스택" note="프로젝트로 증명된 것만" />
+    <dl class="skills">
+      {
+        profile.skills.map((group) => (
+          <div class="skills__group">
+            <dt>{group.group}</dt>
+            <dd>
+              <ul>
+                {group.items.map((item) => (
+                  <li class="skill">
+                    <span class="skill__name">{item.name}</span>
+                    <span class="skill__projects">
+                      {item.projects.map((id) => {
+                        const p = site.byId.get(id)!;
+                        const target = projectHref(p);
+                        return target ? (
+                          <a
+                            href={target.href}
+                            target={target.external ? '_blank' : undefined}
+                            rel={target.external ? 'noopener noreferrer' : undefined}
+                          >
+                            {p.data.title}
+                            {target.external && <span aria-hidden="true"> ↗</span>}
+                          </a>
+                        ) : (
+                          <span>{p.data.title}</span>
+                        );
+                      })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section id="contact" aria-labelledby="contact-title">
+    <SectionHeader id="contact" title="연락처" />
+    <ul class="contact">
+      {
+        profile.contact.email && (
+          <li>
+            <span class="contact__label">이메일</span>
+            <a href={`mailto:${profile.contact.email}`}>{profile.contact.email}</a>
+          </li>
+        )
+      }
+      <li>
+        <span class="contact__label">GitHub</span>
+        <a href={profile.contact.github} target="_blank" rel="noopener noreferrer">
+          {profile.contact.github.replace('https://', '')} <span aria-hidden="true">↗</span>
+        </a>
+      </li>
+    </ul>
+  </section>
+</Base>
+
+<style>
+  section + section {
+    margin-top: var(--sp-16);
+  }
+  .intro {
+    padding-top: var(--sp-16);
+  }
+  .intro__kicker {
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    color: var(--text-3);
+  }
+  .intro__title {
+    font-size: var(--fs-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    margin-top: var(--sp-2);
+  }
+  .intro__lead {
+    display: grid;
+    gap: var(--sp-2);
+    max-width: var(--w-text);
+    margin-top: var(--sp-4);
+    color: var(--text-2);
+  }
+  .intro__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin-top: var(--sp-6);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-2);
+  }
+  .highlight {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+  .highlight__label {
+    font-weight: 700;
+  }
+  .highlight__detail,
+  .principle__body {
+    font-size: var(--fs-small);
+    color: var(--text-2);
+  }
+  .principle__title {
+    font-size: var(--fs-body);
+    font-weight: 700;
+    margin-bottom: var(--sp-1);
+  }
+  .evidence-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2) var(--sp-4);
+    margin-top: var(--sp-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+  }
+  .lines {
+    margin-top: var(--sp-4);
+    border-top: 1px solid var(--line);
+  }
+  .skills {
+    display: grid;
+    gap: var(--sp-4);
+  }
+  .skills__group dt {
+    font-weight: 700;
+    margin-bottom: var(--sp-1);
+  }
+  .skill {
+    display: grid;
+    grid-template-columns: 16rem minmax(0, 1fr);
+    gap: var(--sp-3);
+    padding-block: var(--sp-1);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-small);
+  }
+  .skill__projects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-1) var(--sp-3);
+  }
+  .contact {
+    display: grid;
+    gap: var(--sp-2);
+  }
+  .contact li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-3);
+  }
+  .contact__label {
+    width: 5rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    color: var(--text-3);
+  }
+  @media (max-width: 767px) {
+    section + section {
+      margin-top: var(--sp-12);
+    }
+    .intro {
+      padding-top: var(--sp-12);
+    }
+    .intro__title {
+      font-size: 1.75rem;
+    }
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .skill {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--sp-1);
+    }
+  }
+</style>

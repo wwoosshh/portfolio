@@ -1,0 +1,88 @@
+---
+title: 글(Geul) 프로그래밍 언어
+tagline: 한국어 어순과 조사를 문법으로 쓰는 시스템 언어. 글로 쓴 컴파일러가 자기 자신을 컴파일하고, LLVM이나 C 컴파일러 없이 x86-64 Windows 실행 파일을 직접 만듭니다
+tier: featured
+track: ml
+order: 3
+period:
+  start: "2026-03"
+  end: "2026-09"
+role: 1인 개발 · AI 코딩 에이전트 협업
+stack: [글, Python, x86-64, PE32+, GitHub Actions]
+repo:
+  visibility: public
+  url: "https://github.com/wwoosshh/geul-lang"
+deployment:
+  state: none
+asOf: 2026-09-29
+brief:
+  problem: 모국어 프로그래밍 언어 시도는 대개 키워드 번역이거나, 다른 언어로 옮겨 실행하는 예술 프로젝트라고 방향 검토 문서는 정리합니다. 글은 조사가 인자의 역할을 정하고, 컴파일러가 스스로를 컴파일해 실행 파일을 직접 만드는 언어를 목표로 했습니다.
+  approach: 조사(격)가 인자의 역할을 정하는 언어를 설계하고, 파이썬 참조 구현과 글로 쓴 자체 컴파일러를 함께 키우며 두 구현의 토큰·구문 트리·IR 덤프와 실행 파일 바이트를 비교했습니다.
+  result: C 컴파일러나 LLVM 없이 x86-64 PE 실행 파일을 직접 만들고, 1세대와 2세대 모두 자체 호스팅 고정점에 도달했습니다. 2세대는 수용 테스트 194개를 참조 구현과 자체 컴파일러 양쪽에서 모두 통과했습니다.
+metrics:
+  - label: 자체 호스팅 (1세대)
+    value: 2026-04-02 고정점 달성
+    evidence: "https://github.com/wwoosshh/geul-lang/commit/5c8ab0a"
+  - label: 자체 호스팅 (2세대)
+    value: 2026-09-03 고정점 달성 (자기 컴파일 1·2·3세대 바이트 동일)
+    evidence: "https://github.com/wwoosshh/geul-lang/commit/7ff9a45"
+  - label: 수용 테스트 (2세대, 참조 구현·자체 컴파일러 양쪽)
+    value: 194 / 194
+    evidence: "https://github.com/wwoosshh/geul-lang/blob/e566d187fe311506e0b27c50cca5e0ac5bfb02bc/README.md?plain=1#L72"
+  - label: CI
+    value: 78회 모두 성공
+    status: ok
+    evidence: "https://github.com/wwoosshh/geul-lang/actions"
+links:
+  - label: GitHub 저장소
+    url: "https://github.com/wwoosshh/geul-lang"
+    kind: repo
+  - label: 설계 결정 기록 (D-01 ~ D-45)
+    url: "https://github.com/wwoosshh/geul-lang/blob/v2/docs/02-%EC%84%A4%EA%B3%84%EA%B2%B0%EC%A0%95-%EA%B8%B0%EB%A1%9D.md"
+    kind: doc
+  - label: 설계 결정 기록 6행 (D-01 ~ D-11 확정과 사용자 결정 기록)
+    url: "https://github.com/wwoosshh/geul-lang/blob/e566d187fe311506e0b27c50cca5e0ac5bfb02bc/docs/02-%EC%84%A4%EA%B3%84%EA%B2%B0%EC%A0%95-%EA%B8%B0%EB%A1%9D.md?plain=1#L6"
+    kind: doc
+  - label: 방향 검토 (다른 모국어 언어와의 차이, 2.1절)
+    url: "https://github.com/wwoosshh/geul-lang/blob/e566d187fe311506e0b27c50cca5e0ac5bfb02bc/docs/08-%EB%B0%A9%ED%96%A5-%EA%B2%80%ED%86%A0.md?plain=1#L53-L56"
+    kind: doc
+  - label: 완성 기록
+    url: "https://github.com/wwoosshh/geul-lang/blob/v2/%EC%99%84%EC%84%B1-%EA%B8%B0%EB%A1%9D-2026-09-21.md"
+    kind: doc
+  - label: CI 실행 기록
+    url: "https://github.com/wwoosshh/geul-lang/actions"
+    kind: ci
+aiCollab: '방향과 판단은 직접 했고, 구현과 문서 작업은 AI 코딩 에이전트(Claude Code)와 함께 했습니다. 설계 결정 기록(docs/02)의 2026-09-03 항목은 D-01~D-11 확정을 "사용자 결정: D-04 Python, D-01 동의, 나머지 권고안 채택"이라고 적어 두었습니다. 모든 브랜치와 태그의 커밋 204개 중 199개에 Claude 공동 작성 표기가 있습니다.'
+tags: [compiler, language-design, correctness]
+---
+
+## 문제
+
+모국어로 프로그래밍 언어를 만드는 시도는 대개 영어 기반 언어의 키워드만 번역하거나(문법과 어순은 그대로), 다른 언어로 옮겨 실행하는 예술 프로젝트라고 저장소의 방향 검토 문서는 정리합니다. 글은 한국어의 어순(SOV)과 조사를 문법으로 삼고, 다른 언어로 옮기지 않고 네이티브 실행 파일을 직접 만들며, 컴파일러를 글로 써서 스스로를 컴파일하게 하는 것을 목표로 했습니다.
+
+## 접근
+
+- 조사(격)가 인자의 역할을 정하는 SOV 어순 문법을 설계했습니다. 같은 타입의 인자 둘이 역할이 다른데 호출에서 조사로 구별하지 않으면, 바꿔 써도 조용히 컴파일되는 실수이므로 컴파일러가 오류로 거부합니다(D-30).
+- 파이썬 참조 구현과, 글로 쓴 자체 컴파일러를 함께 키웠습니다. 두 컴파일러의 토큰·구문 트리·IR 덤프와 실행 파일 바이트를 비교하며 단계적으로 옮겼습니다.
+- LLVM이나 C 컴파일러 없이 x86-64 명령을 직접 인코딩하고, PE32+ 실행 파일을 직접 씁니다. 런타임도 C 런타임 없이 글로 썼습니다.
+- 설계 결정은 D-01부터 D-45까지 기록으로 남겼습니다.
+
+## 결과
+
+- 1세대(2026-04-02)와 2세대(2026-09-03) 모두 자체 호스팅 고정점에 도달했습니다. 2세대는 참조 구현이 만든 컴파일러, 그 컴파일러가 자기 소스로 만든 컴파일러, 다시 그것이 만든 컴파일러, 세 세대의 실행 파일 바이트가 같습니다.
+- 2세대의 수용 테스트 194개를 참조 구현과 자체 컴파일러 양쪽에서 모두 통과했습니다.
+
+## 주요 결정
+
+- 1세대는 감사에서 결함이 네 가지 설계 결정(상태 의존 토큰화, 타입 없는 IR, 조용한 실패, 너무 이른 자체호스팅)에서 나온다는 것이 확인되어 종료하고, 그 넷을 설계 단계에서 뒤집어 2세대로 다시 지었습니다.
+- 처음 계획한 상수 접기·죽은 코드 제거·공통 부분식 제거는 컴파일러 자신의 IR에서 측정해 보니 값이 없어(명령 74,122개 중 접을 상수 4개, 죽은 코드 0개) 기각하고, 내부 호출의 34%가 본문 12명령 이하의 작은 함수로 가는 것을 확인해 작은 함수 인라인을 택했습니다(D-31).
+- 활용 방향 세 가지(검토 언어, 핫리로드, 게임 엔진 언어)가 모두 "더 단순한 기존 수단으로 왜 안 되는가"라는 시험에 떨어지자, 1.2.0에서 완성을 선언하고 더 만들지 않기로 했습니다.
+
+## 한계와 다음 단계
+
+- 스스로 "연구·예술 프로젝트"로 분류합니다. 쓸모를 근거로 입증하지 못했고 더 만든다고 생기지도 않는다고 판단해 1.2.0에서 매듭지었습니다.
+- Windows x64 실행 파일만 만들 수 있고, 외부 사용자가 남긴 이슈나 PR은 없습니다.
+
+## AI 협업 방식
+
+방향과 판단은 직접 했고, 구현과 문서 작업은 AI 코딩 에이전트(Claude Code)와 함께 했습니다. 설계 결정 기록(docs/02)의 2026-09-03 항목은 D-01~D-11 확정을 "사용자 결정: D-04 Python, D-01 동의, 나머지 권고안 채택"이라고 적어 두었습니다. 모든 브랜치와 태그의 커밋 204개 중 199개에 Claude 공동 작성 표기가 있습니다.
