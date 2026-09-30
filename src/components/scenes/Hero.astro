@@ -27,10 +27,10 @@ const TICKS = 32;
   </div>
 
   <figure class="hero__oracle panel" aria-labelledby="oracle-caption">
-    <p class="hero__count mono">
+    <p class="hero__count mono" data-reveal>
       <span class="hero__count-label">실행한 프로그램</span>{' '}<strong data-count>약 {runs}</strong>개 · {hero.runs.minutes}분
     </p>
-    <div class="hero__ticks" aria-hidden="true">{Array.from({ length: TICKS }, () => <span class="hero__tick" />)}</div>
+    <div class="hero__ticks" aria-hidden="true" data-reveal>{Array.from({ length: TICKS }, () => <span class="hero__tick" />)}</div>
     <pre class="hero__code mono" data-reveal><code>{hero.sample.code}</code></pre>
     <dl class="hero__rows mono">
       <div class="hero__row" data-reveal>
