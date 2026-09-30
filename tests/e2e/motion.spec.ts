@@ -329,3 +329,81 @@ test.describe('새로 고침(모바일 폭, 스크롤 위치 복원)', () => {
     expect(await hiddenReveals(page)).toEqual([]);
   });
 });
+
+// 읽던 자리: 모드가 바뀌어도(새 모드의 ScrollTrigger가 만들어지며 스크롤 기억이 지워진다, OI-1) 새로 고쳐도(브라우저는 고정 여백이 없는 문서 기준으로 복원한다, OI-1b) 읽던 장이 상단 바 아래에 그대로 있다.
+test.describe('읽던 자리 지키기', () => {
+  const topOf = (page: Page, id: string) => page.locator(`#${id}`).evaluate((el) => el.getBoundingClientRect().top);
+  /**
+   * 장의 위쪽이 고정 상단 바(57px) 바로 아래에 오도록 스크롤하고, 두 프레임을 기다려 읽던 곳 기록이 따라오게 한다.
+   * 스크롤 직후 같은 프레임에 모드가 바뀌는 일은 사람에게는 없다(프레임 하나 분량만 어긋난다).
+   */
+  const readAt = async (page: Page, id: string) => {
+    await page.locator(`#${id}`).evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 57));
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expectAtTop(page, id);
+  };
+  /** 장이 상단 바 바로 아래(0~150px)에 있다. 벗어나면 실제 위치를 보여 준다. */
+  const expectAtTop = (page: Page, id: string) =>
+    expect
+      .poll(async () => {
+        const top = await topOf(page, id);
+        return top >= 0 && top < 150 ? 'top' : Math.round(top);
+      }, { message: `#${id}의 위쪽이 상단 바 아래에 있어야 한다` })
+      .toBe('top');
+  const ready = (page: Page) => expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
+
+  test.describe('움직임 켬(1280×800)', () => {
+    test.use({ viewport: { width: 1280, height: 800 } });
+
+    test('읽던 중 폭이 좁아져 lite가 되어도 읽던 장이 상단 바 아래에 있다', async ({ page }) => {
+      await page.goto('/');
+      await ready(page);
+      await readAt(page, 'experience');
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(page.locator('.pin-spacer')).toHaveCount(0); // lite로 바뀌었다
+      await expectAtTop(page, 'experience');
+    });
+
+    test('덱 아래(기술 스택)를 읽다 새로 고쳐도 그 자리에 있다', async ({ page }) => {
+      await page.goto('/');
+      await ready(page);
+      await readAt(page, 'skills');
+      await page.reload();
+      await ready(page);
+      await expectAtTop(page, 'skills');
+    });
+
+    test('해시(/#experience)로 열어 기술 스택까지 읽다 새로 고치면 해시 자리로 되돌아가지 않는다', async ({ page }) => {
+      await page.goto('/#experience');
+      await ready(page);
+      await readAt(page, 'skills');
+      await page.reload();
+      await ready(page);
+      await expectAtTop(page, 'skills');
+    });
+
+    test('다른 페이지에 갔다가 뒤로 돌아와도 읽던 자리에 있다', async ({ page }) => {
+      await page.goto('/');
+      await ready(page);
+      await readAt(page, 'skills');
+      await page.goto('/projects/asahi/');
+      await page.goBack();
+      await ready(page);
+      await expectAtTop(page, 'skills');
+    });
+  });
+
+  test.describe('움직임 줄임으로 열어 켬으로 바꿈', () => {
+    test.use({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+
+    test('줄임을 끄고 full이 되어도 읽던 장이 상단 바 아래에 있다', async ({ page }) => {
+      await page.goto('/');
+      await ready(page);
+      await expect(page.locator('.pin-spacer')).toHaveCount(0);
+      await readAt(page, 'experience');
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await expect(page.locator('.pin-spacer')).toHaveCount(1); // full로 바뀌어 덱이 고정됐다
+      await expectAtTop(page, 'experience');
+    });
+  });
+});
