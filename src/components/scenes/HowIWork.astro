@@ -1,0 +1,94 @@
+---
+import '../../styles/diagram.css';
+import type { Profile } from '../../lib/schema';
+import SectionHeader from '../SectionHeader.astro';
+
+interface Props {
+  profile: Profile;
+}
+
+const { profile } = Astro.props;
+// 원칙 2·3의 흐름(설계 문서와 구현 계획을 먼저, 테스트를 먼저, 측정으로 확인)을 그린다.
+const STEPS = ['설계 문서', '구현 계획', '테스트 먼저', '구현', '측정·검증'];
+const W = 118;
+const GAP = 22;
+---
+<section id="how-i-work" class="container container--wide" aria-labelledby="how-i-work-title" data-scene="how">
+  <SectionHeader id="how-i-work" title="일하는 방식" />
+  <figure class="how__flow panel">
+    <svg class="dg" viewBox={`0 0 ${STEPS.length * W + (STEPS.length - 1) * GAP + 20} 90`} role="img" aria-labelledby="dg-how-t">
+      <title id="dg-how-t">설계 문서 → 구현 계획 → 테스트 먼저 → 구현 → 측정·검증</title>
+      {
+        STEPS.map((step, i) => (
+          <g class:list={['dg-node', i === STEPS.length - 1 && 'dg-node--accent']} data-pop>
+            <rect x={10 + i * (W + GAP)} y="22" width={W} height="44" rx="6" />
+            <text class="dg-title" x={10 + i * (W + GAP) + 14} y="49">{step}</text>
+          </g>
+        ))
+      }
+      {
+        STEPS.slice(1).map((_, i) => (
+          <path class="dg-line" data-draw d={`M${10 + (i + 1) * W + i * GAP} 44 H${10 + (i + 1) * (W + GAP)}`} />
+        ))
+      }
+    </svg>
+  </figure>
+  <ul class="how__principles">
+    {
+      profile.howIWork.principles.map((p) => (
+        <li class="surface principle" data-reveal>
+          <h3 class="principle__title">{p.title}</h3>
+          <p class="principle__body">{p.body}</p>
+        </li>
+      ))
+    }
+  </ul>
+  <ul class="evidence-list mono" data-reveal>
+    {
+      profile.howIWork.evidence.map((l) => (
+        <li>
+          <a href={l.url} target="_blank" rel="noopener noreferrer">
+            {l.label} <span aria-hidden="true">↗</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .how__flow {
+    padding: var(--sp-4);
+    overflow-x: auto;
+  }
+  .how__flow .dg {
+    min-width: 560px;
+  }
+  .how__principles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-3);
+    margin-top: var(--sp-6);
+  }
+  .principle__title {
+    font-size: var(--fs-body);
+    font-weight: 700;
+    margin-bottom: var(--sp-1);
+  }
+  .principle__body {
+    font-size: var(--fs-small);
+    color: var(--text-2);
+  }
+  .evidence-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2) var(--sp-4);
+    margin-top: var(--sp-4);
+    font-size: var(--fs-mono);
+  }
+  @media (max-width: 1023px) {
+    .how__principles {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

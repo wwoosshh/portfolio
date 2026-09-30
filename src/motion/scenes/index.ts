@@ -4,3 +4,5 @@ import './highlights';
 import './chapter';
 import './project';
 import './deck';
+import './timeline';
+import './how';

@@ -7,6 +7,7 @@ import BuildDeck from '../components/scenes/BuildDeck.astro';
 import ChapterCard from '../components/scenes/ChapterCard.astro';
 import Hero from '../components/scenes/Hero.astro';
 import Highlights from '../components/scenes/Highlights.astro';
+import HowIWork from '../components/scenes/HowIWork.astro';
 import ProjectScene from '../components/scenes/ProjectScene.astro';
 import Base from '../layouts/Base.astro';
 import { projectHref } from '../lib/links';
@@ -40,30 +41,7 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
     <Timeline items={buildTimeline(profile)} />
   </section>
 
-  <section id="how-i-work" class="container" aria-labelledby="how-i-work-title">
-    <SectionHeader id="how-i-work" title="일하는 방식" />
-    <ul class="grid">
-      {
-        profile.howIWork.principles.map((p) => (
-          <li class="surface principle">
-            <h3 class="principle__title">{p.title}</h3>
-            <p class="principle__body">{p.body}</p>
-          </li>
-        ))
-      }
-    </ul>
-    <ul class="evidence-list">
-      {
-        profile.howIWork.evidence.map((l) => (
-          <li>
-            <a href={l.url} target="_blank" rel="noopener noreferrer">
-              {l.label} <span aria-hidden="true">↗</span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
+  <HowIWork profile={profile} />
 
   <section id="more" class="container" aria-labelledby="more-title">
     <SectionHeader id="more" title="그 밖의 프로젝트" />
@@ -145,23 +123,6 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sp-2);
-  }
-  .principle__body {
-    font-size: var(--fs-small);
-    color: var(--text-2);
-  }
-  .principle__title {
-    font-size: var(--fs-body);
-    font-weight: 700;
-    margin-bottom: var(--sp-1);
-  }
-  .evidence-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-2) var(--sp-4);
-    margin-top: var(--sp-3);
-    font-family: var(--font-mono);
-    font-size: var(--fs-mono);
   }
   .lines {
     margin-top: var(--sp-4);
