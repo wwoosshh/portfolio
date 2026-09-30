@@ -7,7 +7,7 @@ interface Props {
 
 const { id, title, note } = Astro.props;
 ---
-<h2 class="section-header" id={`${id}-title`}>
+<h2 class="section-header" id={`${id}-title`} data-reveal>
   <span aria-hidden="true">// </span>{title}{note && <span class="section-header__note"> — {note}</span>}
 </h2>
 

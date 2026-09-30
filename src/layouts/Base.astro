@@ -4,15 +4,19 @@ import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/600.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
+import TopBar from '../components/TopBar.astro';
 import { profile } from '../data/profile';
+import { CHAPTERS } from '../lib/chapters';
 
 interface Props {
   title: string;
   description: string;
   noindex?: boolean;
+  /** true면 main에 container를 붙이지 않는다(홈처럼 장면마다 폭을 정하는 페이지). */
+  bare?: boolean;
 }
 
-const { title, description, noindex = false } = Astro.props;
+const { title, description, noindex = false, bare = false } = Astro.props;
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
 ---
 <!doctype html>
@@ -29,22 +33,24 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
     {canonical && <link rel="canonical" href={canonical} />}
     {canonical && <meta property="og:url" content={canonical} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        d.classList.add('motion');
+        // 연출 스크립트가 3초 안에 시작하지 못하면 숨긴 내용을 되살린다(설계 §5.1).
+        window.__motionFallback = window.setTimeout(function () {
+          d.classList.remove('motion');
+          d.classList.add('motion-failed');
+        }, 3000);
+      })();
+    </script>
   </head>
   <body>
     <a class="skip" href="#content">본문으로 건너뛰기</a>
-    <header class="site-header">
-      <div class="container site-header__inner">
-        <a class="site-header__home mono" href="/">~/{profile.name}</a>
-        <nav aria-label="주요 섹션">
-          <ul class="site-nav">
-            <li><a href="/#ml">프로젝트</a></li>
-            <li><a href="/#experience">경력</a></li>
-            <li><a href="/#contact">연락처</a></li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-    <main id="content" class="container">
+    <TopBar name={profile.name} chapters={CHAPTERS} />
+    <main id="content" class:list={[!bare && 'container']}>
       <slot />
     </main>
     <footer class="site-footer">
@@ -56,6 +62,10 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
         </span>
       </div>
     </footer>
+    <script>
+      import { start } from '../motion/main';
+      start();
+    </script>
   </body>
 </html>
 
@@ -67,33 +77,14 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
   .skip:focus {
     left: var(--sp-4);
     top: var(--sp-4);
+    z-index: 20;
     background: var(--surface);
     padding: var(--sp-2) var(--sp-3);
     border: 1px solid var(--line-strong);
     border-radius: var(--r-sm);
   }
-  .site-header {
-    border-bottom: 1px solid var(--line);
-    background: var(--bg);
-  }
-  .site-header__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-4);
-    min-height: 56px;
-  }
-  .site-header__home {
-    font-size: var(--fs-mono);
-    color: var(--text-2);
-  }
-  .site-nav {
-    display: flex;
-    gap: var(--sp-4);
-    font-size: var(--fs-small);
-  }
-  .site-nav a {
-    color: var(--text-2);
+  main :global(section[id]) {
+    scroll-margin-top: var(--topbar-h);
   }
   .site-footer {
     border-top: 1px solid var(--line);

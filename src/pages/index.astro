@@ -18,8 +18,8 @@ const { profile } = site;
 const title = `${profile.name} · ${profile.headline.mark} ${profile.headline.rest}`;
 const pdfName = `${profile.name}_포트폴리오.pdf`;
 ---
-<Base title={title} description={profile.intro[0]}>
-  <section id="intro" class="intro" aria-labelledby="intro-title">
+<Base title={title} description={profile.intro[0]} bare>
+  <section id="intro" class="intro container" aria-labelledby="intro-title">
     <p class="intro__kicker">~/{profile.name} · {profile.nameEn}</p>
     <h1 id="intro-title" class="intro__title">
       <span class="mark">{profile.headline.mark}</span>{' '}
@@ -33,7 +33,7 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
     </div>
   </section>
 
-  <section id="highlights" aria-labelledby="highlights-title">
+  <section id="highlights" class="container" aria-labelledby="highlights-title">
     <SectionHeader id="highlights" title="핵심 성과" note={`${formatDate(profile.asOf)} 기준`} />
     <ul class="grid">
       {
@@ -49,22 +49,22 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
     </ul>
   </section>
 
-  <section id="ml" aria-labelledby="ml-title">
+  <section id="ml" class="container" aria-labelledby="ml-title">
     <SectionHeader id="ml" title="대표 프로젝트 · AI/ML 시스템과 컴파일러" />
     <div class="grid">{site.ml.map((p) => <ProjectCard project={p} />)}</div>
   </section>
 
-  <section id="agent-product" aria-labelledby="agent-product-title">
+  <section id="agent-product" class="container" aria-labelledby="agent-product-title">
     <SectionHeader id="agent-product" title="AI 에이전트 · 제품" />
     <div class="grid">{site.agentProduct.map((p) => <ProjectCard project={p} />)}</div>
   </section>
 
-  <section id="experience" aria-labelledby="experience-title">
+  <section id="experience" class="container" aria-labelledby="experience-title">
     <SectionHeader id="experience" title="경력 · 활동" />
     <Timeline items={buildTimeline(profile)} />
   </section>
 
-  <section id="how-i-work" aria-labelledby="how-i-work-title">
+  <section id="how-i-work" class="container" aria-labelledby="how-i-work-title">
     <SectionHeader id="how-i-work" title="일하는 방식" />
     <ul class="grid">
       {
@@ -89,13 +89,13 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
     </ul>
   </section>
 
-  <section id="more" aria-labelledby="more-title">
+  <section id="more" class="container" aria-labelledby="more-title">
     <SectionHeader id="more" title="그 밖의 프로젝트" />
     <div class="grid">{site.cards.map((p) => <ProjectCard project={p} />)}</div>
     {site.lines.length > 0 && <ul class="lines">{site.lines.map((p) => <ProjectLine project={p} />)}</ul>}
   </section>
 
-  <section id="skills" aria-labelledby="skills-title">
+  <section id="skills" class="container" aria-labelledby="skills-title">
     <SectionHeader id="skills" title="기술 스택" note="프로젝트로 증명된 것만" />
     <dl class="skills">
       {
@@ -135,7 +135,7 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
     </dl>
   </section>
 
-  <section id="contact" aria-labelledby="contact-title">
+  <section id="contact" class="container" aria-labelledby="contact-title">
     <SectionHeader id="contact" title="연락처" />
     <ul class="contact">
       {
