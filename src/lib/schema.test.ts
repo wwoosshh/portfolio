@@ -169,6 +169,7 @@ describe('profileSchema', () => {
       status: 'ok',
       statusText: 'ok',
       evidence: 'https://github.com/wwoosshh',
+      figure: { value: String(n), unit: '건' },
     })),
     education: [{ school: '청운대학교', major: '컴퓨터공학과', period: { start: '2022-03' }, status: '재학' }],
     experience: [
@@ -197,6 +198,14 @@ describe('profileSchema', () => {
   test('핵심 성과가 3개보다 적으면 실패한다', () => {
     const result = profileSchema.safeParse({ ...validProfile, highlights: validProfile.highlights.slice(0, 2) });
     expect(result.success).toBe(false);
+  });
+
+  test('핵심 성과의 큰 숫자는 숫자 또는 숫자/숫자 형식이다', () => {
+    const bad = {
+      ...validProfile,
+      highlights: validProfile.highlights.map((h) => ({ ...h, figure: { value: '여섯', unit: '건' } })),
+    };
+    expect(profileSchema.safeParse(bad).success).toBe(false);
   });
 
   test('이메일 형식이 아니면 실패한다', () => {

@@ -21,6 +21,7 @@ export const profile = profileSchema.parse({
       status: 'ok',
       statusText: 'triaged 6/6',
       evidence: 'https://github.com/pytorch/pytorch/issues?q=is%3Aissue+author%3Awwoosshh',
+      figure: { value: '6', unit: '건 보고' },
     },
     {
       label: 'vLLM·SGLang 버그 보고',
@@ -28,6 +29,7 @@ export const profile = profileSchema.parse({
       status: 'wait',
       statusText: '수정 PR 리뷰 대기',
       evidence: 'https://github.com/sgl-project/sglang/pull/41239',
+      figure: { value: '2', unit: '개 엔진' },
     },
     {
       label: '자체 컴파일러 자체 호스팅',
@@ -35,6 +37,7 @@ export const profile = profileSchema.parse({
       status: 'ok',
       statusText: 'self-hosted',
       evidence: 'https://github.com/wwoosshh/geul-lang/commit/e566d18',
+      figure: { value: '194/194', unit: '통과' },
     },
     {
       label: 'AI 개발 에이전트 운영',
@@ -42,6 +45,7 @@ export const profile = profileSchema.parse({
       status: 'ok',
       statusText: '81 PRs merged',
       evidence: 'https://github.com/semicollon-club/asahi/pulls?q=is%3Apr+is%3Amerged+base%3Amain',
+      figure: { value: '81', unit: '건 머지' },
     },
   ],
   education: [

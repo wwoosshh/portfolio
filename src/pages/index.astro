@@ -1,16 +1,13 @@
 ---
-import Evidence from '../components/Evidence.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import ProjectLine from '../components/ProjectLine.astro';
 import SectionHeader from '../components/SectionHeader.astro';
-import Status from '../components/Status.astro';
 import Timeline from '../components/Timeline.astro';
 import Hero from '../components/scenes/Hero.astro';
+import Highlights from '../components/scenes/Highlights.astro';
 import Base from '../layouts/Base.astro';
-import { formatDate } from '../lib/format';
 import { projectHref } from '../lib/links';
 import { loadSite } from '../lib/site';
-import { view } from '../lib/status';
 import { buildTimeline } from '../lib/timeline';
 
 const site = await loadSite();
@@ -21,21 +18,7 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
 <Base title={title} description={profile.intro[0]} bare>
   <Hero profile={profile} pdfName={pdfName} />
 
-  <section id="highlights" class="container" aria-labelledby="highlights-title">
-    <SectionHeader id="highlights" title="핵심 성과" note={`${formatDate(profile.asOf)} 기준`} />
-    <ul class="grid">
-      {
-        profile.highlights.map((h) => (
-          <li class="surface highlight">
-            <Status view={view(h.status, h.statusText)} />
-            <p class="highlight__label">{h.label}</p>
-            <p class="highlight__detail">{h.detail}</p>
-            <Evidence evidence={h.evidence} />
-          </li>
-        ))
-      }
-    </ul>
-  </section>
+  <Highlights profile={profile} />
 
   <section id="ml" class="container" aria-labelledby="ml-title">
     <SectionHeader id="ml" title="대표 프로젝트 · AI/ML 시스템과 컴파일러" />
@@ -145,7 +128,8 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
 </Base>
 
 <style>
-  section + section {
+  /* 장면 컴포넌트의 루트 section에는 이 페이지의 범위 표시가 붙지 않으므로, 범위 없이 main의 직계 section끼리 잡는다. */
+  :global(main > section + section) {
     margin-top: var(--sp-16);
   }
   .grid {
@@ -153,15 +137,6 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sp-2);
   }
-  .highlight {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-1);
-  }
-  .highlight__label {
-    font-weight: 700;
-  }
-  .highlight__detail,
   .principle__body {
     font-size: var(--fs-small);
     color: var(--text-2);
@@ -220,7 +195,7 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
     color: var(--text-3);
   }
   @media (max-width: 767px) {
-    section + section {
+    :global(main > section + section) {
       margin-top: var(--sp-12);
     }
     .grid {
