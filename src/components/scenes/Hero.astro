@@ -143,6 +143,12 @@ const TICKS = 32;
     color: var(--text);
     background: transparent;
   }
+  /* 연출이 준비되기 전(data-motion 없음)에는 빈 틀을 숨긴다. 글꼴이 바뀌며 제목 줄이 다시 감기면
+     틀만 먼저 보인 채 밀려 CLS가 된다. 준비되거나 3초 대체 동작으로 .motion이 빠지면 보인다. 내용은 각자 [data-reveal]로 숨어 있다. */
+  :global(.motion:not([data-motion])) .hero__lead,
+  :global(.motion:not([data-motion])) .hero__oracle:not(:focus-within) {
+    opacity: 0;
+  }
   .hero__flag {
     justify-self: start;
     padding: var(--sp-1) var(--sp-2);

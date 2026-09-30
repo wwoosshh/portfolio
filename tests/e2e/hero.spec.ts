@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { hero } from '../../src/data/hero';
 
 test.describe('히어로(움직임 줄임: 최종 상태)', () => {
@@ -83,5 +83,35 @@ test.describe('히어로(스크립트가 시작되기 전)', () => {
     expect(await opacity('.hero__ticks')).toBe(0);
     await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready', { timeout: 8000 });
     await expect.poll(() => opacity('.hero__count'), { timeout: 5000 }).toBe(1);
+  });
+});
+
+// 글꼴이 바뀌며 제목 줄이 다시 감길 때 빈 틀만 먼저 보이면 그 틀이 밀려 CLS가 된다(perf.spec.ts). 연출이 준비되기 전에는 틀을 숨긴다.
+// 스크립트를 늦춰 준비 전 상태를 붙잡는다: motion 클래스는 있고 data-motion은 아직 없다.
+test.describe('히어로(스크립트가 시작되기 전: 빈 틀)', () => {
+  const holdScript = async (page: Page) => {
+    await page.route('**/_astro/*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await route.continue();
+    });
+    await page.goto('/', { waitUntil: 'commit' });
+  };
+  const opacity = (page: Page, sel: string) => page.locator(sel).evaluate((el) => Number(getComputedStyle(el).opacity));
+
+  test('오라클 틀과 소개 묶음은 준비되기 전까지 숨고, 준비되면 보인다', async ({ page }) => {
+    await holdScript(page);
+    await expect.poll(() => opacity(page, '.hero__oracle')).toBe(0);
+    expect(await opacity(page, '.hero__lead')).toBe(0);
+    expect(await page.locator('html').getAttribute('data-motion')).toBeNull();
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready', { timeout: 8000 });
+    expect(await opacity(page, '.hero__oracle')).toBe(1);
+    expect(await opacity(page, '.hero__lead')).toBe(1);
+  });
+
+  test('키보드 초점이 틀 안에 있으면 준비 전에도 틀이 보인다', async ({ page }) => {
+    await holdScript(page);
+    await expect.poll(() => opacity(page, '.hero__oracle')).toBe(0);
+    await page.locator('.hero__oracle a').focus();
+    expect(await opacity(page, '.hero__oracle')).toBe(1);
   });
 });
