@@ -1,0 +1,29 @@
+---
+import { shortRef } from '../lib/format';
+import type { Evidence } from '../lib/schema';
+
+interface Props {
+  evidence: Evidence;
+}
+
+const { evidence } = Astro.props;
+---
+{
+  typeof evidence === 'string' ? (
+    <a class="evidence" href={evidence} target="_blank" rel="noopener noreferrer">
+      근거 → {shortRef(evidence)} <span aria-hidden="true">↗</span>
+    </a>
+  ) : (
+    <span class="evidence evidence--private">근거 → 비공개 저장소 · {evidence.note}</span>
+  )
+}
+
+<style>
+  .evidence {
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+  }
+  .evidence--private {
+    color: var(--text-3);
+  }
+</style>

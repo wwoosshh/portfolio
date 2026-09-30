@@ -1,0 +1,41 @@
+:root {
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --line: #e7e5e4;
+  --line-strong: #d6d3d1;
+  --line-hover: #a8a29e;
+  --text: #1c1917;
+  --text-2: #57534e;
+  --text-3: #78716c;
+  --link: #2563eb;
+  --ok: #15803d;
+  --wait: #b45309;
+  --off: #78716c;
+  --mark: #d9f99d;
+
+  --font-sans: 'Pretendard Variable', Pretendard, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Pretendard Variable', Pretendard, ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  --fs-display: 2.25rem;
+  --fs-h2: 1.5rem;
+  --fs-h3: 1.125rem;
+  --fs-body: 1rem;
+  --fs-small: 0.875rem;
+  --fs-mono: 0.75rem;
+  --fs-tag: 0.6875rem;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+
+  --w-content: 960px;
+  --w-text: 680px;
+}

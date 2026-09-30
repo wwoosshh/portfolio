@@ -1,0 +1,76 @@
+---
+title: inversa-bench
+tagline: 답을 먼저 주고 그 답이 나오는 문제를 "구성"하게 하는 수학 벤치마크. sympy로 기계 채점하고 LLM 심판을 쓰지 않습니다
+tier: featured
+track: ml
+order: 4
+period:
+  start: "2026-06"
+  end: "2026-06"
+role: 1인 개발 · AI 코딩 에이전트 협업
+stack: [Python, sympy, Rasch IRT, 부트스트랩 신뢰구간, OpenRouter]
+repo:
+  visibility: public
+  url: "https://github.com/wwoosshh/inversa-bench"
+deployment:
+  state: none
+asOf: 2026-09-29
+brief:
+  problem: 공개 수학 벤치마크는 학습 데이터에 유출돼 점수가 부풀려질 수 있고, 모델이 강해지면 포화될 수 있습니다.
+  approach: 답을 주고 그 답이 나오는 방정식을 구성하게 하는 역방향 과제를 만들고, 모델이 낸 방정식을 sympy로 기계 검증해 채점했습니다. LLM 심판은 쓰지 않았습니다.
+  result: 59개 모델 리더보드를 만들고, 기존 벤치마크(GSM8K)의 오염 효과 추정 +3.2%와 AIME와의 순위 상관 +0.93(모델 13개)을 측정했습니다. 원래 가설은 기각하고 그대로 보고했습니다.
+metrics:
+  - label: 리더보드 완주 모델 (시도 102개 중)
+    value: 59개 · 7개 패밀리
+    evidence: "https://github.com/wwoosshh/inversa-bench/blob/6f100b7b2f449e0298eb3ee34f781a96c4281a24/README.md?plain=1#L18"
+  - label: 오염 효과 추정 (GSM8K 대 새 문항)
+    value: "+3.2% (95% CI +1.0 ~ +5.7)"
+    evidence: "https://github.com/wwoosshh/inversa-bench/blob/6f100b7b2f449e0298eb3ee34f781a96c4281a24/README.md?plain=1#L15"
+  - label: AIME와 순위 상관 (Spearman, 모델 13개)
+    value: "+0.93 (95% CI +0.65 ~ +1.0)"
+    evidence: "https://github.com/wwoosshh/inversa-bench/blob/6f100b7b2f449e0298eb3ee34f781a96c4281a24/docs/paper/inversa-paper.ko.md?plain=1#L274"
+links:
+  - label: GitHub 저장소
+    url: "https://github.com/wwoosshh/inversa-bench"
+    kind: repo
+  - label: 논문 (한국어)
+    url: "https://github.com/wwoosshh/inversa-bench/blob/main/docs/paper/inversa-paper.ko.md"
+    kind: doc
+  - label: 논문 2.1절 (엄격 채점은 옵트인, 헤드라인 pose 점수의 단서)
+    url: "https://github.com/wwoosshh/inversa-bench/blob/6f100b7b2f449e0298eb3ee34f781a96c4281a24/docs/paper/inversa-paper.ko.md?plain=1#L114-L119"
+    kind: doc
+aiCollab: 방향과 판단은 직접 했고, 구현과 문서 작업은 AI 코딩 에이전트(Claude Code)와 함께 했습니다. 커밋 96개 중 25개에 Claude 공동 작성 표기가 있습니다.
+tags: [evaluation, llm, statistics]
+---
+
+## 문제
+
+공개된 수학 벤치마크는 학습 데이터에 유출되어 점수가 부풀려질 수 있고, 모델이 강해지면 상단이 만점 근처로 포화될 수 있습니다. 그래서 문제를 푸는 대신 구성하게 하는 역방향 과제로 수학 능력을 재 보았습니다.
+
+## 접근
+
+- "문제 → 답"이 아니라 "답 → 그 답이 나오는 문제"를 구성하게 하는 역방향 과제를 만들었습니다. 목표 답을 주고 그 답이 유일한 실근인 방정식을 짓게 하는 과제(pose)와, 무리수 근을 가진 3차식이 주어졌을 때 근이 변환된 값이 되는 새 방정식을 짓게 하는 과제(transform) 두 가지입니다.
+- 모델이 낸 방정식을 sympy로 풀어 유일한 실근이 목표와 같은지 기계 검증해 채점합니다. 사람이나 LLM 심판은 쓰지 않습니다.
+- 유출될 고정 문항을 줄이려고 transform은 무작위 3차식을 쓰고, pose 목표도 옵션으로 시험 때마다 새로 생성할 수 있습니다. 난이도는 프로그램으로 올릴 수 있습니다. 다만 59개 모델 리더보드는 고정된 30문항 은행 두 개로 측정했습니다.
+- 점수를 구간 척도로 옮기는 분석에는 Rasch(1PL) 모형을 쓰고, 격차와 상관에는 부트스트랩 신뢰구간을 붙였습니다.
+
+## 결과
+
+- OpenRouter로 접근할 수 있는 모델을 온도 0으로 한 번씩 측정해, 시도한 102개 중 59개 모델·7개 패밀리의 리더보드를 만들었습니다. 점수(IGS)는 0.18에서 1.00까지 분포합니다.
+- GSM8K와 같은 난이도의 새 문항(GSM-Symbolic)을 비교해, GSM8K의 정확도가 평균 +3.2%(95% CI +1.0 ~ +5.7, 모델 9개 중 8개 양수) 높다는 것을 측정하고 이를 기존 벤치마크의 오염 효과로 해석했습니다. 역방향 과제에서는 교과서에 나오는 친숙한 입력과 무작위 입력의 차이가 +0.0%(모델 7개, 95% CI −10.5 ~ +11.0)로 체계적인 차이가 없었습니다. 다만 표본이 작아 유출될 고정 문항이 없다는 구조적 논거가 주된 근거이고 측정은 보강입니다.
+- 어려운 벤치마크인 AIME와의 순위 상관(Spearman)은 +0.93(모델 13개, 95% CI +0.65 ~ +1.0)이었습니다. 구성 점수가 풀이 능력을 따라간다는 뜻이지만, 아주 약한 모델과 최상위 모델이 양 끝에 고정되어 상관이 부풀 수 있어 두 능력이 같다고까지는 주장하지 않습니다.
+
+## 주요 결정
+
+- 처음 세운 가설은 "문제를 구성하는 능력은 푸는 능력과 별개"였지만, AIME와의 순위 상관이 +0.93으로 구성 능력이 풀이 능력을 따라가는 것으로 나와 이 가설은 기각하고 그대로 보고했습니다. 이 벤치마크의 가치는 새로운 별개 능력이 아니라, 오염에 강하고 자동으로 확장되며 기계로 검증된다는 구조에 있다고 정리했습니다.
+
+## 한계와 다음 단계
+
+- 리더보드는 단일 패스(반복 1회)입니다. 시도한 102개 중 43개는 계정 크레딧 소진과 제공자 비호환 등으로 측정하지 못했고, 추론·대형 모델 10개는 답이 최종 식 전에 잘려 신뢰도가 낮다고 표시했습니다.
+- 격차와 상관은 모델 7~13개로 계산해 신뢰구간이 넓습니다. 오염 격차 +3.2%는 유출 효과와 문항 표면 변화에 대한 취약성을 분리하지 못했습니다.
+- 리더보드 점수(IGS)의 절반인 pose 과제는 관대한(permissive) 채점으로 측정했고, 이 채점은 목표를 그대로 옮겨 쓴 `x = 목표` 같은 1차식도 통과시킵니다. 이를 무효로 하는 엄격 채점(`--pose-no-trivial`)은 옵트인이며 기본은 꺼져 있습니다. 소규모 프로브에서 켜 보니 프런티어-mini 모델의 pose 점수가 절반으로 떨어졌고, 논문은 헤드라인 pose 점수를 이 단서와 함께 읽어야 한다고 적었습니다.
+- 단변수 대수 방정식 구성에만 적용했고, 다른 영역으로의 일반화는 검증하지 못했습니다.
+
+## AI 협업 방식
+
+방향과 판단은 직접 했고, 구현과 문서 작업은 AI 코딩 에이전트(Claude Code)와 함께 했습니다. 커밋 96개 중 25개에 Claude 공동 작성 표기가 있습니다.

@@ -1,0 +1,64 @@
+---
+import { formatDate } from '../lib/format';
+import type { Contribution } from '../lib/schema';
+import { contributionStatus } from '../lib/status';
+import Status from './Status.astro';
+
+interface Props {
+  items: Contribution[];
+  asOf: Date;
+}
+
+const { items, asOf } = Astro.props;
+---
+<div class="contribs">
+  <p class="contribs__asof">{formatDate(asOf)} 기준 · 외부 저장소</p>
+  <ul>
+    {
+      items.map((c) => (
+        <li class="contrib">
+          <div class="contrib__head">
+            <Status view={contributionStatus(c)} />
+            <a class="contrib__ref" href={c.url} target="_blank" rel="noopener noreferrer">
+              {c.repo.split('/')[1]}#{c.number} <span aria-hidden="true">↗</span>
+            </a>
+            <span class="contrib__kind">{c.kind === 'pr' ? 'PR' : '이슈'}</span>
+          </div>
+          <p class="contrib__title">{c.title}</p>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .contribs__asof {
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    color: var(--text-3);
+    margin-bottom: var(--sp-2);
+  }
+  .contrib {
+    padding-block: var(--sp-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .contrib__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-3);
+  }
+  .contrib__ref,
+  .contrib__kind {
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+  }
+  .contrib__kind {
+    color: var(--text-3);
+  }
+  .contrib__title {
+    font-size: var(--fs-small);
+    color: var(--text-2);
+    margin-top: var(--sp-1);
+  }
+</style>

@@ -1,0 +1,72 @@
+---
+title: 맛집큐브 — 맛집 지도·리뷰 서비스
+tagline: 부천·인천·서울 맛집 지도와 리뷰 플랫폼. 자체 도메인, 약관, 검색 엔진 최적화까지 갖춰 런칭을 준비했습니다
+tier: featured
+track: product
+order: 7
+period:
+  start: "2025-09"
+  end: "2026-01"
+role: 1인 개발 · AI 코딩 에이전트 협업
+stack: [React, TypeScript, MUI, Express, Supabase, JWT, Cloudinary, Vercel, Render]
+repo:
+  visibility: public
+  url: "https://github.com/wwoosshh/foodiemap-website"
+deployment:
+  state: down
+  url: "https://www.mzcube.com"
+asOf: 2026-09-29
+brief:
+  problem: 부천·인천·서울 지역의 맛집을 지도와 리뷰로 한곳에서 보여 주는 서비스입니다. 사이트는 스스로를 이렇게 소개합니다. "부천, 인천, 서울 지역 맛집 정보와 리얼 리뷰를 한눈에!"
+  approach: React 프론트엔드와 Express·Supabase 백엔드를 만들고, 홈 화면이 API 4개로 따로 받던 데이터를 통합 API 1개로 묶었습니다. 서버는 이 응답을 만들려고 Supabase 쿼리를 병렬로 실행합니다.
+  result: 2025년 9월 23일부터 2026년 1월 28일까지 두 저장소에서 커밋 445개를 만들었고, 자체 도메인 mzcube.com, 약관·개인정보처리방침, 검색 엔진 최적화, 4개 국어까지 갖춰 런칭을 준비했습니다. 현재 백엔드 서버는 중지 상태입니다.
+metrics:
+  - label: 홈 화면 API 호출 (통합 API로 교체)
+    value: 4개 → 1개
+    evidence: "https://github.com/wwoosshh/foodiemap-website/commit/5b130a1"
+  - label: 웹 저장소 프로덕션 배포
+    value: 302건
+    evidence: "https://api.github.com/repos/wwoosshh/foodiemap-website/deployments?environment=Production&per_page=100"
+links:
+  - label: 웹 저장소
+    url: "https://github.com/wwoosshh/foodiemap-website"
+    kind: repo
+  - label: mzcube.com (서버 중지)
+    url: "https://www.mzcube.com"
+    kind: site
+aiCollab: 방향과 판단은 직접 했고, 구현과 문서 작업은 AI 코딩 에이전트(Claude Code)와 함께 했습니다. 웹·백엔드 두 저장소의 모든 브랜치 커밋 445개 중 404개(웹 299개 중 280개, 백엔드 146개 중 124개)에 Claude 공동 작성 표기가 있습니다. 첫 공동 작성 커밋은 2025년 9월 24일입니다.
+tags: [fullstack, product, performance]
+---
+
+## 문제
+
+부천·인천·서울 지역의 맛집을 지도와 리뷰로 한곳에서 볼 수 있는 서비스를 만드는 것이 목표였습니다. 사이트는 스스로를 이렇게 소개합니다. "부천, 인천, 서울 지역 맛집 정보와 리얼 리뷰를 한눈에!"
+
+## 접근
+
+- React·TypeScript 프론트엔드와 Express·Supabase 백엔드를 만들었습니다.
+- 홈 화면이 API 4개로 따로 받던 데이터(배너·카테고리·맛집 목록 등)를 통합 API 하나(`/api/home/data`)로 묶었습니다(2025-09-30). 서버는 이 응답을 만들 때 Supabase 쿼리를 병렬로 실행합니다.
+- 요청 제한을 전역, 로그인, 가입, 이메일 인증에 따로 두고, helmet 보안 헤더를 적용했습니다.
+- 한글 초성 검색과 자동완성, 카카오·네이버·구글 소셜 로그인, 4개 국어(한국어·영어·일본어·중국어)를 지원하고, 네이버 지도로 맛집 위치를 표시합니다.
+
+## 결과
+
+- 2025년 9월 23일부터 2026년 1월 28일까지(약 4개월) 웹·백엔드 두 저장소에서 커밋 445개(웹 299개, 백엔드 146개)를 만들었습니다.
+- 웹 저장소의 프로덕션 배포 기록은 302건입니다. GitHub의 배포 상태 기록으로는 그중 268건이 성공, 34건이 실패였습니다.
+- 자체 도메인 mzcube.com에 이용약관·개인정보처리방침 페이지와 검색 엔진 최적화(사이트맵, 구조화 데이터)를 갖춰 런칭을 준비했습니다.
+
+## 주요 결정
+
+- 프로젝트 첫날(2025-09-23)에 백엔드 데이터베이스를 MongoDB에서 Supabase(PostgreSQL)로 바꿨습니다.
+- 탈퇴는 계정을 바로 지우지 않고 비활성화해 복구할 수 있게 했습니다(탈퇴 시각을 기록하고 복구 API를 둡니다).
+
+## 한계와 다음 단계
+
+- 지금은 백엔드 서버가 중지되어 있어 맛집 데이터를 불러오지 못합니다.
+- 자동 테스트와 CI가 없습니다. 웹 저장소에는 create-react-app이 만든 예제 테스트 1개만 남아 있고, 백엔드에는 vitest 설정만 있고 테스트 파일이 없습니다.
+- 탈퇴 후 30일이 지나면 계정을 삭제하는 예약 작업(2025-10-18)은, 새 DB 스키마로 바꾸면서(2025-11-15) 삭제 함수를 비활성화해 지금은 삭제하지 않습니다.
+- 실제 사용자는 없습니다.
+
+## AI 협업 방식
+
+방향과 판단은 직접 했고, 구현과 문서 작업은 AI 코딩 에이전트(Claude Code)와 함께 했습니다. 웹·백엔드 두 저장소의 모든 브랜치 커밋 445개 중 404개에 Claude 공동 작성 표기가 있습니다. 첫 공동 작성 커밋은 2025년 9월 24일입니다.

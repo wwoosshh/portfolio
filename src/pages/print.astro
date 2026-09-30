@@ -1,0 +1,137 @@
+---
+import Evidence from '../components/Evidence.astro';
+import ProjectBrief from '../components/ProjectBrief.astro';
+import Status from '../components/Status.astro';
+import Print from '../layouts/Print.astro';
+import { formatDate, formatPeriod, shortRef } from '../lib/format';
+import { projectHref } from '../lib/links';
+import { loadSite } from '../lib/site';
+import { contributionStatus, view } from '../lib/status';
+import { buildTimeline } from '../lib/timeline';
+
+const site = await loadSite();
+const { profile } = site;
+const timeline = buildTimeline(profile);
+const strip = (url: string) => url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+const more = [...site.cards, ...site.lines];
+const evidenceNote = profile.contact.site
+  ? `프로젝트 핵심 수치의 근거는 웹 포트폴리오(${strip(profile.contact.site)})에서 확인할 수 있습니다.`
+  : '프로젝트 핵심 수치의 근거는 웹 포트폴리오에서 확인할 수 있습니다.';
+---
+<Print title={`${profile.name} 포트폴리오`}>
+  <section class="page">
+    <header>
+      <p class="kicker">{profile.nameEn}</p>
+      <h1>
+        {profile.name}{' '}
+        <span class="headline"><span class="mark">{profile.headline.mark}</span> {profile.headline.rest}</span>
+      </h1>
+      {profile.intro.map((t) => <p class="lead">{t}</p>)}
+      <ul class="contact">
+        {profile.contact.email && <li><a href={`mailto:${profile.contact.email}`}>{profile.contact.email}</a></li>}
+        <li><a href={profile.contact.github}>{strip(profile.contact.github)}</a></li>
+        {profile.contact.site && <li><a href={profile.contact.site}>{strip(profile.contact.site)}</a></li>}
+        <li data-private-slot="phone" hidden></li>
+      </ul>
+    </header>
+
+    <h2>핵심 성과 · {formatDate(profile.asOf)} 기준</h2>
+    <ul class="grid2">
+      {
+        profile.highlights.map((h) => (
+          <li class="box">
+            <Status view={view(h.status, h.statusText)} />
+            <p class="strong">{h.label}</p>
+            <p class="small">{h.detail}</p>
+            <Evidence evidence={h.evidence} />
+          </li>
+        ))
+      }
+    </ul>
+
+    <h2>경력 · 활동</h2>
+    <ol class="tl">
+      {
+        timeline.map((t) => (
+          <li>
+            <span class="when">{t.when}</span>
+            <div>
+              <p class="strong">{t.title}</p>
+              {t.subtitle && <p class="small">{t.subtitle}</p>}
+              {t.bullets.length > 0 && (
+                <ul class="bullets">
+                  {t.bullets.map((b) => (
+                    <li>{b}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    <h2>일하는 방식</h2>
+    <ul class="bullets">
+      {profile.howIWork.principles.map((p) => <li><span class="strong">{p.title}</span> — {p.body}</li>)}
+    </ul>
+  </section>
+
+  <section class="page">
+    <h2>대표 프로젝트 · AI/ML 시스템과 컴파일러</h2>
+    <div class="stack">{site.ml.map((p) => <ProjectBrief project={p} size="half" />)}</div>
+  </section>
+
+  <section class="page">
+    <h2>AI 에이전트 · 제품</h2>
+    <div class="stack">{site.agentProduct.map((p) => <ProjectBrief project={p} size="quarter" />)}</div>
+  </section>
+
+  <section class="page">
+    <h2>그 밖의 프로젝트</h2>
+    <ul class="lines">
+      {
+        more.map((p) => {
+          const target = projectHref(p);
+          return (
+            <li>
+              <span class="when">{formatPeriod(p.data.period)}</span>
+              <span>
+                <span class="strong">{p.data.title}</span> — {p.data.tagline}
+                <span class="role">{' · '}{p.data.role}</span>
+                {target && target.external && (
+                  <>
+                    {' · '}
+                    <a href={target.href}>{shortRef(target.href)}</a>
+                  </>
+                )}
+              </span>
+            </li>
+          );
+        })
+      }
+    </ul>
+
+    <h2>기술 스택</h2>
+    <ul class="skills">
+      {profile.skills.map((g) => <li><span class="strong">{g.group}</span> — {g.items.map((i) => i.name).join(', ')}</li>)}
+    </ul>
+
+    <h2>외부 기여 · {formatDate(site.contributions.asOf)} 기준</h2>
+    <ul class="contribs">
+      {
+        site.contributions.items.map((c) => (
+          <li>
+            <Status view={contributionStatus({ ...c, note: undefined })} />
+            <a href={c.url}>{shortRef(c.url)}</a>
+            <span class="small">{c.title}</span>
+            {c.note && <span class="small note">— {c.note}</span>}
+          </li>
+        ))
+      }
+    </ul>
+    <p class="footnote">
+      {evidenceNote} AI 코딩 에이전트와의 협업 여부는 프로젝트마다 역할 표기에 밝혀 두었습니다.
+    </p>
+  </section>
+</Print>

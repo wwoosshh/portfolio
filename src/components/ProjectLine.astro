@@ -1,0 +1,61 @@
+---
+import { formatPeriod } from '../lib/format';
+import { projectHref } from '../lib/links';
+import type { Project } from '../lib/schema';
+
+interface Props {
+  project: { id: string; data: Project };
+}
+
+const { project } = Astro.props;
+const d = project.data;
+const target = projectHref(project);
+---
+<li class="line" data-project={project.id}>
+  <span class="line__period">{formatPeriod(d.period)}</span>
+  <span class="line__body">
+    {
+      target ? (
+        <a
+          href={target.href}
+          target={target.external ? '_blank' : undefined}
+          rel={target.external ? 'noopener noreferrer' : undefined}
+        >
+          {d.title}
+          {target.external && <span aria-hidden="true"> ↗</span>}
+        </a>
+      ) : (
+        <strong>{d.title}</strong>
+      )
+    }
+    <span class="line__tagline"> — {d.tagline}</span>
+    <span class="line__role"> · {d.role}</span>
+  </span>
+</li>
+
+<style>
+  .line {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--sp-3);
+    padding-block: var(--sp-2);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-small);
+  }
+  .line__period {
+    font-family: var(--font-mono);
+    font-size: var(--fs-tag);
+    color: var(--text-3);
+  }
+  .line__tagline,
+  .line__role {
+    color: var(--text-2);
+  }
+  @media (max-width: 767px) {
+    .line {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--sp-1);
+    }
+  }
+</style>

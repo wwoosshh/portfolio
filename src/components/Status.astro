@@ -1,0 +1,27 @@
+---
+import type { StatusView } from '../lib/status';
+
+interface Props {
+  view: StatusView;
+}
+
+const { view } = Astro.props;
+---
+<span class:list={['status', `status--${view.tone}`]}><span aria-hidden="true">{view.symbol}</span> {view.text}</span>
+
+<style>
+  .status {
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    white-space: nowrap;
+  }
+  .status--ok {
+    color: var(--ok);
+  }
+  .status--wait {
+    color: var(--wait);
+  }
+  .status--off {
+    color: var(--off);
+  }
+</style>

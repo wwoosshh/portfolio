@@ -1,0 +1,24 @@
+---
+title: GeulOS
+tagline: AI-네이티브 OS의 참조 구현 시도. QEMU 위의 Linux VM에서 도는 Rust 코어가 화면의 요소를 객체 트리로 다루고, 사용자 클릭과 AI 호출이 같은 이벤트 경로를 지납니다
+tier: card
+track: other
+order: 20
+period:
+  start: "2026-05"
+  end: "2026-06"
+role: 1인 개발 · AI 코딩 에이전트 협업
+stack: [Rust, tokio, QEMU, Alpine Linux, Claude API]
+repo:
+  visibility: public
+  url: "https://github.com/wwoosshh/geul_OS"
+deployment:
+  state: none
+asOf: 2026-09-29
+metrics:
+  - label: AI 대화 효율 개선 (ADR-041, 요약 요청 1건으로 측정)
+    value: "도구 호출 5 → 3회 (−40%) · 응답 지연 32.2 → 23.6초 (−27%)"
+    evidence: "https://github.com/wwoosshh/geul_OS/blob/60d3150dbdc77c8bea087ad123d7b8ba0d426c00/docs/adr/041-ai-chat-efficiency.md?plain=1#L152-L169"
+aiCollab: 방향과 판단은 직접 했고, 구현과 문서 작업은 AI 코딩 에이전트(Claude Code)와 함께 했습니다. 설계 결정 기록(ADR) 36개 중 14개(001~010, 014~017)에는 결정자로 wwoosshh가 적혀 있고, 나머지 22개에는 결정자 항목이 없습니다. 단일 브랜치(main)의 커밋 456개(머지 커밋 2개 포함) 중 397개에 Claude 공동 작성 표기가 있습니다.
+tags: [os, rust, agent]
+---

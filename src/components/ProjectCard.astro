@@ -1,0 +1,127 @@
+---
+import { formatPeriod } from '../lib/format';
+import { projectHref } from '../lib/links';
+import type { Project } from '../lib/schema';
+import { deploymentStatus } from '../lib/status';
+import Evidence from './Evidence.astro';
+import Status from './Status.astro';
+import Tag from './Tag.astro';
+
+interface Props {
+  project: { id: string; data: Project };
+}
+
+const { project } = Astro.props;
+const d = project.data;
+const deploy = deploymentStatus(d.deployment);
+const target = projectHref(project);
+const isDetail = d.tier === 'featured';
+const lead = d.metrics[0];
+---
+<article class="card surface surface--interactive" data-project={project.id}>
+  <h3 class="card__title">
+    {
+      target ? (
+        <a
+          href={target.href}
+          data-detail-link={isDetail ? '' : undefined}
+          target={target.external ? '_blank' : undefined}
+          rel={target.external ? 'noopener noreferrer' : undefined}
+        >
+          {d.title}
+          {target.external && <span aria-hidden="true"> ↗</span>}
+        </a>
+      ) : (
+        d.title
+      )
+    }
+  </h3>
+  {deploy && <Status view={deploy} />}
+  <p class="card__meta">{formatPeriod(d.period)} · {d.role}</p>
+  <p class="card__tagline">{d.tagline}</p>
+  <ul class="card__tags">
+    {
+      d.stack.slice(0, 4).map((s) => (
+        <li>
+          <Tag>{s}</Tag>
+        </li>
+      ))
+    }
+  </ul>
+  {
+    lead && (
+      <p class="card__metric">
+        <span class="card__metric-label">{lead.label}</span> <strong class="mono">{lead.value}</strong>
+      </p>
+    )
+  }
+  {
+    (lead || isDetail) && (
+      <div class="card__foot">
+        {lead ? <Evidence evidence={lead.evidence} /> : <span />}
+        {isDetail && target && (
+          <a class="card__more" href={target.href}>
+            자세히 →
+          </a>
+        )}
+      </div>
+    )
+  }
+</article>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+  .card__title {
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .card__title a {
+    color: var(--text);
+  }
+  .card__meta {
+    font-family: var(--font-mono);
+    font-size: var(--fs-tag);
+    color: var(--text-3);
+  }
+  .card__tagline {
+    font-size: var(--fs-small);
+    color: var(--text-2);
+  }
+  .card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-1);
+  }
+  .card__metric {
+    margin-top: auto;
+    font-size: var(--fs-small);
+  }
+  .card__metric-label {
+    color: var(--text-2);
+  }
+  .card__metric strong {
+    display: inline-block;
+    font-size: var(--fs-mono);
+  }
+  .card__foot {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    margin-top: auto;
+    padding-top: var(--sp-2);
+  }
+  .card__metric + .card__foot {
+    margin-top: 0;
+    padding-top: 0;
+  }
+  .card__more {
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+  }
+</style>
