@@ -25,7 +25,7 @@ const href = `/projects/${project.id}/`;
     <ul class="pscene__metrics">
       {
         d.metrics.map((m) => (
-          <li class="pscene__metric">
+          <li class="pscene__metric" data-reveal>
             <span class="pscene__metric-label">{m.label}</span>
             <strong class="pscene__metric-value mono">{m.value}</strong>
             <Evidence evidence={m.evidence} />
@@ -51,7 +51,7 @@ const href = `/projects/${project.id}/`;
   }
   .pscene__num {
     font-size: var(--fs-mono);
-    color: var(--blue);
+    color: var(--link);
   }
   .pscene__title {
     font-size: var(--fs-display);

@@ -10,7 +10,7 @@ registerScene('project', (root, { mode }) => {
   const panel = root.querySelector<HTMLElement>('.pscene__panel');
   const metrics = Array.from(root.querySelectorAll<HTMLElement>('.pscene__metric'));
   if (!panel) return;
-  claim(...text, panel);
+  claim(...text, panel, ...metrics);
 
   const tl = gsap.timeline();
   tl.fromTo(text, { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.08 })

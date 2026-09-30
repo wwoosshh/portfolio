@@ -63,6 +63,12 @@ describe('디자인 규칙', () => {
     expect(block?.[1]).toMatch(/transition-duration/);
   });
 
+  // 선 파랑(--blue)은 도면의 선·면 색이다. 12px 글씨로는 바탕(--bg)에서 4.39:1이라 4.5:1에 못 미친다. 글씨는 링크 파랑(--link)을 쓴다.
+  test('글씨 색(color)으로 선 파랑(--blue)을 쓰지 않는다', () => {
+    const offenders = styleFiles.filter((f) => /(?<![-\w])color\s*:\s*var\(--blue\)/.test(read(f))).map(rel);
+    expect(offenders).toEqual([]);
+  });
+
   test('모서리 둥글기는 토큰 두 단계와 원형 점만 쓴다', () => {
     const bad = styleFiles.flatMap((f) =>
       [...read(f).matchAll(/border-radius\s*:\s*([^;]+);/g)]
