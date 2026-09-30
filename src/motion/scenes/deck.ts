@@ -1,9 +1,12 @@
 import { gsap, ScrollTrigger } from '../gsap';
 import { topbarOffset } from '../layout';
 import { claim } from '../reveal';
-import { registerScene } from '../registry';
+import { type Cleanup, registerScene } from '../registry';
 import { DURATION, EASE } from '../tokens';
 import { playOnEnter } from '../trigger';
+
+/** 슬라이드를 고정해 가로로 넘기려면 한 슬라이드(수치·근거·도면)가 들어갈 만큼 화면이 높아야 한다. 이보다 낮은 가로 화면(가로 폰 등)은 쌓아서 보여 준다. */
+const PIN_MIN_HEIGHT = 600;
 
 function drawDiagram(slide: HTMLElement): gsap.core.Timeline {
   const pop = slide.querySelectorAll('[data-pop]');
@@ -16,30 +19,29 @@ function drawDiagram(slide: HTMLElement): gsap.core.Timeline {
     .fromTo(fade, { opacity: 0 }, { opacity: 1, stagger: 0.04 }, '>-0.3');
 }
 
-registerScene('deck', (root, { mode }) => {
-  if (mode === 'static') return;
-  const slides = Array.from(root.querySelectorAll<HTMLElement>('.deck__slide'));
-  const texts = slides.map((s) => Array.from(s.querySelectorAll<HTMLElement>('[data-reveal]')));
-  claim(...texts.flat());
+/** 고정 없이 세로로 쌓인 슬라이드를 각자 화면에 들어올 때 한 번 그린다. lite와, 고정하기에는 낮은 화면의 full이 함께 쓴다. */
+function stacked(slides: HTMLElement[], texts: HTMLElement[][]): Cleanup {
+  const tls = slides.map((slide, i) => {
+    const tl = gsap.timeline();
+    tl.fromTo(texts[i], { opacity: 0, y: 16 }, { opacity: 1, y: 0, stagger: 0.06 }).add(drawDiagram(slide), 0.2);
+    return tl;
+  });
+  const triggers = slides.map((slide, i) => playOnEnter(tls[i], { trigger: slide, start: 'top 75%' }));
+  return () => {
+    for (const t of triggers) t.kill();
+    for (const tl of tls) tl.kill();
+  };
+}
 
-  if (mode === 'lite') {
-    const tls = slides.map((slide, i) => {
-      const tl = gsap.timeline();
-      tl.fromTo(texts[i], { opacity: 0, y: 16 }, { opacity: 1, y: 0, stagger: 0.06 }).add(drawDiagram(slide), 0.2);
-      return tl;
-    });
-    const triggers = slides.map((slide, i) => playOnEnter(tls[i], { trigger: slide, start: 'top 75%' }));
-    return () => {
-      for (const t of triggers) t.kill();
-      for (const tl of tls) tl.kill();
-    };
-  }
-
-  // full: 고정하고 가로로 넘긴다. 슬라이드는 기울며 들어오고 나간다(설계 §4.4 강조).
-  const viewport = root.querySelector<HTMLElement>('.deck__viewport');
-  const track = root.querySelector<HTMLElement>('.deck__track');
+/** 고정하고 가로로 넘긴다. 슬라이드는 기울며 들어오고 나간다(설계 §4.4 강조). */
+function pinned(
+  root: HTMLElement,
+  slides: HTMLElement[],
+  texts: HTMLElement[][],
+  viewport: HTMLElement,
+  track: HTMLElement,
+): Cleanup {
   const skip = root.querySelector<HTMLButtonElement>('[data-deck-skip]');
-  if (!viewport || !track) return;
   root.dataset.pinned = '';
   // 배치 폭(offsetWidth)으로 잰다. scrollWidth는 기울어진 마지막 슬라이드의 모서리까지 재서, 끝에서 슬라이드가 15px 덜 온다.
   const distance = () => track.offsetWidth - viewport.clientWidth;
@@ -102,18 +104,30 @@ registerScene('deck', (root, { mode }) => {
   });
 
   // 고정이 끝난 뒤에도 덱은 한 화면 높이로 남는다. 고정 구간의 끝(st.end)까지만 가면 마지막 슬라이드에 머무르므로, 덱이 든 섹션의 다음 섹션으로 간다.
+  // 초점도 그 섹션의 제목으로 옮긴다. 버튼에 남아 있으면 다음 Tab이 덱 안으로 돌아가 스크롤을 끌고 간다.
+  let focused: HTMLElement | null = null;
   const onSkip = () => {
     const next = root.closest('section')?.nextElementSibling;
     const st = move.scrollTrigger;
-    if (next) next.scrollIntoView();
-    else if (st) window.scrollTo({ top: st.end + 2 });
+    if (!next) {
+      if (st) window.scrollTo({ top: st.end + 2 });
+      return;
+    }
+    next.scrollIntoView();
+    focused = next.querySelector<HTMLElement>('h1, h2, h3');
+    if (focused) {
+      focused.tabIndex = -1;
+      focused.focus({ preventScroll: true });
+    }
   };
   skip?.addEventListener('click', onSkip);
 
   // 키보드 초점이 화면 밖 슬라이드로 가면, 잘린 영역을 옆으로 민 것을 되돌리고 그 슬라이드가 보이는 위치로 스크롤한다.
+  // 마우스로 누른 링크는 이미 보이는 곳에 있으므로 스크롤을 옮기지 않는다.
   const onFocus = (event: FocusEvent) => {
+    if (!(event.target instanceof Element) || !event.target.matches(':focus-visible')) return;
     viewport.scrollLeft = 0;
-    const slide = event.target instanceof Element ? event.target.closest<HTMLElement>('.deck__slide') : null;
+    const slide = event.target.closest<HTMLElement>('.deck__slide');
     const st = move.scrollTrigger;
     if (!slide || !st) return;
     const d = distance();
@@ -123,15 +137,42 @@ registerScene('deck', (root, { mode }) => {
   root.addEventListener('focusin', onFocus);
 
   return () => {
-    skip?.removeEventListener('click', onSkip);
-    root.removeEventListener('focusin', onFocus);
-    for (const t of triggers) t.kill();
-    for (const a of anims) {
-      a.scrollTrigger?.kill();
-      a.kill();
+    try {
+      skip?.removeEventListener('click', onSkip);
+      root.removeEventListener('focusin', onFocus);
+      focused?.removeAttribute('tabindex');
+      for (const t of triggers) t.kill();
+      for (const a of anims) {
+        a.scrollTrigger?.kill();
+        a.kill();
+      }
+      move.scrollTrigger?.kill();
+      move.kill();
+    } finally {
+      // 위의 정리가 중간에 실패해도 고정 배치 표시는 반드시 지운다.
+      delete root.dataset.pinned;
     }
-    move.scrollTrigger?.kill();
-    move.kill();
-    delete root.dataset.pinned;
   };
+}
+
+registerScene('deck', (root, { mode }) => {
+  if (mode === 'static') return;
+  const slides = Array.from(root.querySelectorAll<HTMLElement>('.deck__slide'));
+  const texts = slides.map((s) => Array.from(s.querySelectorAll<HTMLElement>('[data-reveal]')));
+
+  if (mode === 'lite') {
+    claim(...texts.flat());
+    return stacked(slides, texts);
+  }
+
+  const viewport = root.querySelector<HTMLElement>('.deck__viewport');
+  const track = root.querySelector<HTMLElement>('.deck__track');
+  if (!viewport || !track) return;
+  claim(...texts.flat());
+
+  // full이라도 화면이 낮으면 고정하지 않고 lite처럼 쌓는다. 높이가 바뀌어 기준을 넘나들면 이 안쪽 컨텍스트만 다시 만든다.
+  const fit = gsap.matchMedia();
+  fit.add(`(min-height: ${PIN_MIN_HEIGHT}px)`, () => pinned(root, slides, texts, viewport, track));
+  fit.add(`not all and (min-height: ${PIN_MIN_HEIGHT}px)`, () => stacked(slides, texts));
+  return () => fit.revert();
 });

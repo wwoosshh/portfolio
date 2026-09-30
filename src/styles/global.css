@@ -131,6 +131,23 @@ img {
   transform: none !important;
 }
 
+/* 도면 부품·덱 슬라이드·타임라인 진행선도 같다. 되돌리기가 중간에 멈춰 인라인 상태가 남아도 최종 모습으로 보인다. */
+.motion-failed [data-pop],
+.motion-failed [data-fade],
+.motion-failed .deck__slide {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.motion-failed [data-draw] {
+  stroke-dasharray: none !important;
+  stroke-dashoffset: 0 !important;
+}
+
+.motion-failed .timeline__progress {
+  transform: scaleY(1) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

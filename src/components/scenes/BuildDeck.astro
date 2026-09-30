@@ -12,7 +12,7 @@ interface Props {
 const { projects } = Astro.props;
 ---
 <div class="deck" data-scene="deck">
-  <button type="button" class="deck__skip mono" data-deck-skip>건너뛰기 ↓</button>
+  <button type="button" class="deck__skip mono" data-deck-skip aria-label="건너뛰기: 2장 가로 구간">건너뛰기 ↓</button>
   <div class="deck__viewport">
     <ol class="deck__track">
       {
@@ -72,11 +72,13 @@ const { projects } = Astro.props;
     border-radius: var(--r-sm);
     cursor: pointer;
   }
-  .deck[data-pinned] .deck__skip {
+  :global(html.motion) .deck[data-pinned] .deck__skip {
     display: inline-flex;
   }
   .deck__viewport {
+    /* clip은 프로그램이 옆으로 스크롤하는 일(초점·scrollIntoView)도 막는다. 지원하지 않는 브라우저는 hidden으로 자른다. */
     overflow: hidden;
+    overflow: clip;
     /* 슬라이드 폭의 기준. 100vw는 세로 스크롤바 폭까지 포함해 보이는 폭보다 넓다. */
     container-type: inline-size;
   }
@@ -128,13 +130,17 @@ const { projects } = Astro.props;
   .deck__figure {
     padding: var(--sp-4);
   }
-  /* full 모드: 한 화면에 한 장씩 가로로 넘긴다 */
-  .deck[data-pinned] .deck__viewport {
+  /*
+   * full 모드: 한 화면에 한 장씩 가로로 넘긴다.
+   * html.motion이 있을 때만 적용한다. 연출이 실패하면 motion을 먼저 지우므로, 되돌리기가 data-pinned를 남겨도 고정 배치가 이어지지 않는다.
+   */
+  :global(html.motion) .deck[data-pinned] .deck__viewport {
     height: calc(100vh - var(--topbar-h));
+    height: calc(100svh - var(--topbar-h));
     display: flex;
     align-items: center;
   }
-  .deck[data-pinned] .deck__track {
+  :global(html.motion) .deck[data-pinned] .deck__track {
     flex-direction: row;
     gap: 0;
     width: max-content;
@@ -142,8 +148,10 @@ const { projects } = Astro.props;
     margin-inline: 0;
     padding-inline: 0;
   }
-  .deck[data-pinned] .deck__slide {
+  :global(html.motion) .deck[data-pinned] .deck__slide {
+    width: 100vw;
     width: 100cqw;
+    padding-inline: var(--sp-6);
     padding-inline: max(var(--sp-6), calc((100cqw - var(--w-wide)) / 2 + var(--sp-6)));
   }
   @media (max-width: 767px) {

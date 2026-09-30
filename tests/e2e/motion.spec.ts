@@ -241,6 +241,76 @@ test.describe('연출 실패 중 되돌리기도 실패', () => {
   });
 });
 
+// T8-I1: 고정 덱이 만들어진 뒤에 실패해도 덱이 고정 배치로 남아 슬라이드가 옆으로 잘려 나가면 안 된다.
+// 장면이 던지면 그 장면들의 정리 함수는 돌지 않으므로 data-pinned가 남는다. 배치는 motion 클래스가 풀어야 한다.
+// 덱 다음 장면(how)의 선택자에서 던지게 한다. 장면은 Element의 querySelectorAll을 쓴다.
+test.describe('연출 실패(고정 덱이 만들어진 뒤)', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('뒤 장면이 실패해도 모든 슬라이드가 화면 안에 들어오고 도면 부품이 숨지 않는다', async ({ page }) => {
+    await page.addInitScript(() => {
+      const qsa = Element.prototype.querySelectorAll;
+      Element.prototype.querySelectorAll = function (this: Element, sel: string) {
+        if (sel === '.how__flow [data-pop]') throw new Error('테스트: how 장면 실패');
+        return qsa.call(this, sel);
+      } as typeof qsa;
+    });
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'failed');
+    // 방문자는 세로로만 스크롤할 수 있다. 각 슬라이드를 세로로 화면 가운데에 두고 가로 위치를 잰다.
+    const outside = await page.evaluate(() =>
+      Array.from(document.querySelectorAll<HTMLElement>('.deck__slide')).flatMap((slide, i) => {
+        const height = slide.getBoundingClientRect().height;
+        window.scrollTo(0, slide.getBoundingClientRect().top + window.scrollY - (window.innerHeight - height) / 2);
+        const r = slide.getBoundingClientRect();
+        return r.left < 0 || r.right > window.innerWidth ? [`슬라이드 ${i + 1}: ${Math.round(r.left)}..${Math.round(r.right)}`] : [];
+      }),
+    );
+    expect(outside).toEqual([]);
+    const hiddenParts = await page
+      .locator('[data-pop], [data-fade]')
+      .evaluateAll((els) => els.filter((e) => Number(getComputedStyle(e).opacity) < 1).map((e) => e.outerHTML.slice(0, 60)));
+    expect(hiddenParts).toEqual([]);
+  });
+
+  // 되돌리기가 막히면 인라인 상태(슬라이드 기울기·투명도, 도면 부품 투명도, 선 그리기, 진행선 배율)가 남는다.
+  // 그 상태를 직접 만들어 놓고, 실패한 방문의 CSS가 이기는지 본다.
+  test('남은 인라인 상태가 있어도 슬라이드·도면 부품·그려진 선·진행선이 최종 모습이다', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(document, 'fonts', {
+        configurable: true,
+        get: () => ({ ready: Promise.reject(new Error('테스트: 연출 시작 실패')) }),
+      });
+    });
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'failed');
+    const left = await page.evaluate(() => {
+      const all = (sel: string) => Array.from(document.querySelectorAll<HTMLElement | SVGElement>(sel));
+      for (const el of all('[data-pop], [data-fade]')) {
+        el.style.opacity = '0';
+        el.style.transform = 'scale(0.6)';
+      }
+      for (const el of all('.deck__slide')) {
+        el.style.opacity = '0.35';
+        el.style.transform = 'rotate(5deg)';
+      }
+      for (const el of all('[data-draw]')) {
+        el.style.strokeDasharray = '50';
+        el.style.strokeDashoffset = '50';
+      }
+      all('.timeline__progress')[0].style.transform = 'scaleY(0)';
+      const css = (el: Element) => getComputedStyle(el);
+      return {
+        parts: all('[data-pop], [data-fade]').filter((e) => Number(css(e).opacity) < 1 || css(e).transform !== 'none').length,
+        slides: all('.deck__slide').filter((e) => Number(css(e).opacity) < 1 || css(e).transform !== 'none').length,
+        lines: all('[data-draw]').filter((e) => css(e).strokeDasharray !== 'none' || Number.parseFloat(css(e).strokeDashoffset) !== 0).length,
+        progress: new DOMMatrix(css(all('.timeline__progress')[0]).transform).d,
+      };
+    });
+    expect(left).toEqual({ parts: 0, slides: 0, lines: 0, progress: 1 });
+  });
+});
+
 // P1-R6c: 3초 대체 동작은 "연출 스크립트가 시작하지 못함"만 맡는다. 글꼴은 최대 1초만 기다린다.
 test.describe('느린 글꼴', () => {
   test('글꼴이 늦어도 오래 기다리지 않고 연출을 시작한다', async ({ page }) => {
