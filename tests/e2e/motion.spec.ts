@@ -311,3 +311,21 @@ test.describe('모바일 폭(lite)', () => {
     }
   });
 });
+
+test.describe('새로 고침(모바일 폭, 스크롤 위치 복원)', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('아래까지 본 뒤 새로 고쳐도 오류 없이 모두 보인다', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
+    await scrollThrough(page);
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await scrollThrough(page);
+    expect(errors).toEqual([]);
+    expect(await hiddenReveals(page)).toEqual([]);
+  });
+});

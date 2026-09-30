@@ -3,6 +3,7 @@ import { gsap, ScrollTrigger, SplitText } from '../gsap';
 import { claim, reachableStart } from '../reveal';
 import { registerScene } from '../registry';
 import { DURATION, EASE } from '../tokens';
+import { playOnEnter } from '../trigger';
 
 /** full에서 판정 장면이 이어지는 시각(초). 글·오라클 위쪽은 0초에 시작하고, 결과 행은 0.8초에 나타난다. */
 const VERDICT_AT = 0.8;
@@ -74,7 +75,7 @@ registerScene('hero', (root, { mode }) => {
   };
   // lite: 요소 상단이 화면 높이의 at 지점에 닿으면 한 번 재생한다. 이미 닿아 있으면 곧바로 재생된다.
   const playWhenVisible = (tl: gsap.core.Timeline, el: HTMLElement, at: number) => {
-    triggers.push(ScrollTrigger.create({ trigger: el, start: reachableStart(el, at), once: true, animation: tl }));
+    triggers.push(playOnEnter(tl, { trigger: el, start: reachableStart(el, at) }));
   };
 
   if (mode === 'full') {

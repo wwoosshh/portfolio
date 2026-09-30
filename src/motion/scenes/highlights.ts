@@ -3,6 +3,7 @@ import { gsap, ScrollTrigger } from '../gsap';
 import { claim, reachableStart } from '../reveal';
 import { registerScene } from '../registry';
 import { DURATION, EASE } from '../tokens';
+import { playOnEnter } from '../trigger';
 
 /** 숫자가 항목보다 늦게 튕기기 시작하는 시각(초). */
 const FIGURE_AT = 0.1;
@@ -39,14 +40,10 @@ registerScene('highlights', (root, { mode }) => {
       if (counter) tl.add(counter, FIGURE_AT + i * FIGURE_STEP);
     });
     timelines.push(tl);
-    // 타임라인에 붙인 트리거는 GSAP이 한 틱 뒤에야 초기화한다. 이미 지나간 그런 트리거가 넷 이상 남은 채 다른 트리거를 만들면
-    // ScrollTrigger.refresh가 배열을 잘못 읽어 죽는다(히어로의 둘에 항목 둘을 더하면 나타난다). 콜백으로 재생하면 바로 초기화된다.
-    const play = () => tl.play();
     triggers.push(
-      ScrollTrigger.create(
-        oneRow
-          ? { trigger: root, start: 'top 75%', once: true, onEnter: play }
-          : { trigger: group[0], start: reachableStart(group[0], 0.85), once: true, onEnter: play },
+      playOnEnter(
+        tl,
+        oneRow ? { trigger: root, start: 'top 75%' } : { trigger: group[0], start: reachableStart(group[0], 0.85) },
       ),
     );
   }
