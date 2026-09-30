@@ -1,0 +1,20 @@
+<svg class="dg" viewBox="0 0 480 300" role="img" aria-labelledby="dg-mzcube-t dg-mzcube-d">
+  <title id="dg-mzcube-t">맛집큐브 홈 화면의 API 호출</title>
+  <desc id="dg-mzcube-d">홈 화면이 따로 받던 API 4개(배너, 카테고리, 맛집 목록 2번)를 통합 API /api/home/data 하나로 묶었고, 서버는 응답을 만들 때 Supabase 쿼리를 병렬로 실행합니다.</desc>
+  <text class="dg-title" x="16" y="30">이전 · 요청 4개</text>
+  <g class="dg-node" data-pop><rect x="16" y="120" width="76" height="40" rx="6" /><text class="dg-title" x="28" y="145">홈 화면</text></g>
+  <path class="dg-line" data-draw d="M92 132 L140 58" />
+  <path class="dg-line" data-draw d="M92 136 L140 108" />
+  <path class="dg-line" data-draw d="M92 144 L140 172" />
+  <path class="dg-line" data-draw d="M92 148 L140 222" />
+  <g class="dg-node" data-pop><rect x="140" y="42" width="80" height="30" rx="6" /><text class="dg-sub" x="150" y="61">배너</text></g>
+  <g class="dg-node" data-pop><rect x="140" y="92" width="80" height="30" rx="6" /><text class="dg-sub" x="150" y="111">카테고리</text></g>
+  <g class="dg-node" data-pop><rect x="140" y="156" width="80" height="30" rx="6" /><text class="dg-sub" x="150" y="175">맛집 목록</text></g>
+  <g class="dg-node" data-pop><rect x="140" y="206" width="80" height="30" rx="6" /><text class="dg-sub" x="150" y="225">맛집 목록</text></g>
+  <text class="dg-title" data-fade x="262" y="30">이후 · 요청 1개</text>
+  <g class="dg-node" data-pop><rect x="262" y="120" width="76" height="40" rx="6" /><text class="dg-title" x="274" y="145">홈 화면</text></g>
+  <path class="dg-line dg-line--ok" data-draw d="M338 140 H372" />
+  <g class="dg-node dg-node--accent" data-pop><rect x="372" y="112" width="96" height="56" rx="6" /><text class="dg-sub" x="376" y="134">/api/home/data</text><text class="dg-sub" x="376" y="154">쿼리 병렬 실행</text></g>
+  <text class="dg-label" data-fade x="262" y="262">통합 API로 교체</text>
+  <text class="dg-label" data-fade x="262" y="276">(커밋 5b130a1, 2025-09-30)</text>
+</svg>

@@ -1,0 +1,28 @@
+<svg class="dg" viewBox="0 0 480 300" role="img" aria-labelledby="dg-asahi-t dg-asahi-d">
+  <title id="dg-asahi-t">asahi의 권한 구조</title>
+  <desc id="dg-asahi-d">디스코드 메시지는 봇이 받고, 파일·셸 작업은 토큰 하나만 가진 워커가 허브에 아웃바운드로 접속해 대신 실행합니다. 봇은 워커 토큰을 sha256 해시로만 저장하고, GitHub 작업에는 최대 1시간짜리 App 토큰을 발급합니다.</desc>
+  <path class="dg-line" data-draw d="M126 52 H176" />
+  <path class="dg-line" data-draw d="M250 86 V142" />
+  <path class="dg-line" data-draw d="M250 232 V186" />
+  <path class="dg-line" data-draw d="M324 52 H372 V254 H324" />
+  <g class="dg-node" data-pop><rect x="16" y="30" width="110" height="44" rx="6" /><text class="dg-title" x="34" y="57">디스코드</text></g>
+  <g class="dg-node dg-node--accent" data-pop>
+    <rect x="176" y="22" width="148" height="64" rx="6" /><text class="dg-title" x="238" y="48">봇</text>
+    <text class="dg-sub" x="186" y="70">디스코드·DB·모델 자격증명</text>
+  </g>
+  <g class="dg-node" data-pop><rect x="176" y="142" width="148" height="44" rx="6" /><text class="dg-title" x="196" y="169">WebSocket 허브</text></g>
+  <g class="dg-node dg-node--accent" data-pop>
+    <rect x="176" y="232" width="148" height="56" rx="6" /><text class="dg-title" x="232" y="256">워커</text>
+    <text class="dg-sub" x="190" y="276">토큰 하나 · 파일·셸 실행</text>
+  </g>
+  <text class="dg-label" data-fade x="132" y="44">메시지</text>
+  <text class="dg-label" data-fade x="258" y="120">봇이 연다</text>
+  <text class="dg-label" data-fade x="258" y="214">아웃바운드 접속</text>
+  <text class="dg-label" data-fade x="258" y="226">(sha256 해시로 대조)</text>
+  <text class="dg-label" data-fade x="380" y="140">GitHub App</text>
+  <text class="dg-label" data-fade x="380" y="154">토큰(최대 1시간)</text>
+  <text class="dg-sub" data-fade x="16" y="120">파일 도구: 허용 폴더와</text>
+  <text class="dg-sub" data-fade x="16" y="134">작업 폴더, 두 번 검사</text>
+  <text class="dg-sub" data-fade x="16" y="162">DB: 정적 SQL 검사 +</text>
+  <text class="dg-sub" data-fade x="16" y="176">읽기 전용 트랜잭션</text>
+</svg>

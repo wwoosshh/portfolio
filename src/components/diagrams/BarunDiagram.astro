@@ -1,0 +1,27 @@
+---
+const N = 5;
+const size = 12;
+const gap = 4;
+// 이전: 고정 3개 + 고객마다 4개(4N+3). 이후: 고정 2개 + 한 번에 5개(7).
+const before = [
+  ...Array.from({ length: 3 }, (_, i) => ({ x: 20 + i * (size + gap), y: 70, fixed: true })),
+  ...Array.from({ length: N * 4 }, (_, i) => ({ x: 20 + (i % 4) * (size + gap), y: 94 + Math.floor(i / 4) * (size + gap), fixed: false })),
+];
+const after = [
+  ...Array.from({ length: 2 }, (_, i) => ({ x: 290 + i * (size + gap), y: 70, fixed: true })),
+  ...Array.from({ length: 5 }, (_, i) => ({ x: 290 + i * (size + gap), y: 94, fixed: false })),
+];
+---
+<svg class="dg" viewBox="0 0 480 300" role="img" aria-labelledby="dg-barun-t dg-barun-d">
+  <title id="dg-barun-t">바른오더 고객 관리 조회의 쿼리 수</title>
+  <desc id="dg-barun-d">고정 쿼리 3개와 고객마다 4개씩 나가던 조회(4N+3)를 고정 2개와 한 번에 가져오는 5개, 모두 7개로 줄였습니다. 고객이 5명이면 23개에서 7개입니다.</desc>
+  <text class="dg-title" x="20" y="40">이전 · 4N+3</text>
+  <text class="dg-sub" x="20" y="56">고정 3 + 고객마다 4</text>
+  {before.map((b) => <rect class:list={['dg-block', b.fixed && 'dg-block--fixed']} data-pop x={b.x} y={b.y} width={size} height={size} />)}
+  <text class="dg-title" data-fade x="290" y="40">이후 · 7</text>
+  <text class="dg-sub" data-fade x="290" y="56">고정 2 + 한 번에 5</text>
+  {after.map((b) => <rect class:list={['dg-block', b.fixed ? 'dg-block--fixed' : 'dg-block--after']} data-pop x={b.x} y={b.y} width={size} height={size} />)}
+  <path class="dg-line" data-draw d="M110 160 H270" />
+  <path class="dg-head" data-fade d="M270 154 L282 160 L270 166 Z" />
+  <text class="dg-label" data-fade x="20" y="270">고객 5명일 때 23개 → 7개 (커밋 f586b65)</text>
+</svg>

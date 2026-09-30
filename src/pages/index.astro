@@ -3,6 +3,7 @@ import ProjectCard from '../components/ProjectCard.astro';
 import ProjectLine from '../components/ProjectLine.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import Timeline from '../components/Timeline.astro';
+import BuildDeck from '../components/scenes/BuildDeck.astro';
 import ChapterCard from '../components/scenes/ChapterCard.astro';
 import Hero from '../components/scenes/Hero.astro';
 import Highlights from '../components/scenes/Highlights.astro';
@@ -27,9 +28,11 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
     {site.ml.map((p, i) => <ProjectScene project={p} num={`1-${i + 1}`} />)}
   </section>
 
-  <section id="agent-product" class="container" aria-labelledby="agent-product-title">
-    <SectionHeader id="agent-product" title="AI 에이전트 · 제품" />
-    <div class="grid">{site.agentProduct.map((p) => <ProjectCard project={p} />)}</div>
+  <section id="agent-product" aria-labelledby="agent-product-title">
+    <div class="container container--wide">
+      <ChapterCard id="agent-product" num="2장" title="만들고 운영한다" lead="AI 에이전트와 제품" />
+    </div>
+    <BuildDeck projects={site.agentProduct} />
   </section>
 
   <section id="experience" class="container" aria-labelledby="experience-title">

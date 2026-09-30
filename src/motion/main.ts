@@ -49,6 +49,9 @@ export async function start(): Promise<void> {
 
     startTopbar();
     ScrollTrigger.refresh();
+    // 고정 구간이 만드는 여백은 브라우저가 해시 위치로 스크롤한 뒤에 생긴다. 해시가 가리키는 곳으로 다시 스크롤한다.
+    // :target은 브라우저가 해시를 해석한 결과다. decodeURIComponent로 직접 풀면 잘못된 인코딩(#%E0%A4%A)에서 오류가 나 연출 전체가 꺼진다.
+    document.querySelector(':target')?.scrollIntoView();
     html.dataset.motion = 'ready';
     // 글꼴이 늦게 도착해 줄바꿈이 달라지면 스크롤 위치를 다시 잰다.
     document.fonts.ready.then(() => ScrollTrigger.refresh());

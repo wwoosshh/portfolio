@@ -1,0 +1,21 @@
+---
+import '../../styles/diagram.css';
+import AsahiDiagram from './AsahiDiagram.astro';
+import BarunDiagram from './BarunDiagram.astro';
+import MzcubeDiagram from './MzcubeDiagram.astro';
+import NogadaDiagram from './NogadaDiagram.astro';
+
+interface Props {
+  id: string;
+}
+
+const DIAGRAMS = {
+  asahi: AsahiDiagram,
+  'barun-order': BarunDiagram,
+  mzcube: MzcubeDiagram,
+  'nogada-rpg': NogadaDiagram,
+} as const;
+
+const Component = DIAGRAMS[Astro.props.id as keyof typeof DIAGRAMS];
+---
+{Component && <Component />}

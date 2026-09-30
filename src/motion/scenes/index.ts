@@ -3,3 +3,4 @@ import './hero';
 import './highlights';
 import './chapter';
 import './project';
+import './deck';
