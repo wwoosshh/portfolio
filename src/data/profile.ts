@@ -12,6 +12,7 @@ export const profile = profileSchema.parse({
   contact: {
     email: 'nunconnect1@gmail.com',
     github: 'https://github.com/wwoosshh',
+    site: 'https://portfolio-nu-taupe-66.vercel.app',
   },
   highlights: [
     {
