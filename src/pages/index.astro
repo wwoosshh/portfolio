@@ -3,8 +3,10 @@ import ProjectCard from '../components/ProjectCard.astro';
 import ProjectLine from '../components/ProjectLine.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import Timeline from '../components/Timeline.astro';
+import ChapterCard from '../components/scenes/ChapterCard.astro';
 import Hero from '../components/scenes/Hero.astro';
 import Highlights from '../components/scenes/Highlights.astro';
+import ProjectScene from '../components/scenes/ProjectScene.astro';
 import Base from '../layouts/Base.astro';
 import { projectHref } from '../lib/links';
 import { loadSite } from '../lib/site';
@@ -20,9 +22,9 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
 
   <Highlights profile={profile} />
 
-  <section id="ml" class="container" aria-labelledby="ml-title">
-    <SectionHeader id="ml" title="대표 프로젝트 · AI/ML 시스템과 컴파일러" />
-    <div class="grid">{site.ml.map((p) => <ProjectCard project={p} />)}</div>
+  <section id="ml" class="container container--wide" aria-labelledby="ml-title">
+    <ChapterCard id="ml" num="1장" title="정확성" lead="AI/ML 시스템과 컴파일러" />
+    {site.ml.map((p, i) => <ProjectScene project={p} num={`1-${i + 1}`} />)}
   </section>
 
   <section id="agent-product" class="container" aria-labelledby="agent-product-title">
@@ -131,6 +133,10 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
   /* 장면 컴포넌트의 루트 section에는 이 페이지의 범위 표시가 붙지 않으므로, 범위 없이 main의 직계 section끼리 잡는다. */
   :global(main > section + section) {
     margin-top: var(--sp-16);
+  }
+  /* 등장 전 대표작 패널은 오른쪽으로 40px 밀려 있다. 폭 768~1231px에서는 그 밀림이 가로 스크롤을 만들므로 1장 안에서 자른다. */
+  #ml {
+    overflow-x: clip;
   }
   .grid {
     display: grid;

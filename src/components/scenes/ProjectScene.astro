@@ -1,0 +1,110 @@
+---
+import { formatDate, formatPeriod } from '../../lib/format';
+import type { ProjectEntry } from '../../lib/site';
+import Evidence from '../Evidence.astro';
+
+interface Props {
+  project: ProjectEntry;
+  num: string;
+}
+
+const { project, num } = Astro.props;
+const d = project.data;
+const href = `/projects/${project.id}/`;
+---
+<article class="pscene" data-scene="project" data-project={project.id}>
+  <div class="pscene__text">
+    <p class="pscene__num mono" data-reveal>{num}</p>
+    <h3 class="pscene__title" data-reveal><a href={href} data-detail-link>{d.title}</a></h3>
+    <p class="pscene__meta mono" data-reveal>{formatPeriod(d.period)} · {d.role}</p>
+    <p class="pscene__tagline" data-reveal>{d.tagline}</p>
+    <p data-reveal><a class="pscene__more mono" href={href}>자세히 보기 →</a></p>
+  </div>
+  <div class="pscene__panel panel" data-reveal>
+    <p class="pscene__asof mono">{formatDate(d.asOf)} 기준</p>
+    <ul class="pscene__metrics">
+      {
+        d.metrics.map((m) => (
+          <li class="pscene__metric">
+            <span class="pscene__metric-label">{m.label}</span>
+            <strong class="pscene__metric-value mono">{m.value}</strong>
+            <Evidence evidence={m.evidence} />
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</article>
+
+<style>
+  .pscene {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--sp-12);
+    align-items: center;
+    padding-block: var(--sp-16);
+    border-top: 1px solid var(--line);
+  }
+  .pscene__text {
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .pscene__num {
+    font-size: var(--fs-mono);
+    color: var(--blue);
+  }
+  .pscene__title {
+    font-size: var(--fs-display);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .pscene__title a {
+    color: var(--text);
+  }
+  .pscene__meta {
+    font-size: var(--fs-tag);
+    color: var(--text-3);
+  }
+  .pscene__tagline {
+    color: var(--text-2);
+  }
+  .pscene__more {
+    font-size: var(--fs-mono);
+  }
+  .pscene__panel {
+    display: grid;
+    gap: var(--sp-3);
+    padding: var(--sp-6);
+  }
+  .pscene__asof {
+    font-size: var(--fs-tag);
+    color: var(--text-3);
+  }
+  .pscene__metrics {
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .pscene__metric {
+    display: grid;
+    gap: var(--sp-1);
+    padding: var(--sp-3);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+  }
+  .pscene__metric-label {
+    font-size: var(--fs-small);
+    color: var(--text-2);
+  }
+  .pscene__metric-value {
+    font-size: 1.25rem;
+  }
+  @media (max-width: 767px) {
+    .pscene {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--sp-6);
+      padding-block: var(--sp-12);
+    }
+  }
+</style>
