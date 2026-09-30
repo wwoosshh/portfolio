@@ -119,6 +119,11 @@ img {
   opacity: 0;
 }
 
+/* 키보드 초점이 들어온 요소는 등장 전이라도 보인다(초점 표시가 보이도록). 연출은 건드리지 않는다. */
+.motion [data-reveal]:focus-within {
+  opacity: 1 !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

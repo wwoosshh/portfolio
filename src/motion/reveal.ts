@@ -35,17 +35,3 @@ export function revealRemaining(root: ParentNode): void {
     );
   });
 }
-
-/** 키보드 초점이 아직 드러나지 않은 [data-reveal] 안으로 들어오면 그 조상들을 바로 드러낸다(초점 표시가 보이도록). */
-export function revealOnFocus(): void {
-  document.addEventListener('focusin', (event) => {
-    let el = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-reveal]') : null;
-    while (el) {
-      if (Number(getComputedStyle(el).opacity) < 1) {
-        // overwrite: true — 아직 시작하지 않은 등장 연출까지 없애, 나중에 다시 숨었다 나타나지 않게 한다.
-        gsap.to(el, { opacity: 1, y: 0, duration: DURATION.fast, ease: EASE.out, overwrite: true });
-      }
-      el = el.parentElement?.closest<HTMLElement>('[data-reveal]') ?? null;
-    }
-  });
-}
