@@ -133,7 +133,7 @@ test.describe('움직임 켬(데스크톱 기본)', () => {
     await expect(page.locator('html')).toHaveAttribute('data-motion', 'ready');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect.poll(() => hasClass(page, 'motion')).toBe(false);
-    expect(await hiddenReveals(page)).toEqual([]);
+    await expect.poll(() => hiddenReveals(page)).toEqual([]);
   });
 
   // P1-R14: 짧은 마지막 장(연락처)도 맨 아래에서는 현재 장이 된다.
