@@ -1,21 +1,39 @@
 :root {
-  --bg: #fafaf9;
+  /* 바탕 — 종이와 모눈 패널 */
+  --bg: #fbfbf8;
   --surface: #ffffff;
-  --line: #e7e5e4;
-  --line-strong: #d6d3d1;
-  --line-hover: #a8a29e;
-  --text: #1c1917;
-  --text-2: #57534e;
-  --text-3: #78716c;
+  --panel: #f6f7f9;
+  --grid: #e2e7ee;
+
+  /* 선 */
+  --line: #e2e7ee;
+  --line-strong: #cfd6df;
+  --line-hover: #9aa4b2;
+
+  /* 글씨(바탕·표면·패널 모두에서 대비 4.5:1 이상) */
+  --text: #111111;
+  --text-2: #4b5563;
+  --text-3: #626a76;
   --link: #2563eb;
-  --ok: #15803d;
+
+  /* 도면과 상태 */
+  --blue: #2f6fed;
+  --ok: #127a43;
+  --ok-line: #18a058;
+  --ok-bg: #effaf3;
+  --bad: #c4323a;
+  --bad-line: #e5484d;
+  --bad-bg: #fff1f1;
   --wait: #b45309;
-  --off: #78716c;
-  --mark: #d9f99d;
+  --off: #626a76;
+  --mark: #ffe066;
 
   --font-sans: 'Pretendard Variable', Pretendard, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Pretendard Variable', Pretendard, ui-monospace, 'Cascadia Code', Consolas, monospace;
 
+  --fs-hero: clamp(2.5rem, 6vw, 5.5rem);
+  --fs-chapter: clamp(2rem, 5vw, 4.5rem);
+  --fs-figure: clamp(2.25rem, 4vw, 3.5rem);
   --fs-display: 2.25rem;
   --fs-h2: 1.5rem;
   --fs-h3: 1.125rem;
@@ -37,5 +55,15 @@
   --r-md: 10px;
 
   --w-content: 960px;
+  --w-wide: 1200px;
   --w-text: 680px;
+  --topbar-h: 57px;
+
+  /* 움직임 — src/motion/tokens.ts와 같은 값 */
+  --dur-fast: 200ms;
+  --dur-base: 400ms;
+  --dur-slow: 800ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.7, 0, 0.3, 1);
+  --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
