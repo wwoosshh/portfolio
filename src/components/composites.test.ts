@@ -81,6 +81,19 @@ describe('MetricList', () => {
     expect(html).toContain('근거 → vllm#58675');
     expect(html).toContain('status--wait');
   });
+  test('계산한 수치가 없으면 기준일만 적는다', async () => {
+    const html = await container.renderToString(MetricList, {
+      props: { metrics: featured.data.metrics, asOf: featured.data.asOf },
+    });
+    expect(html).toMatch(/<p class="metrics__asof"[^>]*>2026-09-29 기준<\/p>/);
+    expect(html).not.toContain('자동 갱신');
+  });
+  test('계산한 수치가 들어 있으면 그 수치가 매일 자동으로 바뀐다고 밝힌다', async () => {
+    const html = await container.renderToString(MetricList, {
+      props: { metrics: metricsOf(featured, contributions), asOf: featured.data.asOf, live: true },
+    });
+    expect(html).toMatch(/<p class="metrics__asof"[^>]*>2026-09-29 기준 · 기여·릴리스 수치는 매일 자동 갱신<\/p>/);
+  });
 });
 
 describe('ProjectCard', () => {
@@ -107,14 +120,14 @@ describe('ProjectCard', () => {
     expect(html.indexOf('class="card__metric"')).toBeLessThan(html.indexOf('class="card__foot"'));
   });
   // 건수는 매일 바뀌므로 기대값을 데이터에서 계산한 수치로 잡는다.
-  test('기여 데이터에서 계산한 수치가 있으면 프런트매터의 수치보다 앞에 둔다', async () => {
+  test('기여 데이터에서 계산한 수치가 있어도 카드의 대표 수치는 프런트매터의 첫 수치(핵심 결과)다', async () => {
     const html = await container.renderToString(ProjectCard, { props: { project: featured } });
     const lead = metricsOf(featured, contributions)[0];
-    expect(lead.label).toMatch(/^외부 이슈 \(/);
+    expect(lead).toBe(featured.data.metrics[0]);
     const metric = html.match(/<p class="card__metric"[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? '';
-    expect(metric).toContain(lead.label);
-    expect(metric).toContain(lead.value);
-    expect(metric).not.toContain('GSM8K');
+    expect(metric).toContain('GSM8K');
+    expect(metric).toContain('379 → 273 / 500');
+    expect(metric).not.toContain('외부 이슈');
     expect(html).toContain(`근거 → ${shortRef(lead.evidence as string)}`);
   });
   test('수치가 없는 카드는 수치 줄도 근거 줄도 그리지 않는다', async () => {
@@ -126,6 +139,13 @@ describe('ProjectCard', () => {
 });
 
 describe('ProjectScene', () => {
+  test('수치 패널의 기준일: 계산한 수치가 있는 프로젝트만 그 수치가 매일 자동으로 바뀐다고 밝힌다', async () => {
+    const live = await container.renderToString(ProjectScene, { props: { project: featured, num: '1-1' } });
+    expect(live).toMatch(/<p class="pscene__asof mono"[^>]*>2026-09-29 기준 · 기여·릴리스 수치는 매일 자동 갱신<\/p>/);
+    const fixed = await container.renderToString(ProjectScene, { props: { project: staticFeatured, num: '1-4' } });
+    expect(fixed).toMatch(/<p class="pscene__asof mono"[^>]*>2026-09-29 기준<\/p>/);
+    expect(fixed).not.toContain('자동 갱신');
+  });
   test('제목 요소는 기본이 h3이고, headingLevel로 h4가 된다', async () => {
     const byDefault = await container.renderToString(ProjectScene, { props: { project: featured, num: '1-1' } });
     expect(byDefault).toMatch(/<h3 class="pscene__title"/);

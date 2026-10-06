@@ -1,5 +1,5 @@
 ---
-import { formatDate } from '../lib/format';
+import { asOfLabel } from '../lib/live-metrics';
 import type { Metric } from '../lib/schema';
 import { TONE_TEXT, view } from '../lib/status';
 import Evidence from './Evidence.astro';
@@ -8,12 +8,14 @@ import Status from './Status.astro';
 interface Props {
   metrics: Metric[];
   asOf: Date;
+  /** 기여 데이터에서 계산한 수치가 들어 있으면 true. 그 수치가 매일 바뀐다고 기준일 옆에 밝힌다. */
+  live?: boolean;
 }
 
-const { metrics, asOf } = Astro.props;
+const { metrics, asOf, live = false } = Astro.props;
 ---
 <div class="metrics surface">
-  <p class="metrics__asof">{formatDate(asOf)} 기준</p>
+  <p class="metrics__asof">{asOfLabel(asOf, live)}</p>
   <ul>
     {
       metrics.map((m) => (

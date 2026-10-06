@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import raw from '../../src/data/contributions.json' with { type: 'json' };
 import { profile } from '../../src/data/profile';
 
 test.describe('핵심 성과(움직임 줄임)', () => {
@@ -22,6 +23,14 @@ test.describe('핵심 성과(움직임 줄임)', () => {
       await expect(page.locator('#highlights .hl__figure').nth(i)).toHaveText(`${h.figure.value} ${h.figure.unit}`);
     }
   });
+});
+
+// 핵심 성과의 숫자는 매일 갱신되는 기여 데이터에서 계산한다. 머리글의 기준일이 정적인 날짜를 그대로 말하면 안 된다(P2-R3).
+test('핵심 성과 머리글은 기여 데이터의 마지막 변경 날짜와 매일 자동 갱신을 밝힌다', async ({ page }) => {
+  await page.goto('/');
+  const note = page.locator('#highlights .section-header__note');
+  await expect(note).toContainText(`${raw.asOf.slice(0, 10)} 기준 · 매일 자동 갱신`);
+  await expect(note).not.toContainText('2026-09-30');
 });
 
 test.describe('핵심 성과(움직임 켬)', () => {

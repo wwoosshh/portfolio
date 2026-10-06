@@ -59,6 +59,11 @@ test('인쇄: 다른 개발자의 수정 PR은 같은 행에 `다른 개발자 �
   }
 });
 
+test('인쇄: 핵심 성과의 기준일은 기여 데이터의 마지막 변경 날짜다', async ({ page }) => {
+  await page.goto('/print/');
+  await expect(page.locator('.print h2').first()).toHaveText(`핵심 성과 · ${raw.asOf.slice(0, 10)} 기준`);
+});
+
 test('인쇄: 표 아래에 매일 자동 확인과 마지막 변경 날짜가 있다', async ({ page }) => {
   await page.goto('/print/');
   await expect(page.locator('.print .asof')).toHaveText(`매일 자동 확인 · 마지막 변경 ${raw.asOf.slice(0, 10)}`);

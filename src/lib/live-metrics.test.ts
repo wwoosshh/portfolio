@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { liveMetrics, metricsOf } from './live-metrics';
+import { asOfLabel, liveMetrics, metricsOf } from './live-metrics';
 import { contributionsSchema, type Contributions } from './schema';
 
 const FUZZER = 'torch-compile-fuzzer';
@@ -147,15 +147,36 @@ describe('그 밖의 프로젝트', () => {
 });
 
 describe('metricsOf', () => {
-  const staticMetric = { label: '설계 결정 기록 (ADR)', value: '12개', evidence: 'https://github.com/semicollon-club/asahi/tree/main/docs/decisions' };
-  test('계산한 수치를 앞에 두고 프런트매터의 수치를 뒤에 붙인다', () => {
+  const metric = (label: string) => ({ label, value: '1', evidence: 'https://github.com/semicollon-club/asahi/tree/main/docs/decisions' });
+  const [headline, second, third] = [metric('핵심 결과'), metric('둘째'), metric('셋째')];
+  test('프런트매터의 첫 수치(핵심 결과)를 맨 앞에 두고, 그 뒤에 계산한 수치를, 이어서 나머지 수치를 둔다', () => {
     const data = fixture([]);
-    const out = metricsOf({ id: 'asahi', data: { metrics: [staticMetric] } }, data);
-    expect(out).toEqual([...liveMetrics('asahi', data), staticMetric]);
-    expect(out[0].label).toContain('main에 병합된 PR');
-    expect(out.at(-1)).toBe(staticMetric);
+    const out = metricsOf({ id: 'asahi', data: { metrics: [headline, second, third] } }, data);
+    expect(out).toEqual([headline, ...liveMetrics('asahi', data), second, third]);
+    expect(out[0]).toBe(headline);
+    expect(out[1].label).toContain('main에 병합된 PR');
+  });
+  test('프런트매터 수치가 하나뿐이면 그 뒤에 계산한 수치가 온다', () => {
+    const data = fixture([]);
+    expect(metricsOf({ id: 'asahi', data: { metrics: [headline] } }, data)).toEqual([headline, ...liveMetrics('asahi', data)]);
+  });
+  test('프런트매터 수치가 없으면 계산한 수치만 쓴다', () => {
+    const data = fixture([]);
+    expect(metricsOf({ id: 'asahi', data: { metrics: [] } }, data)).toEqual(liveMetrics('asahi', data));
   });
   test('계산할 수치가 없는 프로젝트는 프런트매터의 수치 그대로', () => {
-    expect(metricsOf({ id: 'geul-lang', data: { metrics: [staticMetric] } }, fixture([]))).toEqual([staticMetric]);
+    expect(metricsOf({ id: 'geul-lang', data: { metrics: [headline, second] } }, fixture([]))).toEqual([headline, second]);
+  });
+  test('수치가 하나도 없으면 빈 목록', () => {
+    expect(metricsOf({ id: 'geul-lang', data: { metrics: [] } }, fixture([]))).toEqual([]);
+  });
+});
+
+describe('asOfLabel', () => {
+  test('계산한 수치가 없으면 기준일만', () => {
+    expect(asOfLabel(new Date('2026-09-30'), false)).toBe('2026-09-30 기준');
+  });
+  test('계산한 수치가 들어 있으면 그 수치가 매일 자동으로 바뀐다는 말을 덧붙인다', () => {
+    expect(asOfLabel(new Date('2026-09-30'), true)).toBe('2026-09-30 기준 · 기여·릴리스 수치는 매일 자동 갱신');
   });
 });

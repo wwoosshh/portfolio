@@ -1,7 +1,7 @@
 ---
 import { contributions } from '../../data/contributions';
-import { formatDate, formatPeriod } from '../../lib/format';
-import { metricsOf } from '../../lib/live-metrics';
+import { formatPeriod } from '../../lib/format';
+import { asOfLabel, liveMetrics, metricsOf } from '../../lib/live-metrics';
 import type { ProjectEntry } from '../../lib/site';
 import Evidence from '../Evidence.astro';
 
@@ -16,6 +16,7 @@ const { project, num, headingLevel = 3 } = Astro.props;
 const Heading = `h${headingLevel}` as 'h3' | 'h4';
 const d = project.data;
 const metrics = metricsOf(project, contributions);
+const live = liveMetrics(project.id, contributions).length > 0;
 const href = `/projects/${project.id}/`;
 ---
 <article class="pscene" data-scene="project" data-project={project.id}>
@@ -27,7 +28,7 @@ const href = `/projects/${project.id}/`;
     <p data-reveal><a class="pscene__more mono" href={href}>자세히 보기 →</a></p>
   </div>
   <div class="pscene__panel panel" data-reveal>
-    <p class="pscene__asof mono">{formatDate(d.asOf)} 기준</p>
+    <p class="pscene__asof mono">{asOfLabel(d.asOf, live)}</p>
     <ul class="pscene__metrics">
       {
         metrics.map((m) => (

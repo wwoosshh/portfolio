@@ -1,4 +1,5 @@
 ---
+import { contributions } from '../../data/contributions';
 import { formatDate } from '../../lib/format';
 import type { Profile } from '../../lib/schema';
 import { view } from '../../lib/status';
@@ -13,7 +14,7 @@ interface Props {
 const { profile } = Astro.props;
 ---
 <section id="highlights" class="container container--wide" aria-labelledby="highlights-title" data-scene="highlights">
-  <SectionHeader id="highlights" title="핵심 성과" note={`${formatDate(profile.asOf)} 기준`} />
+  <SectionHeader id="highlights" title="핵심 성과" note={`${formatDate(contributions.asOf)} 기준 · 매일 자동 갱신`} />
   <ul class="hl">
     {
       profile.highlights.map((h) => (

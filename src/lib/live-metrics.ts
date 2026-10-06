@@ -1,4 +1,5 @@
 import { byRepo, shortRepo, tally } from './contribution-stats';
+import { formatDate } from './format';
 import type { Contributions, Metric, Project } from './schema';
 
 // 상태가 바뀌는 프로젝트 수치는 MDX에 적지 않고 기여 데이터에서 계산한다(설계 2026-10-06 §4).
@@ -73,7 +74,19 @@ export function liveMetrics(projectId: string, data: Contributions): Metric[] {
   return [];
 }
 
-/** 계산한 수치를 앞에 두고, 프런트매터에 적은 수치(상태가 바뀌지 않는 값)를 뒤에 붙인다. */
+/**
+ * 프로젝트의 핵심 수치 목록. 프런트매터의 첫 수치(그 프로젝트의 핵심 결과)를 맨 앞에 두고, 그 뒤에 계산한 수치를, 이어서 나머지 수치를 둔다.
+ * 건수처럼 매일 바뀌는 값이 맨 앞에 서면 핵심 결과를 가린다(P2-R4). 프런트매터 수치가 없으면 계산한 수치만 쓴다.
+ */
 export function metricsOf(entry: { id: string; data: Pick<Project, 'metrics'> }, data: Contributions): Metric[] {
-  return [...liveMetrics(entry.id, data), ...entry.data.metrics];
+  const [headline, ...rest] = entry.data.metrics;
+  const live = liveMetrics(entry.id, data);
+  return headline ? [headline, ...live, ...rest] : live;
+}
+
+/** 수치 묶음 위에 붙이는 말: 계산한 수치가 들어 있는 묶음만 그 수치가 매일 바뀐다고 밝힌다(P2-R3). */
+export const LIVE_NOTE = '기여·릴리스 수치는 매일 자동 갱신';
+
+export function asOfLabel(asOf: Date, live: boolean): string {
+  return live ? `${formatDate(asOf)} 기준 · ${LIVE_NOTE}` : `${formatDate(asOf)} 기준`;
 }
