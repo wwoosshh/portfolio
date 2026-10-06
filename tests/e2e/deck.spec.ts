@@ -119,8 +119,8 @@ test.describe('2장 가로 구간(낮은 화면)', () => {
       await expect(page.locator('.deck')).not.toHaveAttribute('data-pinned');
       await expect(page.locator('[data-deck-skip]')).toBeHidden();
       const slides = page.locator('.deck__slide');
-      await expect(slides).toHaveCount(4);
-      for (let i = 0; i < 4; i++) {
+      await expect(slides).toHaveCount(3);
+      for (let i = 0; i < 3; i++) {
         for (const part of ['.deck__metrics', '.evidence', '.deck__figure']) {
           const el = slides.nth(i).locator(part).first();
           await el.scrollIntoViewIfNeeded();
@@ -188,7 +188,7 @@ test.describe('2장 가로 구간(모바일)', () => {
         label: el.getAttribute('aria-label') ?? '',
       })),
     );
-    expect(figures).toHaveLength(4);
+    expect(figures).toHaveLength(3);
     for (const f of figures) {
       expect(f.svg).toBeGreaterThanOrEqual(480);
       expect(f).toMatchObject({ scrolls: true, overflowX: 'auto', tabindex: '0', role: 'group' });
@@ -200,11 +200,11 @@ test.describe('2장 가로 구간(모바일)', () => {
 test.describe('2장 도면(움직임 줄임)', () => {
   test.use({ reducedMotion: 'reduce' });
 
-  test('슬라이드 4개가 도면·상태·근거와 함께 보인다', async ({ page }) => {
+  test('슬라이드 3개가 도면·상태·근거와 함께 보인다', async ({ page }) => {
     await page.goto('/');
-    const slides = page.locator('#agent-product .deck__slide');
-    await expect(slides).toHaveCount(4);
-    for (let i = 0; i < 4; i++) {
+    const slides = page.locator('#personal .deck__slide');
+    await expect(slides).toHaveCount(3);
+    for (let i = 0; i < 3; i++) {
       const svg = slides.nth(i).locator('svg.dg[role="img"]');
       await expect(svg).toHaveCount(1);
       await expect(svg.locator('title')).not.toHaveText('');

@@ -1,4 +1,12 @@
+import { byRepo, shortRepo, tally } from '../lib/contribution-stats';
 import { profileSchema } from '../lib/schema';
+import { contributions } from './contributions';
+
+// 기여 수치는 글에 적지 않고 데이터(매일 갱신)에서 계산한다.
+const pt = tally(contributions.items.filter((c) => c.repo === 'pytorch/pytorch'));
+const all = tally(contributions.items);
+const repoNames = byRepo(contributions.items).map((g) => shortRepo(g.repo));
+const { asahi } = contributions.own;
 
 export const profile = profileSchema.parse({
   name: '우성현',
@@ -6,7 +14,7 @@ export const profile = profileSchema.parse({
   asOf: '2026-09-30',
   headline: { mark: '정확성을 검증하는', rest: 'AI/ML 시스템 엔지니어' },
   intro: [
-    '한국어 시스템 언어의 컴파일러를 만들었고, PyTorch 컴파일러와 LLM 추론 엔진이 오류 없이 틀린 값을 내는 지점을 찾아 보고합니다. PyTorch에는 수정 PR도 올렸습니다.',
+    `한국어 시스템 언어의 컴파일러를 만들었고, PyTorch 컴파일러와 LLM 추론 엔진이 오류 없이 틀린 값을 내는 지점을 찾아 보고하고 고칩니다. PyTorch 기여자로 수정 ${pt.merged}건이 병합되었습니다.`,
     'AI 코딩 에이전트와 함께 빠르게 만들되, 결과는 믿기 전에 측정하고 검증합니다.',
   ],
   contact: {
@@ -16,20 +24,20 @@ export const profile = profileSchema.parse({
   },
   highlights: [
     {
-      label: 'PyTorch 버그 6건 보고',
-      detail: 'torch.compile에서 찾은 버그 6건(조용한 오답 5건, 크래시 1건)을 보고했고, 6건 모두 PyTorch 측에서 분류(triaged)했습니다. 수정 PR 5건이 리뷰 중입니다.',
+      label: `PyTorch 기여자 · 병합 ${pt.merged}건`,
+      detail: `torch.compile에서 찾은 버그를 이슈 ${pt.issues}건으로 보고하고 수정 PR ${pt.prs}건을 냈습니다. 병합 ${pt.merged}건, 열린 PR ${pt.openPrs}건.`,
       status: 'ok',
-      statusText: 'triaged 6/6',
-      evidence: 'https://github.com/pytorch/pytorch/issues?q=is%3Aissue+author%3Awwoosshh',
-      figure: { value: '6', unit: '건 보고' },
+      statusText: `merged ${pt.merged}`,
+      evidence: 'https://github.com/pytorch/pytorch/pulls?q=is%3Apr+author%3Awwoosshh',
+      figure: { value: String(pt.merged), unit: '건 병합' },
     },
     {
-      label: 'vLLM·SGLang 버그 보고',
-      detail: 'Entail로 찾은 설정 누락을 보고했고, 다른 개발자들이 이를 고치는 PR을 올렸습니다.',
-      status: 'wait',
-      statusText: '수정 PR 리뷰 대기',
-      evidence: 'https://github.com/sgl-project/sglang/pull/41239',
-      figure: { value: '2', unit: '개 엔진' },
+      label: `오픈소스 ${all.repos}곳에 기여`,
+      detail: `${repoNames.join('·')}에 이슈 ${all.issues}건, PR ${all.prs}건을 올렸습니다.`,
+      status: 'ok',
+      statusText: `issues ${all.issues} · PRs ${all.prs}`,
+      evidence: 'https://github.com/search?q=author%3Awwoosshh+-user%3Awwoosshh+-org%3Asemicollon-club&type=issues',
+      figure: { value: String(all.repos), unit: '개 프로젝트' },
     },
     {
       label: '자체 컴파일러 자체 호스팅',
@@ -41,11 +49,11 @@ export const profile = profileSchema.parse({
     },
     {
       label: 'AI 개발 에이전트 운영',
-      detail: '동아리에서 실제로 쓰는 디스코드 AI 개발 에이전트 asahi의 개발을 이끌고 운영합니다. main 브랜치에 머지된 PR 81건.',
+      detail: `동아리에서 실제로 쓰는 디스코드 AI 개발 에이전트 asahi의 개발을 이끌고 운영합니다. main 브랜치에 병합된 PR ${asahi.mergedPrs}건.`,
       status: 'ok',
-      statusText: '81 PRs merged',
-      evidence: 'https://github.com/semicollon-club/asahi/pulls?q=is%3Apr+is%3Amerged+base%3Amain',
-      figure: { value: '81', unit: '건 머지' },
+      statusText: `${asahi.mergedPrs} PRs merged`,
+      evidence: asahi.url,
+      figure: { value: String(asahi.mergedPrs), unit: '건 병합' },
     },
   ],
   education: [

@@ -1,30 +1,37 @@
 ---
-import { formatDate, formatPeriod } from '../../lib/format';
+import { contributions } from '../../data/contributions';
+import { formatPeriod } from '../../lib/format';
+import { asOfLabel, liveMetrics, metricsOf } from '../../lib/live-metrics';
 import type { ProjectEntry } from '../../lib/site';
 import Evidence from '../Evidence.astro';
 
 interface Props {
   project: ProjectEntry;
   num: string;
+  /** 제목 요소의 단계. 소제목 아래에 놓일 때는 4를 쓴다. */
+  headingLevel?: 3 | 4;
 }
 
-const { project, num } = Astro.props;
+const { project, num, headingLevel = 3 } = Astro.props;
+const Heading = `h${headingLevel}` as 'h3' | 'h4';
 const d = project.data;
+const metrics = metricsOf(project, contributions);
+const live = liveMetrics(project.id, contributions).length > 0;
 const href = `/projects/${project.id}/`;
 ---
 <article class="pscene" data-scene="project" data-project={project.id}>
   <div class="pscene__text">
     <p class="pscene__num mono" data-reveal>{num}</p>
-    <h3 class="pscene__title" data-reveal><a href={href} data-detail-link>{d.title}</a></h3>
+    <Heading class="pscene__title" data-reveal><a href={href} data-detail-link>{d.title}</a></Heading>
     <p class="pscene__meta mono" data-reveal>{formatPeriod(d.period)} · {d.role}</p>
     <p class="pscene__tagline" data-reveal>{d.tagline}</p>
     <p data-reveal><a class="pscene__more mono" href={href}>자세히 보기 →</a></p>
   </div>
   <div class="pscene__panel panel" data-reveal>
-    <p class="pscene__asof mono">{formatDate(d.asOf)} 기준</p>
+    <p class="pscene__asof mono">{asOfLabel(d.asOf, live)}</p>
     <ul class="pscene__metrics">
       {
-        d.metrics.map((m) => (
+        metrics.map((m) => (
           <li class="pscene__metric" data-reveal>
             <span class="pscene__metric-label">{m.label}</span>
             <strong class="pscene__metric-value mono">{m.value}</strong>

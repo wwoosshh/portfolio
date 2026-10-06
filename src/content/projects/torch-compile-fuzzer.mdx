@@ -3,6 +3,7 @@ title: torch.compile 정합성 퍼저 + PyTorch 수정 PR
 tagline: 별칭·뷰·in-place 연산에 특화한 차등 퍼저로 torch.compile이 오류 없이 틀린 값을 내는 버그를 찾아, PyTorch에 보고하고 수정 PR을 올렸습니다
 tier: featured
 track: ml
+group: oss
 order: 2
 period:
   start: "2026-09"
@@ -18,7 +19,7 @@ asOf: 2026-09-29
 brief:
   problem: torch.compile은 별칭(같은 메모리를 가리키는 텐서)·뷰·in-place 변경이 섞인 코드를 최적화하다가 오류 없이 eager 실행과 다른 값을 내는 경우가 있습니다.
   approach: 반환값뿐 아니라 별칭 관계, 입력의 최종 상태, 부작용까지 eager 실행과 비교하는 차등 퍼저를 만들고, 정수 값으로 허용오차 0 비교를 했습니다.
-  result: 약 21,000개 프로그램에서 나이틀리에서도 재현되는 새로운 조용한 오답 7계열을 찾았고(G는 미보고), 이 중 6계열을 이슈 4건으로 올렸습니다. 크래시 1건과 NNSmith 비교 발견 1건을 더한 이슈 6건은 모두 분류됐고, 수정 PR 6건 중 5건은 리뷰 중입니다.
+  result: 약 21,000개 프로그램에서 나이틀리에서도 재현되는 새로운 조용한 오답 7계열을 찾았고(G는 미보고), 이 중 6계열을 이슈 4건으로 올렸습니다. 크래시 1건과 NNSmith 비교 발견 1건을 더해 이슈 6건을 올렸고, 이슈마다 수정 PR(6건)을 올렸습니다. 현재 상태는 포트폴리오 사이트의 외부 기여 목록이 매일 자동으로 갱신합니다.
 metrics:
   - label: 실행한 프로그램 (torch 2.14.0)
     value: 약 21,000개 · 45분
@@ -26,14 +27,6 @@ metrics:
   - label: 새로 찾은 조용한 오답 계열 (나이틀리 재현)
     value: 7개
     evidence: "https://github.com/wwoosshh/AI-accelerator-compiler/blob/afcfac2376eeaa03f822ea5ea0d09e897f092ef8/fuzz/README.md?plain=1#L4-L5"
-  - label: PyTorch 이슈 분류
-    value: 6 / 6 triaged
-    status: ok
-    evidence: "https://github.com/pytorch/pytorch/issues?q=is%3Aissue+author%3Awwoosshh"
-  - label: PyTorch 수정 PR
-    value: 5건 리뷰 중 · 1건 닫힘
-    status: wait
-    evidence: "https://github.com/pytorch/pytorch/pulls?q=is%3Apr+author%3Awwoosshh"
 links:
   - label: GitHub 저장소
     url: "https://github.com/wwoosshh/AI-accelerator-compiler"
@@ -65,8 +58,8 @@ tags: [correctness, compiler, pytorch, fuzzing]
 ## 결과
 
 - torch 2.14.0에서 약 21,000개 프로그램(45분)을 돌려, 나이틀리에서도 재현되는 새로운 조용한 오답 7계열을 찾았습니다.
-- 원인을 코드 위치까지 규명해 PyTorch에 이슈 6건(조용한 오답 5건, 크래시 1건)을 올렸고, 6건 모두 PyTorch 측에서 분류(triaged)했습니다. 7계열 중 6계열이 이슈 4건에 대응하고(H1~H3은 #198094 한 건으로 묶었습니다) G는 아직 보고하지 않았습니다. 나머지 이슈 2건은 7계열에 들지 않는 크래시 F(#198100)와 NNSmith 비교에서 나온 L(#198131)입니다.
-- 이슈마다 수정 PR을 올렸고(6건), 모두 회귀 테스트를 넣었습니다. 5건은 메인테이너가 남긴 리뷰(2건)와 리뷰어가 요청한 자동 리뷰(3건)에 수정 커밋으로 대응하며 진행 중이고, 1건은 이슈에서 먼저 논의하라는 절차 안내와 함께 닫혔습니다.
+- 원인을 코드 위치까지 규명해 PyTorch에 이슈 6건(조용한 오답 5건, 크래시 1건)을 올렸습니다. 7계열 중 6계열이 이슈 4건에 대응하고(H1~H3은 #198094 한 건으로 묶었습니다) G는 아직 보고하지 않았습니다. 나머지 이슈 2건은 7계열에 들지 않는 크래시 F(#198100)와 NNSmith 비교에서 나온 L(#198131)입니다.
+- 이슈마다 수정 PR을 올렸고(6건), 모두 회귀 테스트를 넣었습니다. 메인테이너가 남긴 리뷰와 리뷰어가 요청한 자동 리뷰에는 수정 커밋으로 대응했고, 1건은 이슈에서 먼저 논의하라는 절차 안내를 받았습니다.
 
 ## 주요 결정
 
@@ -75,9 +68,9 @@ tags: [correctness, compiler, pytorch, fuzzing]
 
 ## 한계와 다음 단계
 
-- 작성 시점(2026-09-29) 기준으로 머지된 PR은 없습니다. 리뷰에 계속 대응하고 있습니다.
+- 수정 PR의 병합·리뷰 상태와 이슈의 분류 상태는 계속 바뀝니다. 현재 상태는 포트폴리오 사이트의 외부 기여 목록이 매일 자동으로 갱신합니다.
 - 7계열 중 동적 형상에서 별칭의 stride가 어긋나는 1계열(G)은 원인은 확정했지만 설계 결정이 필요해 아직 PyTorch에 보고하지 않았습니다.
-- unfold 수정 PR(닫힘)은 C++ 변경이라 Windows PC에서 컴파일하지 못한 채 올렸습니다.
+- unfold 수정 PR은 C++ 변경이라 Windows PC에서 컴파일하지 못한 채 올렸습니다.
 - 개인 Windows PC(RTX 4070 Ti)에서만 돌렸습니다. Inductor는 CUDA 백엔드만 검사했고, MSVC가 없어 CPU 백엔드는 검사하지 못했습니다.
 
 ## AI 협업 방식

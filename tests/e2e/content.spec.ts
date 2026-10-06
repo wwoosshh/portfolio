@@ -5,8 +5,8 @@ const ids = (page: import('@playwright/test').Page, selector: string) =>
 
 test('콘텐츠 완성도: 섹션별 프로젝트가 정해진 순서로 모두 있다', async ({ page }) => {
   await page.goto('/');
-  expect(await ids(page, '#ml [data-project]')).toEqual(['entail', 'torch-compile-fuzzer', 'geul-lang', 'inversa-bench']);
-  expect(await ids(page, '#agent-product [data-project]')).toEqual(['asahi', 'barun-order', 'mzcube', 'nogada-rpg']);
+  expect(await ids(page, '#oss [data-project]')).toEqual(['entail', 'torch-compile-fuzzer', 'geul-lang', 'inversa-bench', 'asahi']);
+  expect(await ids(page, '#personal [data-project]')).toEqual(['barun-order', 'mzcube', 'nogada-rpg']);
   expect(await ids(page, '#more [data-project]')).toEqual([
     'geulos',
     'connect',

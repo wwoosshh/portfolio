@@ -1,5 +1,7 @@
 ---
+import { contributions } from '../data/contributions';
 import { formatPeriod } from '../lib/format';
+import { metricsOf } from '../lib/live-metrics';
 import type { Project } from '../lib/schema';
 import { deploymentStatus } from '../lib/status';
 import Evidence from './Evidence.astro';
@@ -13,7 +15,7 @@ interface Props {
 const { project, size } = Astro.props;
 const d = project.data;
 const deploy = deploymentStatus(d.deployment);
-const metrics = d.metrics.slice(0, size === 'half' ? 2 : 1);
+const metrics = metricsOf(project, contributions).slice(0, size === 'half' ? 2 : 1);
 ---
 <article class:list={['brief', `brief--${size}`]} data-project={project.id}>
   <header class="brief__head">
@@ -54,14 +56,16 @@ const metrics = d.metrics.slice(0, size === 'half' ? 2 : 1);
   .brief {
     border: 1px solid var(--line);
     border-radius: var(--r-md);
-    padding: var(--sp-3);
-    break-inside: avoid;
+    padding: var(--sp-2) var(--sp-3);
   }
+  /* 카드가 쪽 끝에 걸려도 통째로 다음 쪽으로 넘기지 않는다. 큰 카드를 통째로 넘기면 빈자리가 생겨,
+     글꼴 그리기가 1%만 달라도(리눅스 CI) 한 장이 늘어난다. 머리줄만 본문과 같은 쪽에 붙인다. */
   .brief__head {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: var(--sp-1) var(--sp-2);
+    break-after: avoid;
   }
   .brief__title {
     font-size: 14px;
@@ -91,7 +95,7 @@ const metrics = d.metrics.slice(0, size === 'half' ? 2 : 1);
   .brief__metrics {
     display: grid;
     gap: var(--sp-1);
-    margin-top: var(--sp-2);
+    margin-top: var(--sp-1);
     font-size: 11px;
   }
   .brief__metrics li {

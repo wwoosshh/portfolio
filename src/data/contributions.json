@@ -1,0 +1,313 @@
+{
+  "asOf": "2026-10-06T03:36:33.754Z",
+  "author": "wwoosshh",
+  "excludeOwners": [
+    "wwoosshh",
+    "semicollon-club"
+  ],
+  "ignore": [],
+  "items": [
+    {
+      "repo": "Comfy-Org/ComfyUI",
+      "kind": "issue",
+      "number": 16490,
+      "title": "Dynamic VRAM: a ModelSamplingDiscrete schedule leaks into later runs of the same checkpoint (buffers restored by attribute path), giving wrong or black images reported as success",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/Comfy-Org/ComfyUI/issues/16490",
+      "labels": [],
+      "createdAt": "2026-09-23T05:49:51Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "entail",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "issue",
+      "number": 198094,
+      "title": "[inductor] Scatter result reinplaced into a graph input that a later, unrelated mutation overwrites: y = slice_scatter(x, src); x.zero_(); return y returns zeros",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/pytorch/pytorch/issues/198094",
+      "labels": [
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T02:35:00Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "issue",
+      "number": 198095,
+      "title": "[aot_autograd] Output that is a view of an aliased input (synthetic base) is regenerated from the wrong tensor: ta[0] returns t0[0], ta.view(-1) asserts on ViewMeta shape",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/pytorch/pytorch/issues/198095",
+      "labels": [
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T02:35:01Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "pr",
+      "number": 198096,
+      "title": "[inductor] Do not reinplace into a graph input that a later, unrelated mutation overwrites",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/pytorch/pytorch/pull/198096",
+      "labels": [
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T02:35:03Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "pr",
+      "number": 198097,
+      "title": "[aot_autograd] Regenerate output aliases of merged (synthetic-base) inputs from metadata",
+      "state": "open",
+      "stateReason": null,
+      "review": "changes_requested",
+      "url": "https://github.com/pytorch/pytorch/pull/198097",
+      "labels": [
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T02:35:05Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "issue",
+      "number": 198100,
+      "title": "[dynamo] x.contiguous().unsqueeze_(d) / x.to(x.dtype).unsqueeze_(d) crashes guard creation with IndexError: list index out of range (in-place view through a no-op alias of the input)",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/pytorch/pytorch/issues/198100",
+      "labels": [
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T02:56:13Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "issue",
+      "number": 198101,
+      "title": "[inductor] Consumer of a dtype view of an input is computed after a later in-place mutation of that input (y = x.view(int32) * 2; y.sub_(-4); x[:, 2:5] = 2; return y.view(int64))",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/pytorch/pytorch/issues/198101",
+      "labels": [
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T02:56:14Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "issue",
+      "number": 198102,
+      "title": "[functionalization] In-place mutation through a gapped unfold view (step > size) silently zeroes every base element not covered by a window under torch.compile",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/pytorch/pytorch/issues/198102",
+      "labels": [
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T02:56:15Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "pr",
+      "number": 198103,
+      "title": "[dynamo] Graph break on an in-place view of a no-op alias of a graph input",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/pytorch/pytorch/pull/198103",
+      "labels": [
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T02:56:17Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "pr",
+      "number": 198104,
+      "title": "[inductor] Realize consumers of aliasing buffers before a mutation of the aliased buffer",
+      "state": "open",
+      "stateReason": null,
+      "review": "approved",
+      "url": "https://github.com/pytorch/pytorch/pull/198104",
+      "labels": [
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T02:56:19Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "pr",
+      "number": 198105,
+      "title": "[functionalization] unfold inverse: keep base elements that no window covers",
+      "state": "closed",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/pytorch/pytorch/pull/198105",
+      "labels": [],
+      "createdAt": "2026-09-22T02:56:22Z",
+      "closedAt": "2026-09-25T18:00:36Z",
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "note": "이슈에서 먼저 논의하라는 절차 안내",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "issue",
+      "number": 198131,
+      "title": "[inductor] `dst[:] = src[:]; src.add_(1)` copies the *updated* `src` into `dst` (remove_noop_ops replaces a copy of an input by the input itself, which is mutated before the copy's user runs)",
+      "state": "closed",
+      "stateReason": "completed",
+      "review": null,
+      "url": "https://github.com/pytorch/pytorch/issues/198131",
+      "labels": [
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T05:51:13Z",
+      "closedAt": "2026-09-30T20:01:45Z",
+      "mergedAt": null,
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "pytorch/pytorch",
+      "kind": "pr",
+      "number": 198132,
+      "title": "[inductor] remove_noop_ops: keep a copy of an input that is mutated before the copy's user runs",
+      "state": "merged",
+      "stateReason": null,
+      "review": "approved",
+      "url": "https://github.com/pytorch/pytorch/pull/198132",
+      "labels": [
+        "Merged",
+        "triaged"
+      ],
+      "createdAt": "2026-09-22T05:51:16Z",
+      "closedAt": "2026-09-30T20:01:46Z",
+      "mergedAt": "2026-09-30T20:01:46Z",
+      "project": "torch-compile-fuzzer",
+      "related": []
+    },
+    {
+      "repo": "sgl-project/sglang",
+      "kind": "issue",
+      "number": 41227,
+      "title": "[Bug] `--json-model-override-args '{\"rope_scaling\": ...}'` drops `rope_theta` for models without a per-model fallback: Llama-3.2-3B-Instruct GSM8K 161 → 106 (first 200)",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/sgl-project/sglang/issues/41227",
+      "labels": [],
+      "createdAt": "2026-09-25T06:47:18Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "entail",
+      "related": [
+        {
+          "repo": "sgl-project/sglang",
+          "number": 41239,
+          "title": "Fix rope_scaling override silently dropping the RoPE base",
+          "url": "https://github.com/sgl-project/sglang/pull/41239",
+          "author": "ptimizeroracle",
+          "state": "closed"
+        },
+        {
+          "repo": "sgl-project/sglang",
+          "number": 41327,
+          "title": "fix(rope): fall back to config.rope_theta when rope_parameters lacks it",
+          "url": "https://github.com/sgl-project/sglang/pull/41327",
+          "author": "apex-mochen",
+          "state": "closed"
+        }
+      ]
+    },
+    {
+      "repo": "vllm-project/vllm",
+      "kind": "issue",
+      "number": 58675,
+      "title": "[Bug]: `--hf-overrides '{\"rope_scaling\": ...}'` drops `rope_theta` under Transformers v5; models without a per-file default silently run with base 10000",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/vllm-project/vllm/issues/58675",
+      "labels": [],
+      "createdAt": "2026-09-25T06:47:07Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": "entail",
+      "related": [
+        {
+          "repo": "vllm-project/vllm",
+          "number": 58679,
+          "title": "[Bugfix] Preserve RoPE base parameters in rope_scaling overrides",
+          "url": "https://github.com/vllm-project/vllm/pull/58679",
+          "author": "taking-lying-flat",
+          "state": "open"
+        }
+      ]
+    }
+  ],
+  "own": {
+    "asahi": {
+      "mergedPrs": 81,
+      "mineMergedPrs": 79,
+      "url": "https://github.com/semicollon-club/asahi/pulls?q=is%3Apr+is%3Amerged+base%3Amain"
+    },
+    "entail": {
+      "pypiReleases": 19,
+      "pypiLatest": "2.4.0",
+      "url": "https://pypi.org/project/entail-ai/"
+    }
+  }
+}

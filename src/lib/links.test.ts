@@ -22,6 +22,7 @@ describe('projectHref', () => {
     const p = make('entail', {
       tier: 'featured',
       track: 'ml',
+      group: 'oss',
       brief: { problem: 'p', approach: 'a', result: 'r' },
       metrics: [{ label: 'm', value: '1', evidence: 'https://github.com/wwoosshh/Entail' }],
     });

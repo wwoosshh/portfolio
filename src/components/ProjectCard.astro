@@ -1,5 +1,7 @@
 ---
+import { contributions } from '../data/contributions';
 import { formatPeriod } from '../lib/format';
+import { metricsOf } from '../lib/live-metrics';
 import { projectHref } from '../lib/links';
 import type { Project } from '../lib/schema';
 import { deploymentStatus } from '../lib/status';
@@ -16,7 +18,7 @@ const d = project.data;
 const deploy = deploymentStatus(d.deployment);
 const target = projectHref(project);
 const isDetail = d.tier === 'featured';
-const lead = d.metrics[0];
+const lead = metricsOf(project, contributions)[0];
 ---
 <article class="card surface surface--interactive" data-project={project.id} data-tilt data-reveal>
   <h3 class="card__title">

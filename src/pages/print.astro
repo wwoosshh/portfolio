@@ -3,10 +3,12 @@ import Evidence from '../components/Evidence.astro';
 import ProjectBrief from '../components/ProjectBrief.astro';
 import Status from '../components/Status.astro';
 import Print from '../layouts/Print.astro';
+import { printRows, shortRepo } from '../lib/contribution-stats';
 import { formatDate, formatPeriod, shortRef } from '../lib/format';
+import { liveMetrics } from '../lib/live-metrics';
 import { projectHref } from '../lib/links';
 import { loadSite } from '../lib/site';
-import { contributionStatus, view } from '../lib/status';
+import { contributionStatus, relatedStatus, view } from '../lib/status';
 import { buildTimeline } from '../lib/timeline';
 
 const site = await loadSite();
@@ -14,6 +16,10 @@ const { profile } = site;
 const timeline = buildTimeline(profile);
 const strip = (url: string) => url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 const more = [...site.cards, ...site.lines];
+// 외부 기여 표: 16줄까지만 싣되 저장소마다 한 줄 이상. 저장소 묶음 순서(병합 많은 순)대로, 묶음 안에서는 병합·승인·리뷰 중 순으로 둔다(홈의 보드와 같은 순서).
+const { rows: contribRows, rest: contribRest } = printRows(site.contributions.items);
+// 직접 운영하는 오픈소스 요약: 기여 데이터에서 계산한 수치가 있으면 핵심 결과와 그 수치를 함께(half), 없으면 핵심 결과만(quarter) 싣는다.
+const ossSize = (id: string) => (liveMetrics(id, site.contributions).length > 0 ? 'half' : 'quarter');
 const evidenceNote = profile.contact.site
   ? `프로젝트 핵심 수치의 근거는 웹 포트폴리오(${strip(profile.contact.site)})에서 확인할 수 있습니다.`
   : '프로젝트 핵심 수치의 근거는 웹 포트폴리오에서 확인할 수 있습니다.';
@@ -35,7 +41,7 @@ const evidenceNote = profile.contact.site
       </ul>
     </header>
 
-    <h2>핵심 성과 · {formatDate(profile.asOf)} 기준</h2>
+    <h2>핵심 성과 · {formatDate(site.contributions.asOf)} 기준</h2>
     <ul class="grid2">
       {
         profile.highlights.map((h) => (
@@ -75,19 +81,49 @@ const evidenceNote = profile.contact.site
     <ul class="bullets">
       {profile.howIWork.principles.map((p) => <li><span class="strong">{p.title}</span> — {p.body}</li>)}
     </ul>
-  </section>
 
-  <section class="page">
-    <h2>대표 프로젝트 · AI/ML 시스템과 컴파일러</h2>
-    <div class="stack">{site.ml.map((p) => <ProjectBrief project={p} size="half" />)}</div>
-  </section>
+    <h2>오픈소스 · 외부 프로젝트 기여</h2>
+    <table class="ctable">
+      <thead>
+        <tr>
+          <th>저장소</th>
+          <th>항목</th>
+          <th>상태</th>
+          <th>제목</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          contribRows.map((c) => (
+            <tr>
+              <td>{shortRepo(c.repo)}</td>
+              <td class="ref"><a href={c.url}>{c.kind === 'pr' ? 'PR' : '이슈'} #{c.number}</a></td>
+              <td><Status view={contributionStatus({ ...c, note: undefined })} /></td>
+              <td>
+                <span class="ctable__title">{c.title}</span>
+                {(c.note || c.related.length > 0) && (
+                  <span class="ctable__sub">
+                    {c.note && <>— {c.note}</>}
+                    {c.related.map((r, i) => (
+                      <>{i > 0 && ' · '}다른 개발자 수정 PR <a href={r.url}>#{r.number}</a> ({relatedStatus(r).text})</>
+                    ))}
+                  </span>
+                )}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+    {contribRest > 0 && <p class="rest">외 {contribRest}건 · 전체 목록은 사이트의 외부 기여 목록</p>}
+    <p class="asof">매일 자동 확인 · 마지막 변경 {formatDate(site.contributions.asOf)}</p>
 
-  <section class="page">
-    <h2>AI 에이전트 · 제품</h2>
-    <div class="stack">{site.agentProduct.map((p) => <ProjectBrief project={p} size="quarter" />)}</div>
-  </section>
+    <h2>오픈소스 · 직접 운영하는 프로젝트</h2>
+    <div class="stack">{site.oss.map((p) => <ProjectBrief project={p} size={ossSize(p.id)} />)}</div>
 
-  <section class="page">
+    <h2>개인 프로젝트</h2>
+    <div class="stack">{site.personal.map((p) => <ProjectBrief project={p} size="quarter" />)}</div>
+
     <h2>그 밖의 프로젝트</h2>
     <ul class="lines">
       {
@@ -117,19 +153,6 @@ const evidenceNote = profile.contact.site
       {profile.skills.map((g) => <li><span class="strong">{g.group}</span> — {g.items.map((i) => i.name).join(', ')}</li>)}
     </ul>
 
-    <h2>외부 기여 · {formatDate(site.contributions.asOf)} 기준</h2>
-    <ul class="contribs">
-      {
-        site.contributions.items.map((c) => (
-          <li>
-            <Status view={contributionStatus({ ...c, note: undefined })} />
-            <a href={c.url}>{shortRef(c.url)}</a>
-            <span class="small">{c.title}</span>
-            {c.note && <span class="small note">— {c.note}</span>}
-          </li>
-        ))
-      }
-    </ul>
     <p class="footnote">
       {evidenceNote} AI 코딩 에이전트와의 협업 여부는 프로젝트마다 역할 표기에 밝혀 두었습니다.
     </p>

@@ -40,11 +40,9 @@ const { title } = Astro.props;
     max-width: 178mm;
     margin-inline: auto;
   }
-  .print .page {
-    break-after: page;
-  }
-  .print .page:last-child {
-    break-after: auto;
+  /* 쪽 나눔은 내용이 흐르는 대로 둔다. 구역 사이에 쪽을 강제로 나누면 첫 쪽 아래가 비어 4쪽을 넘기 쉽다. */
+  .print h2 {
+    break-after: avoid;
   }
   .print h1 {
     font-size: 22px;
@@ -126,27 +124,65 @@ const { title } = Astro.props;
   }
   .print .stack {
     display: grid;
-    gap: var(--sp-3);
+    gap: var(--sp-2);
   }
   .print .skills {
     display: grid;
     gap: var(--sp-1);
   }
-  .print .contribs > li {
-    display: grid;
-    grid-template-columns: 24mm 32mm minmax(0, 1fr);
-    gap: 0 var(--sp-2);
-    align-items: baseline;
+  /* 외부 기여 표: 한 항목이 한 줄이다. 긴 제목은 잘리고, 다른 개발자의 수정 PR과 사유는 아래 줄에 붙는다. */
+  .print .ctable {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 10.5px;
+    line-height: 1.35;
   }
-  .print .contribs .small {
+  .print .ctable th {
+    padding: 0 var(--sp-2) var(--sp-1) 0;
+    font-family: var(--font-mono);
+    font-weight: 400;
+    text-align: left;
+    color: var(--text-3);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .print .ctable td {
+    padding: 1px var(--sp-2) 1px 0;
+    vertical-align: top;
+    border-bottom: 1px solid var(--line);
+  }
+  .print .ctable tr {
+    break-inside: avoid;
+  }
+  .print .ctable th:nth-child(1) {
+    width: 17mm;
+  }
+  .print .ctable th:nth-child(2) {
+    width: 27mm;
+  }
+  .print .ctable th:nth-child(3) {
+    width: 33mm;
+  }
+  .print .ctable .ref {
+    font-family: var(--font-mono);
     white-space: nowrap;
+  }
+  .print .ctable__title {
+    display: block;
     overflow: hidden;
+    white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .print .contribs .note {
-    grid-column: 3;
-    white-space: normal;
-    overflow: visible;
+  .print .ctable__sub {
+    display: block;
+    color: var(--text-3);
+  }
+  .print .asof,
+  .print .rest {
+    margin-top: var(--sp-1);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
   }
   .print .footnote {
     margin-top: var(--sp-4);

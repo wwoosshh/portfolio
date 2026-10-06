@@ -1,8 +1,28 @@
 import { expect, test } from '@playwright/test';
 import { PDFDocument } from 'pdf-lib';
+import raw from '../../src/data/contributions.json' with { type: 'json' };
+import { contributions } from '../../src/data/contributions';
 import { profile } from '../../src/data/profile';
+import { byRepo, printRows } from '../../src/lib/contribution-stats';
+import { kstDate } from './dates';
 
 const PHONE = /01[016789][-. ]?\d{3,4}[-. ]?\d{4}/;
+
+// 건수는 매일 바뀐다. 기대값은 기여 데이터(JSON)에서 읽고, 숫자를 적지 않는다.
+const STATUS_WORDS = ['병합됨', '승인 · 병합 대기', '리뷰 중', '변경 요청', '닫힘', '해결됨', '분류됨', '열림'];
+const RELATED_WORDS = ['병합됨', '닫힘', '리뷰 대기'];
+const KIND = { pr: 'PR', issue: '이슈' } as const;
+const SHORT = new Map([
+  ['pytorch/pytorch', 'PyTorch'],
+  ['vllm-project/vllm', 'vLLM'],
+  ['sgl-project/sglang', 'SGLang'],
+  ['Comfy-Org/ComfyUI', 'ComfyUI'],
+]);
+type Related = { number: number; url: string };
+const relatedOf = (c: (typeof raw.items)[number]): Related[] => (c as { related?: Related[] }).related ?? [];
+// 표는 16줄까지(저장소마다 한 줄 이상). 실을 줄과 싣지 못한 건수는 화면과 같은 함수로 센다.
+const { rows: shown, rest } = printRows(contributions.items);
+const shownUrls = new Set(shown.map((c) => c.url));
 
 test('인쇄 페이지는 A4 4장 이하 PDF가 된다', async ({ page }) => {
   await page.goto('/print/', { waitUntil: 'networkidle' });
@@ -10,6 +30,86 @@ test('인쇄 페이지는 A4 4장 이하 PDF가 된다', async ({ page }) => {
   const pdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
   const doc = await PDFDocument.load(pdf);
   expect(doc.getPageCount()).toBeLessThanOrEqual(4);
+});
+
+// 운영체제마다 글꼴 그리기가 조금씩 달라(리눅스 CI는 윈도보다 약 1% 길다) 쪽 나눔이 경계에 걸리면 한 장이 늘어난다.
+// 3% 키워도 4장 안에 들어오는지로 그 여유를 미리 확인한다.
+test('인쇄 페이지는 3% 커져도 A4 4장 이하다(운영체제별 글꼴 차이 여유)', async ({ page }) => {
+  await page.goto('/print/', { waitUntil: 'networkidle' });
+  await page.evaluate(() => document.fonts.ready);
+  const pdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true, scale: 1.03 });
+  const doc = await PDFDocument.load(pdf);
+  expect(doc.getPageCount()).toBeLessThanOrEqual(4);
+});
+
+test('인쇄: 외부 기여 표는 싣는 항목마다 한 행이고 저장소·종류 #번호·상태 글자·제목을 가진다', async ({ page }) => {
+  await page.goto('/print/');
+  const rows = page.locator('.print .ctable tbody tr');
+  await expect(rows).toHaveCount(shown.length);
+  const [firstGroup] = byRepo(contributions.items);
+  await expect(rows.first().locator('td').first()).toHaveText(SHORT.get(firstGroup.repo) ?? firstGroup.repo.split('/')[1]);
+  // 싣는 순서도 같은 함수가 정한다.
+  const hrefs = await rows.locator('td:nth-child(2) a').evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+  expect(hrefs).toEqual(shown.map((c) => c.url));
+  for (const c of shown) {
+    const row = rows.filter({ has: page.locator(`a[href="${c.url}"]`) });
+    await expect(row, c.url).toHaveCount(1);
+    await expect(row.locator('td').nth(0), c.url).toHaveText(SHORT.get(c.repo) ?? c.repo.split('/')[1]);
+    await expect(row.locator('td').nth(1), c.url).toHaveText(`${KIND[c.kind as 'pr' | 'issue']} #${c.number}`);
+    await expect(row.locator('td').nth(2), c.url).toHaveText(new RegExp(STATUS_WORDS.join('|')));
+    await expect(row.locator('.ctable__title'), c.url).toHaveText(c.title);
+  }
+});
+
+test('인쇄: 저장소마다 한 줄 이상 싣고, 싣지 못한 항목이 있으면 건수와 전체 목록의 위치를 밝힌다', async ({ page }) => {
+  await page.goto('/print/');
+  const cells = await page.locator('.print .ctable tbody tr td:first-child').allInnerTexts();
+  const names = byRepo(contributions.items).map((g) => SHORT.get(g.repo) ?? g.repo.split('/')[1]);
+  expect([...new Set(cells)].sort()).toEqual([...names].sort());
+  expect(shown.length + rest).toBe(raw.items.length);
+  const line = page.locator('.print .rest');
+  if (rest === 0) await expect(line).toHaveCount(0);
+  else await expect(line).toHaveText(`외 ${rest}건 · 전체 목록은 사이트의 외부 기여 목록`);
+});
+
+test('인쇄: 다른 개발자의 수정 PR은 같은 행에 `다른 개발자 수정 PR #번호 (상태)`로 들어 있다', async ({ page }) => {
+  await page.goto('/print/');
+  const withRelated = raw.items.filter((c) => relatedOf(c).length > 0);
+  expect(withRelated.length).toBeGreaterThan(0);
+  // 표에 싣는 항목만 본다.
+  for (const c of withRelated.filter((c) => shownUrls.has(c.url))) {
+    const row = page.locator('.print .ctable tbody tr').filter({ has: page.locator(`a[href="${c.url}"]`) });
+    for (const r of relatedOf(c)) {
+      await expect(row.locator(`a[href="${r.url}"]`), r.url).toHaveCount(1);
+      const text = await row.innerText();
+      const phrases = RELATED_WORDS.map((word) => `다른 개발자 수정 PR #${r.number} (${word})`);
+      expect(
+        phrases.some((phrase) => text.includes(phrase)),
+        `${r.url}: ${text}`,
+      ).toBe(true);
+    }
+  }
+});
+
+test('인쇄: 핵심 성과의 기준일은 기여 데이터의 마지막 변경 날짜다', async ({ page }) => {
+  await page.goto('/print/');
+  await expect(page.locator('.print h2').first()).toHaveText(`핵심 성과 · ${kstDate(raw.asOf)} 기준`);
+});
+
+test('인쇄: 표 아래에 매일 자동 확인과 마지막 변경 날짜가 있다', async ({ page }) => {
+  await page.goto('/print/');
+  await expect(page.locator('.print .asof')).toHaveText(`매일 자동 확인 · 마지막 변경 ${kstDate(raw.asOf)}`);
+});
+
+test('인쇄: 오픈소스가 개인 프로젝트보다 먼저 나오고, 끝에 있던 외부 기여 목록은 없다', async ({ page }) => {
+  await page.goto('/print/');
+  const headings = (await page.locator('.print h2').allInnerTexts()).map((t) => t.trim());
+  const order = ['오픈소스 · 외부 프로젝트 기여', '오픈소스 · 직접 운영하는 프로젝트', '개인 프로젝트', '그 밖의 프로젝트', '기술 스택'];
+  expect(headings.filter((h) => order.includes(h))).toEqual(order);
+  expect(headings.filter((h) => h.startsWith('외부 기여'))).toEqual([]);
+  await expect(page.locator('.print .contribs')).toHaveCount(0);
+  const briefs = await page.locator('.print .brief').evaluateAll((els) => els.map((e) => e.getAttribute('data-project')));
+  expect(briefs).toEqual(['entail', 'torch-compile-fuzzer', 'geul-lang', 'inversa-bench', 'asahi', 'barun-order', 'mzcube', 'nogada-rpg']);
 });
 
 test('인쇄 페이지는 검색 엔진 색인을 막는다', async ({ page }) => {

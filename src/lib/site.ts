@@ -11,8 +11,10 @@ export interface Site {
   contributions: Contributions;
   all: ProjectEntry[];
   featured: ProjectEntry[];
-  ml: ProjectEntry[];
-  agentProduct: ProjectEntry[];
+  /** 1장 오픈소스에 놓는 대표작(group: oss), order 순서. */
+  oss: ProjectEntry[];
+  /** 2장 개인 프로젝트에 놓는 대표작(group: personal), order 순서. */
+  personal: ProjectEntry[];
   cards: ProjectEntry[];
   lines: ProjectEntry[];
   byId: Map<string, ProjectEntry>;
@@ -24,6 +26,7 @@ export async function loadSite(): Promise<Site> {
   const errors = checkIntegrity({
     projects: all.map((p) => ({ id: p.id, tier: p.data.tier })),
     contributions: contributions.items,
+    ignore: contributions.ignore,
     skills: profile.skills,
   });
   if (errors.length > 0) {
@@ -35,8 +38,8 @@ export async function loadSite(): Promise<Site> {
     contributions,
     all,
     featured,
-    ml: featured.filter((p) => p.data.track === 'ml'),
-    agentProduct: featured.filter((p) => p.data.track === 'agent' || p.data.track === 'product'),
+    oss: featured.filter((p) => p.data.group === 'oss'),
+    personal: featured.filter((p) => p.data.group === 'personal'),
     cards: all.filter((p) => p.data.tier === 'card'),
     lines: all.filter((p) => p.data.tier === 'line'),
     byId: new Map(all.map((p) => [p.id, p])),
