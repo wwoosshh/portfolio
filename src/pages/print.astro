@@ -3,7 +3,7 @@ import Evidence from '../components/Evidence.astro';
 import ProjectBrief from '../components/ProjectBrief.astro';
 import Status from '../components/Status.astro';
 import Print from '../layouts/Print.astro';
-import { byRepo, shortRepo, sortByPriority } from '../lib/contribution-stats';
+import { printRows, shortRepo } from '../lib/contribution-stats';
 import { formatDate, formatPeriod, shortRef } from '../lib/format';
 import { liveMetrics } from '../lib/live-metrics';
 import { projectHref } from '../lib/links';
@@ -16,8 +16,8 @@ const { profile } = site;
 const timeline = buildTimeline(profile);
 const strip = (url: string) => url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 const more = [...site.cards, ...site.lines];
-// 외부 기여 표: 저장소 묶음 순서(병합 많은 순)대로, 묶음 안에서는 병합·승인·리뷰 중 순으로 둔다. 홈의 보드와 같은 순서다.
-const contribRows = byRepo(site.contributions.items).flatMap((g) => sortByPriority(g.items));
+// 외부 기여 표: 16줄까지만 싣되 저장소마다 한 줄 이상. 저장소 묶음 순서(병합 많은 순)대로, 묶음 안에서는 병합·승인·리뷰 중 순으로 둔다(홈의 보드와 같은 순서).
+const { rows: contribRows, rest: contribRest } = printRows(site.contributions.items);
 // 직접 운영하는 오픈소스 요약: 기여 데이터에서 계산한 수치가 있으면 핵심 결과와 그 수치를 함께(half), 없으면 핵심 결과만(quarter) 싣는다.
 const ossSize = (id: string) => (liveMetrics(id, site.contributions).length > 0 ? 'half' : 'quarter');
 const evidenceNote = profile.contact.site
@@ -115,6 +115,7 @@ const evidenceNote = profile.contact.site
         }
       </tbody>
     </table>
+    {contribRest > 0 && <p class="rest">외 {contribRest}건 · 전체 목록은 사이트의 외부 기여 목록</p>}
     <p class="asof">매일 자동 확인 · 마지막 변경 {formatDate(site.contributions.asOf)}</p>
 
     <h2>오픈소스 · 직접 운영하는 프로젝트</h2>

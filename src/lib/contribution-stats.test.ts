@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { byRepo, contributionPriority, shortRepo, sortByPriority, tally } from './contribution-stats';
+import { byRepo, contributionPriority, printRows, shortRepo, sortByPriority, tally } from './contribution-stats';
 import { contributionSchema, type Contribution } from './schema';
 
 const make = (o: Partial<Contribution> & Pick<Contribution, 'repo' | 'kind' | 'number'>): Contribution =>
@@ -168,6 +168,97 @@ describe('sortByPriority', () => {
   });
   test('빈 목록은 빈 배열이다', () => {
     expect(sortByPriority([])).toEqual([]);
+  });
+});
+
+describe('printRows', () => {
+  const keys = (rows: readonly Contribution[]) => rows.map((c) => `${c.repo}#${c.number}`);
+  const numbered = (repo: string, kind: 'pr' | 'issue', from: number, count: number, o: Partial<Contribution> = {}) =>
+    Array.from({ length: count }, (_, i) => make({ repo, kind, number: from + i, ...o }));
+
+  // 오늘의 데이터와 같은 구성(15개): PyTorch 12개(병합 1, 승인 1, 리뷰 중 2, 변경 요청 1, 해결 1, 열린 이슈 5, 닫힘 1)와 나머지 세 저장소에 하나씩.
+  const today: Contribution[] = [
+    make({ repo: 'Comfy-Org/ComfyUI', kind: 'issue', number: 16490 }),
+    ...numbered(T, 'issue', 198094, 2, { labels: ['triaged'] }),
+    make({ repo: T, kind: 'pr', number: 198096 }),
+    make({ repo: T, kind: 'pr', number: 198097, review: 'changes_requested' }),
+    ...numbered(T, 'issue', 198100, 3, { labels: ['triaged'] }),
+    make({ repo: T, kind: 'pr', number: 198103 }),
+    make({ repo: T, kind: 'pr', number: 198104, review: 'approved' }),
+    make({ repo: T, kind: 'pr', number: 198105, state: 'closed' }),
+    make({ repo: T, kind: 'issue', number: 198131, state: 'closed', stateReason: 'completed' }),
+    make({ repo: T, kind: 'pr', number: 198132, state: 'merged', review: 'approved' }),
+    make({ repo: 'sgl-project/sglang', kind: 'issue', number: 41227 }),
+    make({ repo: 'vllm-project/vllm', kind: 'issue', number: 58675 }),
+  ];
+
+  // 스무 개: A 병합 PR 12개, B 열린 이슈 5개, C 닫힌 PR 3개.
+  const twenty: Contribution[] = [
+    ...numbered('a/a', 'pr', 100, 12, { state: 'merged' }),
+    ...numbered('b/b', 'issue', 200, 5),
+    ...numbered('c/c', 'pr', 300, 3, { state: 'closed' }),
+  ];
+
+  test('오늘의 15개는 모두 들어가고 남는 것이 없다', () => {
+    expect(today).toHaveLength(15);
+    const { rows, rest } = printRows(today);
+    expect(rest).toBe(0);
+    expect(keys(rows)).toEqual(keys(byRepo(today).flatMap((g) => sortByPriority(g.items))));
+  });
+
+  test('스무 개이면 16줄만 싣고 4건이 남는다', () => {
+    const { rows, rest } = printRows(twenty);
+    expect(rows).toHaveLength(16);
+    expect(rest).toBe(4);
+  });
+
+  test('저장소마다 최소 한 줄이 들어가고, 그 줄은 그 저장소에서 우선순위가 가장 높은 항목이다', () => {
+    const { rows } = printRows(twenty);
+    expect(new Set(rows.map((c) => c.repo))).toEqual(new Set(['a/a', 'b/b', 'c/c']));
+    // 닫힌 PR(6)뿐인 C와 열린 이슈(5)뿐인 B도, 병합 PR(0)이 12개나 있는 A에 밀리지 않는다. 각 저장소의 대표는 번호가 가장 큰 항목이다.
+    expect(rows.some((c) => c.repo === 'c/c' && c.number === 302)).toBe(true);
+    expect(rows.some((c) => c.repo === 'b/b' && c.number === 204)).toBe(true);
+  });
+
+  test('남은 자리는 저장소와 상관없이 우선순위 순으로 채운다', () => {
+    // 보장된 3줄(A#111, B#204, C#302) 뒤의 13자리: 병합 PR 11개(A#110~#100)가 먼저, 그다음 열린 이슈 2개(B#203, B#202).
+    expect(keys(printRows(twenty).rows)).toEqual([
+      ...Array.from({ length: 12 }, (_, i) => `a/a#${111 - i}`),
+      'b/b#204',
+      'b/b#203',
+      'b/b#202',
+      'c/c#302',
+    ]);
+  });
+
+  test('저장소 묶음 순서(byRepo)대로, 묶음 안에서는 우선순위 순으로 내보낸다', () => {
+    const mixedUp = [...twenty].reverse();
+    const { rows } = printRows(mixedUp);
+    expect([...new Set(rows.map((c) => c.repo))]).toEqual(byRepo(mixedUp).map((g) => g.repo));
+    for (const g of byRepo(mixedUp)) {
+      const mine = rows.filter((c) => c.repo === g.repo);
+      expect(keys(mine)).toEqual(keys(sortByPriority(mine)));
+    }
+  });
+
+  test('상한은 인자로 바꿀 수 있고, 원본은 바꾸지 않는다', () => {
+    const copy = [...twenty];
+    expect(printRows(twenty, 5)).toMatchObject({ rest: 15 });
+    expect(printRows(twenty, 5).rows).toHaveLength(5);
+    expect(printRows(twenty, 100)).toMatchObject({ rest: 0 });
+    expect(twenty).toEqual(copy);
+  });
+
+  test('저장소가 상한보다 많아도 저장소마다 한 줄은 싣는다', () => {
+    const repos = Array.from({ length: 5 }, (_, i) => make({ repo: `o/r${i}`, kind: 'issue', number: i + 1 }));
+    const { rows, rest } = printRows([...repos, ...numbered('o/r0', 'issue', 50, 3)], 3);
+    expect(new Set(rows.map((c) => c.repo)).size).toBe(5);
+    expect(rows).toHaveLength(5);
+    expect(rest).toBe(3);
+  });
+
+  test('빈 목록은 줄도 남는 것도 없다', () => {
+    expect(printRows([])).toEqual({ rows: [], rest: 0 });
   });
 });
 

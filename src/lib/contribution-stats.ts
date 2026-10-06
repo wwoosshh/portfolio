@@ -92,3 +92,19 @@ export function byRepo(items: readonly Contribution[]): RepoGroup[] {
     }))
     .sort((a, b) => b.tally.merged - a.tally.merged || b.items.length - a.items.length || a.repo.localeCompare(b.repo));
 }
+
+/**
+ * 인쇄 표에 실을 줄. 표가 길어져 PDF가 4쪽을 넘지 않도록 cap줄까지만 싣되, 한 저장소가 자리를 다 차지하지 않게 한다.
+ * 먼저 저장소마다 우선순위가 가장 높은 항목 하나를 싣고(저장소가 cap보다 많아도 이 보장은 지킨다), 남은 자리는 전체를 우선순위 순으로 채운다.
+ * 내보내는 순서는 저장소 묶음 순서(byRepo)이고, 묶음 안에서는 우선순위 순이다. rest는 싣지 못한 항목 수다.
+ */
+export function printRows(items: readonly Contribution[], cap = 16): { rows: Contribution[]; rest: number } {
+  const groups = byRepo(items);
+  const chosen = new Set<Contribution>(groups.map((g) => sortByPriority(g.items)[0]));
+  for (const c of sortByPriority(items)) {
+    if (chosen.size >= cap) break;
+    chosen.add(c);
+  }
+  const rows = groups.flatMap((g) => sortByPriority(g.items).filter((c) => chosen.has(c)));
+  return { rows, rest: items.length - rows.length };
+}

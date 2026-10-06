@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import raw from '../../src/data/contributions.json' with { type: 'json' };
+import { contributions } from '../../src/data/contributions';
+import { byRepo, sortByPriority } from '../../src/lib/contribution-stats';
 import { kstDate } from './dates';
 
 // 건수는 매일 바뀐다. 기대값은 기여 데이터(JSON)에서 이 파일이 직접 세고, 숫자를 적지 않는다.
@@ -28,11 +30,13 @@ const rowOf = (page: Page, c: Item) => page.locator('.cboard__item').filter({ ha
 test.describe('외부 기여 보드(움직임 줄임: 최종 상태)', () => {
   test.use({ reducedMotion: 'reduce' });
 
-  test('저장소마다 묶음이 하나이고 PyTorch가 맨 앞이다', async ({ page }) => {
+  test('저장소마다 묶음이 하나이고, 묶음은 병합 많은 순이다', async ({ page }) => {
     await page.goto('/');
     const groups = page.locator('#oss .cboard .cboard__repo');
     await expect(groups).toHaveCount(repos.length);
-    await expect(groups.first()).toHaveAttribute('data-repo', 'pytorch/pytorch');
+    const order = byRepo(contributions.items).map((g) => g.repo);
+    await expect(groups.first()).toHaveAttribute('data-repo', order[0]);
+    expect(await groups.evaluateAll((els) => els.map((e) => e.getAttribute('data-repo')))).toEqual(order);
     for (const repo of repos) {
       const link = page.locator(`#oss .cboard__repo[data-repo="${repo}"] h4 a`);
       await expect(link).toHaveAttribute('href', `https://github.com/${repo}`);
@@ -40,6 +44,16 @@ test.describe('외부 기여 보드(움직임 줄임: 최종 상태)', () => {
       await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
       await expect(link).toContainText(` · ${repo}`);
       await expect(link).toContainText('↗');
+    }
+  });
+
+  // 병합 칩의 도장이 화면 안에서 찍히려면 병합 PR이 묶음의 위쪽에 있어야 한다. 순서는 sortByPriority가 정한다.
+  test('묶음 안의 줄은 병합, 승인, 리뷰 중, 변경 요청, 해결, 열림, 닫힘 순이다', async ({ page }) => {
+    await page.goto('/');
+    for (const g of byRepo(contributions.items)) {
+      const refs = page.locator(`#oss .cboard__repo[data-repo="${g.repo}"] .cboard__item a.cboard__ref`);
+      const hrefs = await refs.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+      expect(hrefs, g.repo).toEqual(sortByPriority(g.items).map((c) => c.url));
     }
   });
 

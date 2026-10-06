@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { PDFDocument } from 'pdf-lib';
 import raw from '../../src/data/contributions.json' with { type: 'json' };
+import { contributions } from '../../src/data/contributions';
 import { profile } from '../../src/data/profile';
+import { byRepo, printRows } from '../../src/lib/contribution-stats';
 import { kstDate } from './dates';
 
 const PHONE = /01[016789][-. ]?\d{3,4}[-. ]?\d{4}/;
@@ -18,6 +20,9 @@ const SHORT = new Map([
 ]);
 type Related = { number: number; url: string };
 const relatedOf = (c: (typeof raw.items)[number]): Related[] => (c as { related?: Related[] }).related ?? [];
+// 표는 16줄까지(저장소마다 한 줄 이상). 실을 줄과 싣지 못한 건수는 화면과 같은 함수로 센다.
+const { rows: shown, rest } = printRows(contributions.items);
+const shownUrls = new Set(shown.map((c) => c.url));
 
 test('인쇄 페이지는 A4 4장 이하 PDF가 된다', async ({ page }) => {
   await page.goto('/print/', { waitUntil: 'networkidle' });
@@ -27,12 +32,16 @@ test('인쇄 페이지는 A4 4장 이하 PDF가 된다', async ({ page }) => {
   expect(doc.getPageCount()).toBeLessThanOrEqual(4);
 });
 
-test('인쇄: 외부 기여 표는 항목마다 한 행이고 저장소·종류 #번호·상태 글자·제목을 가진다', async ({ page }) => {
+test('인쇄: 외부 기여 표는 싣는 항목마다 한 행이고 저장소·종류 #번호·상태 글자·제목을 가진다', async ({ page }) => {
   await page.goto('/print/');
   const rows = page.locator('.print .ctable tbody tr');
-  await expect(rows).toHaveCount(raw.items.length);
-  await expect(rows.first().locator('td').first()).toHaveText('PyTorch');
-  for (const c of raw.items) {
+  await expect(rows).toHaveCount(shown.length);
+  const [firstGroup] = byRepo(contributions.items);
+  await expect(rows.first().locator('td').first()).toHaveText(SHORT.get(firstGroup.repo) ?? firstGroup.repo.split('/')[1]);
+  // 싣는 순서도 같은 함수가 정한다.
+  const hrefs = await rows.locator('td:nth-child(2) a').evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+  expect(hrefs).toEqual(shown.map((c) => c.url));
+  for (const c of shown) {
     const row = rows.filter({ has: page.locator(`a[href="${c.url}"]`) });
     await expect(row, c.url).toHaveCount(1);
     await expect(row.locator('td').nth(0), c.url).toHaveText(SHORT.get(c.repo) ?? c.repo.split('/')[1]);
@@ -42,11 +51,23 @@ test('인쇄: 외부 기여 표는 항목마다 한 행이고 저장소·종류 
   }
 });
 
+test('인쇄: 저장소마다 한 줄 이상 싣고, 싣지 못한 항목이 있으면 건수와 전체 목록의 위치를 밝힌다', async ({ page }) => {
+  await page.goto('/print/');
+  const cells = await page.locator('.print .ctable tbody tr td:first-child').allInnerTexts();
+  const names = byRepo(contributions.items).map((g) => SHORT.get(g.repo) ?? g.repo.split('/')[1]);
+  expect([...new Set(cells)].sort()).toEqual([...names].sort());
+  expect(shown.length + rest).toBe(raw.items.length);
+  const line = page.locator('.print .rest');
+  if (rest === 0) await expect(line).toHaveCount(0);
+  else await expect(line).toHaveText(`외 ${rest}건 · 전체 목록은 사이트의 외부 기여 목록`);
+});
+
 test('인쇄: 다른 개발자의 수정 PR은 같은 행에 `다른 개발자 수정 PR #번호 (상태)`로 들어 있다', async ({ page }) => {
   await page.goto('/print/');
   const withRelated = raw.items.filter((c) => relatedOf(c).length > 0);
   expect(withRelated.length).toBeGreaterThan(0);
-  for (const c of withRelated) {
+  // 표에 싣는 항목만 본다.
+  for (const c of withRelated.filter((c) => shownUrls.has(c.url))) {
     const row = page.locator('.print .ctable tbody tr').filter({ has: page.locator(`a[href="${c.url}"]`) });
     for (const r of relatedOf(c)) {
       await expect(row.locator(`a[href="${r.url}"]`), r.url).toHaveCount(1);
