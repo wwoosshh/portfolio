@@ -96,21 +96,46 @@ export const projectSchema = z
     });
   });
 
+const repoName = z.string().regex(/^[\w.-]+\/[\w.-]+$/, 'owner/repo 형식이어야 합니다');
+const contributionStateSchema = z.enum(['open', 'merged', 'closed']);
+
+const relatedPrSchema = z.strictObject({
+  repo: repoName,
+  number: z.number().int().positive(),
+  title: z.string().min(1),
+  state: contributionStateSchema,
+  url: httpUrl,
+  author: z.string().min(1),
+});
+
 export const contributionSchema = z
   .strictObject({
-    repo: z.string().regex(/^[\w.-]+\/[\w.-]+$/, 'owner/repo 형식이어야 합니다'),
+    repo: repoName,
     kind: z.enum(['pr', 'issue']),
     number: z.number().int().positive(),
     title: z.string().min(1),
-    state: z.enum(['open', 'merged', 'closed']),
+    state: contributionStateSchema,
+    stateReason: z.enum(['completed', 'not_planned', 'reopened', 'duplicate']).nullable().default(null),
+    review: z.enum(['approved', 'changes_requested', 'review_required']).nullable().default(null),
     url: httpUrl,
-    project: z.string().min(1),
+    // 이 기여를 찾은 도구(대표작 id). 자동으로 새로 찾은 항목은 null이다.
+    project: z.string().min(1).nullable(),
     labels: z.array(z.string()).default([]),
-    note: z.string().optional(),
+    createdAt: z.iso.datetime(),
+    closedAt: z.iso.datetime().nullable().default(null),
+    mergedAt: z.iso.datetime().nullable().default(null),
+    note: z.string().min(1).optional(),
+    related: z.array(relatedPrSchema).default([]),
   })
   .superRefine((c, ctx) => {
     if (c.kind === 'issue' && c.state === 'merged') {
       ctx.addIssue({ code: 'custom', path: ['state'], message: '이슈는 merged 상태일 수 없습니다' });
+    }
+    if (c.kind === 'issue' && c.review !== null) {
+      ctx.addIssue({ code: 'custom', path: ['review'], message: '이슈에는 리뷰 상태가 없습니다' });
+    }
+    if (c.state === 'merged' && c.mergedAt === null) {
+      ctx.addIssue({ code: 'custom', path: ['mergedAt'], message: '병합된 PR은 mergedAt이 있어야 합니다' });
     }
     const expected = `https://github.com/${c.repo}/${c.kind === 'pr' ? 'pull' : 'issues'}/${c.number}`;
     if (c.url !== expected) {
@@ -119,8 +144,24 @@ export const contributionSchema = z
   });
 
 export const contributionsSchema = z.strictObject({
+  // 마지막으로 내용이 바뀐 시각. 매일 확인하지만 바뀐 것이 없으면 그대로다.
   asOf: z.coerce.date(),
+  author: z.string().min(1),
+  excludeOwners: z.array(z.string().min(1)).default([]),
+  ignore: z.array(z.string().regex(/^[\w.-]+\/[\w.-]+#\d+$/)).default([]),
   items: z.array(contributionSchema),
+  own: z.strictObject({
+    asahi: z.strictObject({
+      mergedPrs: z.number().int().nonnegative(),
+      mineMergedPrs: z.number().int().nonnegative(),
+      url: httpUrl,
+    }),
+    entail: z.strictObject({
+      pypiReleases: z.number().int().positive(),
+      pypiLatest: z.string().min(1),
+      url: httpUrl,
+    }),
+  }),
 });
 
 const experienceSchema = z.strictObject({

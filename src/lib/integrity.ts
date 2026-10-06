@@ -3,18 +3,24 @@ import type { Contribution, Profile, Project } from './schema';
 export interface IntegrityInput {
   projects: { id: string; tier: Project['tier'] }[];
   contributions: Contribution[];
+  /** 목록에서 뺄 항목의 `owner/repo#번호`. 데이터에 남아 있으면 오류다. */
+  ignore: string[];
   skills: Profile['skills'];
 }
 
-export function checkIntegrity({ projects, contributions, skills }: IntegrityInput): string[] {
+export function checkIntegrity({ projects, contributions, ignore, skills }: IntegrityInput): string[] {
   const errors: string[] = [];
   const tierById = new Map(projects.map((p) => [p.id, p.tier]));
+  const ignored = new Set(ignore);
   const seen = new Set<string>();
 
   for (const c of contributions) {
     const key = `${c.repo}#${c.number}`;
     if (seen.has(key)) errors.push(`기여 ${key}: 중복 항목`);
     seen.add(key);
+    if (ignored.has(key)) errors.push(`기여 ${key}: ignore에 적힌 항목이 items에 남아 있음`);
+    // 자동으로 새로 찾은 기여는 아직 찾은 도구(project)가 없다.
+    if (c.project === null) continue;
     const tier = tierById.get(c.project);
     if (tier === undefined) errors.push(`기여 ${key}: 존재하지 않는 프로젝트 "${c.project}"`);
     else if (tier !== 'featured') errors.push(`기여 ${key}: "${c.project}"는 대표작(featured)이 아님`);

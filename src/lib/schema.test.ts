@@ -131,12 +131,65 @@ describe('contributionSchema', () => {
     state: 'open',
     url: 'https://github.com/pytorch/pytorch/pull/198096',
     project: 'torch-compile-fuzzer',
+    createdAt: '2026-09-22T02:35:03Z',
   };
 
-  test('저장소·번호와 URL이 일치하면 통과한다', () => {
+  test('저장소·번호와 URL이 일치하면 통과하고 기본값이 채워진다', () => {
     const result = contributionSchema.safeParse(pr);
     expect(result.success).toBe(true);
-    if (result.success) expect(result.data.labels).toEqual([]);
+    if (result.success) {
+      expect(result.data).toMatchObject({
+        labels: [],
+        related: [],
+        stateReason: null,
+        review: null,
+        closedAt: null,
+        mergedAt: null,
+      });
+    }
+  });
+
+  test('자동으로 새로 찾은 항목은 project가 null이어도 통과한다', () => {
+    expect(contributionSchema.safeParse({ ...pr, project: null }).success).toBe(true);
+  });
+
+  test('project 키 자체가 없으면 실패한다', () => {
+    const { project: _omit, ...rest } = pr;
+    expect(contributionSchema.safeParse(rest).success).toBe(false);
+  });
+
+  test('createdAt은 ISO 날짜·시각이어야 한다', () => {
+    expect(contributionSchema.safeParse({ ...pr, createdAt: '2026-09-22' }).success).toBe(false);
+  });
+
+  test('병합된 PR은 mergedAt이 있어야 한다', () => {
+    const result = contributionSchema.safeParse({ ...pr, state: 'merged' });
+    expect(messages(result)).toContain('병합된 PR은 mergedAt이 있어야 합니다');
+    expect(contributionSchema.safeParse({ ...pr, state: 'merged', mergedAt: '2026-09-30T05:00:00Z' }).success).toBe(true);
+  });
+
+  test('이슈에는 리뷰 상태가 없다', () => {
+    const result = contributionSchema.safeParse({
+      ...pr,
+      kind: 'issue',
+      url: 'https://github.com/pytorch/pytorch/issues/198096',
+      review: 'approved',
+    });
+    expect(messages(result)).toContain('이슈에는 리뷰 상태가 없습니다');
+  });
+
+  test('다른 개발자의 수정 PR은 상태·주소·작성자를 모두 갖춰야 한다', () => {
+    const related = {
+      repo: 'sgl-project/sglang',
+      number: 41239,
+      title: 'Fix rope_scaling override silently dropping the RoPE base',
+      state: 'closed',
+      url: 'https://github.com/sgl-project/sglang/pull/41239',
+      author: 'someone',
+    };
+    expect(contributionSchema.safeParse({ ...pr, related: [related] }).success).toBe(true);
+    const { author: _omit, ...withoutAuthor } = related;
+    expect(contributionSchema.safeParse({ ...pr, related: [withoutAuthor] }).success).toBe(false);
   });
 
   test('URL이 저장소·번호와 다르면 실패한다', () => {

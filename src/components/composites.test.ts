@@ -162,6 +162,7 @@ describe('ContributionList', () => {
       url: 'https://github.com/pytorch/pytorch/issues/198094',
       project: 'torch-compile-fuzzer',
       labels: ['triaged'],
+      createdAt: '2026-09-22T02:35:00Z',
     });
     const html = await container.renderToString(ContributionList, {
       props: { items: [item], asOf: new Date('2026-09-29') },

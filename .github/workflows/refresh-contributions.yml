@@ -1,0 +1,35 @@
+name: refresh-contributions
+# 매일 06:00(KST)에 외부 오픈소스 기여 상태를 갱신한다. 바뀐 것이 있으면 main에 커밋하고, 그 푸시로 Vercel이 배포한다.
+on:
+  schedule:
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: refresh-contributions
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Refresh contribution data
+        run: node --experimental-strip-types scripts/refresh-contributions.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Validate (unit tests + build)
+        run: npm test && npm run build
+      - name: Commit if changed
+        run: |
+          git add src/data/contributions.json
+          if git diff --cached --quiet; then echo "변경 없음"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(data): 오픈소스 기여 상태 자동 갱신"
+          git push
