@@ -4,6 +4,7 @@ import Timeline from '../components/Timeline.astro';
 import BuildDeck from '../components/scenes/BuildDeck.astro';
 import ChapterCard from '../components/scenes/ChapterCard.astro';
 import Closing from '../components/scenes/Closing.astro';
+import ContributionBoard from '../components/scenes/ContributionBoard.astro';
 import Hero from '../components/scenes/Hero.astro';
 import Highlights from '../components/scenes/Highlights.astro';
 import HowIWork from '../components/scenes/HowIWork.astro';
@@ -22,15 +23,17 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
 <Base title={title} description={profile.intro[0]} bare>
   <Hero profile={profile} pdfName={pdfName} />
   <Highlights profile={profile} />
-  <section id="ml" class="container container--wide" aria-labelledby="ml-title">
-    <ChapterCard id="ml" num="1장" title="정확성" lead="AI/ML 시스템과 컴파일러" />
-    {site.ml.map((p, i) => <ProjectScene project={p} num={`1-${i + 1}`} />)}
+  <section id="oss" class="container container--wide" aria-labelledby="oss-title">
+    <ChapterCard id="oss" num="1장" title="오픈소스" lead="검증받은 기여와 직접 운영하는 오픈소스" />
+    <ContributionBoard contributions={site.contributions} byId={site.byId} />
+    <h3 class="chapter-sub" data-reveal>직접 운영하는 오픈소스</h3>
+    {site.oss.map((p, i) => <ProjectScene project={p} num={`1-${i + 1}`} headingLevel={4} />)}
   </section>
-  <section id="agent-product" aria-labelledby="agent-product-title">
+  <section id="personal" aria-labelledby="personal-title">
     <div class="container container--wide">
-      <ChapterCard id="agent-product" num="2장" title="만들고 운영한다" lead="AI 에이전트와 제품" />
+      <ChapterCard id="personal" num="2장" title="개인 프로젝트" lead="직접 만든 제품과 실험" />
     </div>
-    <BuildDeck projects={site.agentProduct} />
+    <BuildDeck projects={site.personal} />
   </section>
   <section id="experience" class="container" aria-labelledby="experience-title">
     <SectionHeader id="experience" title="경력 · 활동" />
@@ -48,8 +51,19 @@ const pdfName = `${profile.name}_포트폴리오.pdf`;
     margin-top: var(--sp-16);
   }
   /* 등장 전 대표작 패널은 오른쪽으로 40px 밀려 있다. 폭 768~1231px에서는 그 밀림이 가로 스크롤을 만들므로 1장 안에서 자른다. */
-  #ml {
+  #oss {
     overflow-x: clip;
+  }
+  /* 1장 안의 소제목: 외부 기여 보드와 직접 운영하는 오픈소스를 나눈다. 바로 아래 첫 장면의 위쪽 선과 겹치지 않게 한다. */
+  .chapter-sub {
+    font-size: var(--fs-h2);
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+  }
+  .chapter-sub + :global(.pscene) {
+    border-top: 0;
+    padding-top: var(--sp-8);
   }
   @media (max-width: 767px) {
     :global(main > section + section) {

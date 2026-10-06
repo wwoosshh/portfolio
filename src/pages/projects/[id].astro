@@ -27,7 +27,7 @@ const deploy = deploymentStatus(d.deployment);
 const deployUrl = d.deployment.state === 'none' ? undefined : d.deployment.url;
 const deployVideo = d.deployment.state === 'down' ? d.deployment.video : undefined;
 const contribs = site.contributionsFor(project.id);
-const back = d.track === 'ml' ? '/#ml' : '/#agent-product';
+const back = d.group === 'personal' ? '/#personal' : '/#oss';
 const LINK_KIND = {
   repo: '저장소',
   pr: 'PR',

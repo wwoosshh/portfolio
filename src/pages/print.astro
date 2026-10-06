@@ -78,13 +78,11 @@ const evidenceNote = profile.contact.site
   </section>
 
   <section class="page">
-    <h2>대표 프로젝트 · AI/ML 시스템과 컴파일러</h2>
-    <div class="stack">{site.ml.map((p) => <ProjectBrief project={p} size="half" />)}</div>
-  </section>
+    <h2>오픈소스 · 직접 운영하는 프로젝트</h2>
+    <div class="stack">{site.oss.map((p, i) => <ProjectBrief project={p} size={i < 2 ? 'half' : 'quarter'} />)}</div>
 
-  <section class="page">
-    <h2>AI 에이전트 · 제품</h2>
-    <div class="stack">{site.agentProduct.map((p) => <ProjectBrief project={p} size="quarter" />)}</div>
+    <h2>개인 프로젝트</h2>
+    <div class="stack">{site.personal.map((p) => <ProjectBrief project={p} size="quarter" />)}</div>
   </section>
 
   <section class="page">

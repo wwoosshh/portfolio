@@ -58,6 +58,8 @@ export const projectSchema = z
     tagline: z.string().min(1),
     tier: z.enum(['featured', 'card', 'line']),
     track: z.enum(['ml', 'agent', 'product', 'other']),
+    // 홈의 어느 장에 놓는가: oss는 1장 오픈소스, personal은 2장 개인 프로젝트. 대표작만 쓴다.
+    group: z.enum(['oss', 'personal']).optional(),
     order: z.number().int(),
     period: periodSchema,
     role: z.string().min(1),
@@ -82,6 +84,9 @@ export const projectSchema = z
       }
       if (!p.brief) {
         ctx.addIssue({ code: 'custom', path: ['brief'], message: '대표작은 brief(문제·접근·결과 요약)가 필요합니다' });
+      }
+      if (!p.group) {
+        ctx.addIssue({ code: 'custom', path: ['group'], message: '대표작은 group(oss 또는 personal)이 필요합니다' });
       }
     }
     const isPrivate = p.repo?.visibility === 'private';

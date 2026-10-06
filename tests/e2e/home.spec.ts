@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('홈: 섹션이 정해진 순서로 있다', async ({ page }) => {
   await page.goto('/');
   const ids = await page.locator('main > section[id]').evaluateAll((els) => els.map((e) => e.id));
-  expect(ids).toEqual(['intro', 'highlights', 'ml', 'agent-product', 'experience', 'how-i-work', 'more', 'skills', 'contact']);
+  expect(ids).toEqual(['intro', 'highlights', 'oss', 'personal', 'experience', 'how-i-work', 'more', 'skills', 'contact']);
 });
 
 test('홈: 소개에 대표 분야와 연락 버튼이 있다', async ({ page }) => {

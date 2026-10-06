@@ -8,6 +8,7 @@ import ContributionList from './ContributionList.astro';
 import MetricList from './MetricList.astro';
 import ProjectCard from './ProjectCard.astro';
 import ProjectLine from './ProjectLine.astro';
+import ProjectScene from './scenes/ProjectScene.astro';
 import Timeline from './Timeline.astro';
 
 let container: AstroContainer;
@@ -22,6 +23,7 @@ const featured = {
     tagline: '설정 검사 라이브러리',
     tier: 'featured',
     track: 'ml',
+    group: 'oss',
     order: 1,
     period: { start: '2026-09', end: '2026-09' },
     role: '1인 개발 · AI 코딩 에이전트 협업',
@@ -120,6 +122,17 @@ describe('ProjectCard', () => {
     expect(html).toContain('data-project="monney"');
     expect(html).not.toContain('card__metric');
     expect(html).not.toContain('card__foot');
+  });
+});
+
+describe('ProjectScene', () => {
+  test('제목 요소는 기본이 h3이고, headingLevel로 h4가 된다', async () => {
+    const byDefault = await container.renderToString(ProjectScene, { props: { project: featured, num: '1-1' } });
+    expect(byDefault).toMatch(/<h3 class="pscene__title"/);
+    expect(byDefault).not.toContain('<h4');
+    const nested = await container.renderToString(ProjectScene, { props: { project: featured, num: '1-1', headingLevel: 4 } });
+    expect(nested).toMatch(/<h4 class="pscene__title"[^>]*><a href="\/projects\/entail\/" data-detail-link/);
+    expect(nested).not.toContain('<h3');
   });
 });
 

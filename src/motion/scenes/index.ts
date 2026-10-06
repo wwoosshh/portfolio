@@ -2,6 +2,7 @@
 import './hero';
 import './highlights';
 import './chapter';
+import './contrib';
 import './project';
 import './deck';
 import './timeline';

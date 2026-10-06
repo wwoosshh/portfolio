@@ -23,6 +23,7 @@ body {
 h1,
 h2,
 h3,
+h4,
 p,
 ul,
 ol,
@@ -131,10 +132,11 @@ img {
   transform: none !important;
 }
 
-/* 도면 부품·덱 슬라이드·타임라인 진행선도 같다. 되돌리기가 중간에 멈춰 인라인 상태가 남아도 최종 모습으로 보인다. */
+/* 도면 부품·덱 슬라이드·타임라인 진행선·기여 보드의 병합 칩(도장 찍기)도 같다. 되돌리기가 중간에 멈춰 인라인 상태가 남아도 최종 모습으로 보인다. */
 .motion-failed [data-pop],
 .motion-failed [data-fade],
-.motion-failed .deck__slide {
+.motion-failed .deck__slide,
+.motion-failed .cboard__item .status {
   opacity: 1 !important;
   transform: none !important;
 }

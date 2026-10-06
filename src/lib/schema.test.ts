@@ -9,6 +9,7 @@ const validProject = {
   tagline: '설정이 엔진에 도달했는지 검사한다',
   tier: 'featured',
   track: 'ml',
+  group: 'oss',
   order: 1,
   period: { start: '2026-09', end: '2026-09' },
   role: '1인 개발 · AI 코딩 에이전트 협업',
@@ -61,6 +62,22 @@ describe('projectSchema', () => {
   test('대표작의 track은 other일 수 없다', () => {
     const result = projectSchema.safeParse({ ...validProject, track: 'other' });
     expect(messages(result)).toContain('대표작은 track이 ml, agent, product 중 하나여야 합니다');
+  });
+
+  test('대표작은 group(oss 또는 personal)이 필요하다', () => {
+    const { group: _omit, ...rest } = validProject;
+    expect(messages(projectSchema.safeParse(rest))).toContain('대표작은 group(oss 또는 personal)이 필요합니다');
+  });
+
+  test('group은 oss 또는 personal만 쓸 수 있다', () => {
+    expect(projectSchema.safeParse({ ...validProject, group: 'personal' }).success).toBe(true);
+    expect(projectSchema.safeParse({ ...validProject, group: 'ml' }).success).toBe(false);
+  });
+
+  test('대표작이 아니면 group이 없어도 된다', () => {
+    const { group: _omit, ...rest } = validProject;
+    const card = { ...rest, tier: 'card', track: 'other', brief: undefined, metrics: [] };
+    expect(projectSchema.safeParse(card).success).toBe(true);
   });
 
   test('공개 저장소 프로젝트는 비공개 근거를 쓸 수 없다', () => {

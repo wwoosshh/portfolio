@@ -18,23 +18,15 @@ for (const id of IDS) {
   });
 }
 
-test('홈 1장: 수치 패널의 앞쪽은 계산한 수치다', async ({ page }) => {
+test('홈 1장: 직접 운영하는 오픈소스의 수치 패널 앞쪽은 계산한 수치다', async ({ page }) => {
   await page.goto('/');
-  for (const id of ['entail', 'torch-compile-fuzzer']) {
-    const rows = page.locator(`#ml [data-project="${id}"] .pscene__metric`);
+  for (const id of IDS) {
+    const rows = page.locator(`#oss [data-project="${id}"] .pscene__metric`);
     for (const [i, m] of liveMetrics(id, contributions).entries()) {
       await expect(rows.nth(i).locator('.pscene__metric-label'), id).toHaveText(m.label);
       await expect(rows.nth(i).locator('.pscene__metric-value'), id).toHaveText(m.value);
     }
   }
-});
-
-test('홈 2장: asahi 슬라이드의 첫 수치는 계산한 수치다', async ({ page }) => {
-  await page.goto('/');
-  const [first] = liveMetrics('asahi', contributions);
-  const row = page.locator('#agent-product .deck__slide[data-project="asahi"] .deck__metric').first();
-  await expect(row.locator('.deck__metric-label')).toHaveText(first.label);
-  await expect(row.locator('strong')).toHaveText(first.value);
 });
 
 test('인쇄: 대표작 요약의 첫 수치는 계산한 수치다', async ({ page }) => {
