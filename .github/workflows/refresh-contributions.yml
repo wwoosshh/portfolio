@@ -49,6 +49,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/data/contributions.json
           git commit -m "chore(data): 오픈소스 기여 상태 자동 갱신"
+          # 작업이 도는 사이 main에 다른 커밋이 올라왔으면 그 위로 옮겨 올린다.
+          git pull --rebase origin main
           git push
       - name: Read the Playwright version
         id: playwright
@@ -81,4 +83,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/portfolio.pdf
           git commit -m "chore(data): 공개 PDF 자동 갱신"
+          git pull --rebase origin main
           git push
