@@ -32,6 +32,16 @@ test('인쇄 페이지는 A4 4장 이하 PDF가 된다', async ({ page }) => {
   expect(doc.getPageCount()).toBeLessThanOrEqual(4);
 });
 
+// 운영체제마다 글꼴 그리기가 조금씩 달라(리눅스 CI는 윈도보다 약 1% 길다) 쪽 나눔이 경계에 걸리면 한 장이 늘어난다.
+// 3% 키워도 4장 안에 들어오는지로 그 여유를 미리 확인한다.
+test('인쇄 페이지는 3% 커져도 A4 4장 이하다(운영체제별 글꼴 차이 여유)', async ({ page }) => {
+  await page.goto('/print/', { waitUntil: 'networkidle' });
+  await page.evaluate(() => document.fonts.ready);
+  const pdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true, scale: 1.03 });
+  const doc = await PDFDocument.load(pdf);
+  expect(doc.getPageCount()).toBeLessThanOrEqual(4);
+});
+
 test('인쇄: 외부 기여 표는 싣는 항목마다 한 행이고 저장소·종류 #번호·상태 글자·제목을 가진다', async ({ page }) => {
   await page.goto('/print/');
   const rows = page.locator('.print .ctable tbody tr');
