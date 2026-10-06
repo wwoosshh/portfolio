@@ -24,6 +24,9 @@ export interface RepoGroup {
   tools: string[];
 }
 
+/** 문자 코드 순 비교. localeCompare는 실행 환경(윈도, 리눅스)의 정렬 규칙에 따라 순서가 달라진다. */
+const byCodePoint = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
 const SHORT_NAMES = new Map([
   ['pytorch/pytorch', 'PyTorch'],
   ['vllm-project/vllm', 'vLLM'],
@@ -90,7 +93,7 @@ export function byRepo(items: readonly Contribution[]): RepoGroup[] {
       tally: tally(list),
       tools: [...new Set(list.flatMap((c) => (c.project ? [c.project] : [])))],
     }))
-    .sort((a, b) => b.tally.merged - a.tally.merged || b.items.length - a.items.length || a.repo.localeCompare(b.repo));
+    .sort((a, b) => b.tally.merged - a.tally.merged || b.items.length - a.items.length || byCodePoint(a.repo, b.repo));
 }
 
 /**

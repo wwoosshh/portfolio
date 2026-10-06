@@ -1,7 +1,7 @@
 ---
 import { byRepo, shortRepo, sortByPriority, tally } from '../../lib/contribution-stats';
 import { formatDate } from '../../lib/format';
-import type { Contributions } from '../../lib/schema';
+import type { Contribution, Contributions } from '../../lib/schema';
 import type { ProjectEntry } from '../../lib/site';
 import { contributionStatus, relatedStatus } from '../../lib/status';
 import Status from '../Status.astro';
@@ -21,6 +21,7 @@ const summary = [
   { label: '프로젝트', value: total.repos },
 ];
 const headingId = (repo: string) => `cboard-${repo.replace('/', '--').toLowerCase()}`;
+const kindLabel = (c: Contribution) => (c.kind === 'pr' ? 'PR' : '이슈');
 ---
 <div class="cboard" data-scene="contrib">
   <h3 class="cboard__title" data-reveal>외부 프로젝트 기여</h3>
@@ -63,10 +64,10 @@ const headingId = (repo: string) => `cboard-${repo.replace('/', '--').toLowerCas
             {sortByPriority(g.items).map((c) => (
               <li class="cboard__item" data-reveal data-state={c.state}>
                 <div class="cboard__head">
-                  <span class="cboard__kind mono">{c.kind === 'pr' ? 'PR' : '이슈'}</span>
+                  <span class="cboard__kind mono">{kindLabel(c)}</span>
                   <Status view={contributionStatus(c)} />
                   <a class="cboard__ref mono" href={c.url} target="_blank" rel="noopener noreferrer">
-                    #{c.number} <span aria-hidden="true">↗</span>
+                    <span class="sr-only">{kindLabel(c)}{' '}</span>#{c.number} <span aria-hidden="true">↗</span>
                   </a>
                 </div>
                 <p class="cboard__text">{c.title}</p>

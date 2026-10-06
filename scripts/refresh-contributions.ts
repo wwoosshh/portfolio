@@ -25,6 +25,8 @@ export interface GqlNode {
 
 const DATA_PATH = fileURLToPath(new URL('../src/data/contributions.json', import.meta.url));
 export const key = (repo: string, number: number) => `${repo}#${number}`;
+/** 문자 코드 순 비교. localeCompare는 실행 환경(윈도, GitHub의 리눅스)의 정렬 규칙에 따라 순서가 달라져 순서만 바뀐 커밋이 한 번 생길 수 있다. */
+const byCodePoint = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 /** 병합 판정: merged가 참이면 병합. PyTorch처럼 봇이 병합하고 PR을 닫는 저장소는 닫혔고 Merged 라벨이 있으면 병합으로 본다. */
 export function prState(n: { state: string; merged?: boolean; labels: string[] }): State {
@@ -73,7 +75,7 @@ export function mergeItems(existing: Item[], fresh: Omit<Item, 'project' | 'note
     const p = prev.get(k);
     out.set(k, { ...f, project: p?.project ?? null, ...(p?.note ? { note: p.note } : {}), related: p?.related ?? [] });
   }
-  return [...out.values()].sort((a, b) => a.repo.localeCompare(b.repo) || a.number - b.number);
+  return [...out.values()].sort((a, b) => byCodePoint(a.repo, b.repo) || a.number - b.number);
 }
 
 export function sameContent(a: Data, b: Data): boolean {

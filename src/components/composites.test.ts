@@ -222,6 +222,23 @@ describe('ContributionList', () => {
     expect(html).toContain('이슈');
   });
 
+  test('링크 이름에 종류(PR·이슈)가 들어 있다', async () => {
+    const base = {
+      repo: 'pytorch/pytorch',
+      title: 'title',
+      state: 'open',
+      project: null,
+      createdAt: '2026-09-22T02:35:00Z',
+    };
+    const items = [
+      contributionSchema.parse({ ...base, kind: 'issue', number: 1, url: 'https://github.com/pytorch/pytorch/issues/1' }),
+      contributionSchema.parse({ ...base, kind: 'pr', number: 2, url: 'https://github.com/pytorch/pytorch/pull/2' }),
+    ];
+    const html = await container.renderToString(ContributionList, { props: { items, asOf: new Date('2026-10-06') } });
+    expect(html).toMatch(/<a class="contrib__ref"[^>]*>\s*<span class="sr-only"[^>]*>이슈 <\/span>pytorch#1 /);
+    expect(html).toMatch(/<a class="contrib__ref"[^>]*>\s*<span class="sr-only"[^>]*>PR <\/span>pytorch#2 /);
+  });
+
   test('머리글은 매일 자동 확인과 마지막 변경 날짜를 알린다', async () => {
     const html = await container.renderToString(ContributionList, {
       props: { items: [], asOf: new Date('2026-10-06T02:34:21Z') },

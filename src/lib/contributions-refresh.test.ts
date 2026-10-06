@@ -195,6 +195,10 @@ describe('mergeItems', () => {
     const out = mergeItems([kept], [], []);
     expect(out).toEqual([kept]);
   });
+  test('저장소는 문자 코드 순으로 정렬한다(윈도와 리눅스의 정렬 규칙 차이로 순서가 바뀌어 불필요한 커밋이 생기지 않게)', () => {
+    const existing = [item({ repo: 'a/b', number: 1 }), item({ repo: 'Z/z', number: 1 }), item({ repo: 'B/b', number: 1 })];
+    expect(mergeItems(existing, [], []).map((i) => `${i.repo}#${i.number}`)).toEqual(['B/b#1', 'Z/z#1', 'a/b#1']);
+  });
   test('저장소, 번호 순으로 정렬한다', () => {
     const existing = [item({ repo: 'z/z', number: 1 }), item({ repo: 'a/b', number: 10 }), item({ repo: 'a/b', number: 2 })];
     expect(mergeItems(existing, [], []).map((i) => `${i.repo}#${i.number}`)).toEqual(['a/b#2', 'a/b#10', 'z/z#1']);

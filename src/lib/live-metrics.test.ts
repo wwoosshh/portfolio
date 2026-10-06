@@ -102,8 +102,8 @@ describe('entail', () => {
       {
         label: '다른 개발자의 수정 PR',
         value: '열림 1 · 병합 0 · 닫힘 2',
-        // 첫 관련 PR의 주소
-        evidence: 'https://github.com/sgl-project/sglang/pull/41239',
+        // 관련 PR 한 건이 아니라 외부 이슈 검색(위 수치와 같은 주소). 첫 관련 PR은 닫힌 것일 수 있어 열림·병합·닫힘 합계의 근거가 못 된다.
+        evidence: 'https://github.com/search?q=author%3Awwoosshh+-user%3Awwoosshh+-org%3Asemicollon-club&type=issues',
         status: 'wait',
       },
       {

@@ -46,7 +46,8 @@ export function liveMetrics(projectId: string, data: Contributions): Metric[] {
       metrics.push({
         label: '다른 개발자의 수정 PR',
         value: `열림 ${open} · 병합 ${merged} · 닫힘 ${closed}`,
-        evidence: prs[0].url,
+        // 관련 PR 한 건의 주소가 아니라 외부 이슈 검색(위 수치와 같은 주소). 첫 관련 PR은 닫힌 것일 수 있어 합계의 근거가 못 된다.
+        evidence: EXTERNAL_SEARCH,
         status: merged > 0 ? 'ok' : open > 0 ? 'wait' : 'off',
       });
     }

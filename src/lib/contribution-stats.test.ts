@@ -99,6 +99,15 @@ describe('byRepo', () => {
     ])[0];
     expect(group.tools).toEqual(['torch-compile-fuzzer', 'entail']);
   });
+  test('저장소 이름순은 문자 코드 순이다(실행 환경의 정렬 규칙에 기대지 않는다)', () => {
+    const out = byRepo([
+      make({ repo: 'a/a', kind: 'issue', number: 1 }),
+      make({ repo: 'Z/z', kind: 'issue', number: 1 }),
+      make({ repo: 'B/b', kind: 'issue', number: 1 }),
+    ]);
+    // 대문자가 소문자보다 앞이다. localeCompare는 환경에 따라 a, B, Z 순으로 돌려준다.
+    expect(out.map((g) => g.repo)).toEqual(['B/b', 'Z/z', 'a/a']);
+  });
   test('빈 목록은 빈 배열이다', () => {
     expect(byRepo([])).toEqual([]);
   });

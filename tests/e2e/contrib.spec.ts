@@ -71,6 +71,8 @@ test.describe('외부 기여 보드(움직임 줄임: 최종 상태)', () => {
       await expect(link, c.url).toHaveAttribute('rel', 'noopener noreferrer');
       await expect(link, c.url).toContainText(`#${c.number}`);
       await expect(link, c.url).toContainText('↗');
+      // 링크 이름만 읽어도 PR인지 이슈인지 알 수 있다(↗는 이름에서 빠진다).
+      await expect(link, c.url).toHaveAccessibleName(`${c.kind === 'pr' ? 'PR' : '이슈'} #${c.number}`);
     }
   });
 
