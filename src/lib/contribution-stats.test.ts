@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { byRepo, prFirst, shortRepo, tally } from './contribution-stats';
+import { byRepo, contributionPriority, shortRepo, sortByPriority, tally } from './contribution-stats';
 import { contributionSchema, type Contribution } from './schema';
 
 const make = (o: Partial<Contribution> & Pick<Contribution, 'repo' | 'kind' | 'number'>): Contribution =>
@@ -104,19 +104,70 @@ describe('byRepo', () => {
   });
 });
 
-describe('prFirst', () => {
-  test('PR을 먼저, 같은 종류끼리는 번호가 작은 순으로 두고 원본은 바꾸지 않는다', () => {
+describe('contributionPriority', () => {
+  const rank = (o: Parameters<typeof make>[0]) => contributionPriority(make(o));
+
+  test('병합 → 승인된 열린 PR → 결정 없는 열린 PR → 변경 요청 → 해결된 이슈 → 열린 이슈 → 닫힌 PR → 그 밖의 닫힌 이슈 순으로 0부터 7', () => {
+    expect([
+      rank({ repo: T, kind: 'pr', number: 1, state: 'merged' }),
+      rank({ repo: T, kind: 'pr', number: 2, review: 'approved' }),
+      rank({ repo: T, kind: 'pr', number: 3 }),
+      rank({ repo: T, kind: 'pr', number: 4, review: 'changes_requested' }),
+      rank({ repo: T, kind: 'issue', number: 5, state: 'closed', stateReason: 'completed' }),
+      rank({ repo: T, kind: 'issue', number: 6 }),
+      rank({ repo: T, kind: 'pr', number: 7, state: 'closed' }),
+      rank({ repo: T, kind: 'issue', number: 8, state: 'closed', stateReason: 'not_planned' }),
+    ]).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+  });
+  test('리뷰 결정이 review_required인 열린 PR은 결정 없는 PR과 같다', () => {
+    expect(rank({ repo: T, kind: 'pr', number: 1, review: 'review_required' })).toBe(2);
+  });
+  test('병합·닫힌 PR의 리뷰 결정은 순위에 영향을 주지 않는다', () => {
+    expect(rank({ repo: T, kind: 'pr', number: 1, state: 'merged', review: 'approved' })).toBe(0);
+    expect(rank({ repo: T, kind: 'pr', number: 2, state: 'closed', review: 'approved' })).toBe(6);
+  });
+  test('사유가 completed가 아니거나 없는 닫힌 이슈는 7이고, triaged 라벨은 열린 이슈 순위를 바꾸지 않는다', () => {
+    expect(rank({ repo: T, kind: 'issue', number: 1, state: 'closed' })).toBe(7);
+    expect(rank({ repo: T, kind: 'issue', number: 2, state: 'closed', stateReason: 'duplicate' })).toBe(7);
+    expect(rank({ repo: T, kind: 'issue', number: 3, labels: ['triaged'] })).toBe(5);
+  });
+});
+
+describe('sortByPriority', () => {
+  test('우선순위가 높은 것부터, 같은 순위에서는 번호가 큰 것부터 두고 원본은 바꾸지 않는다', () => {
     const items = [
       make({ repo: T, kind: 'issue', number: 1 }),
-      make({ repo: T, kind: 'pr', number: 30 }),
-      make({ repo: T, kind: 'issue', number: 2 }),
       make({ repo: T, kind: 'pr', number: 10 }),
+      make({ repo: T, kind: 'issue', number: 7 }),
+      make({ repo: T, kind: 'pr', number: 30, state: 'merged' }),
+      make({ repo: T, kind: 'pr', number: 20, state: 'merged' }),
+      make({ repo: T, kind: 'pr', number: 15, review: 'approved' }),
+      make({ repo: T, kind: 'pr', number: 12, state: 'closed' }),
+      make({ repo: T, kind: 'issue', number: 9, state: 'closed', stateReason: 'completed' }),
     ];
-    expect(prFirst(items).map((c) => `${c.kind}#${c.number}`)).toEqual(['pr#10', 'pr#30', 'issue#1', 'issue#2']);
-    expect(items.map((c) => c.number)).toEqual([1, 30, 2, 10]);
+    expect(sortByPriority(items).map((c) => `${c.kind}#${c.number}`)).toEqual([
+      'pr#30',
+      'pr#20',
+      'pr#15',
+      'pr#10',
+      'issue#9',
+      'issue#7',
+      'issue#1',
+      'pr#12',
+    ]);
+    expect(items.map((c) => c.number)).toEqual([1, 10, 7, 30, 20, 15, 12, 9]);
+  });
+  test('병합은 번호가 더 작아도 열린 이슈보다 앞이고, PR이 아니어도 해결된 이슈가 열린 PR 뒤에 온다', () => {
+    const out = sortByPriority([
+      make({ repo: T, kind: 'issue', number: 900 }),
+      make({ repo: T, kind: 'issue', number: 800, state: 'closed', stateReason: 'completed' }),
+      make({ repo: T, kind: 'pr', number: 5, state: 'merged' }),
+      make({ repo: T, kind: 'pr', number: 6, review: 'changes_requested' }),
+    ]);
+    expect(out.map((c) => c.number)).toEqual([5, 6, 800, 900]);
   });
   test('빈 목록은 빈 배열이다', () => {
-    expect(prFirst([])).toEqual([]);
+    expect(sortByPriority([])).toEqual([]);
   });
 });
 

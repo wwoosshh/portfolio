@@ -35,9 +35,25 @@ export function shortRepo(repo: string): string {
   return SHORT_NAMES.get(repo) ?? repo.split('/')[1] ?? repo;
 }
 
-/** 한 저장소 안의 순서: PR을 먼저, 같은 종류끼리는 번호가 작은 순. 홈의 보드와 인쇄 표가 같은 순서를 쓴다. */
-export function prFirst(items: readonly Contribution[]): Contribution[] {
-  return [...items].sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'pr' ? -1 : 1) || a.number - b.number);
+/**
+ * 보여 줄 우선순위. 작을수록 먼저다.
+ * 0 병합 PR · 1 승인된 열린 PR · 2 결정 없는 열린 PR(리뷰 중) · 3 변경 요청 PR · 4 해결된 이슈 · 5 열린 이슈 · 6 닫힌 PR · 7 그 밖의 닫힌 이슈.
+ * 병합 칩 도장이 화면 안에서 찍히려면 병합 PR이 묶음의 맨 위에 있어야 한다.
+ */
+export function contributionPriority(c: Contribution): number {
+  if (c.kind === 'pr') {
+    if (c.state === 'merged') return 0;
+    if (c.state === 'closed') return 6;
+    if (c.review === 'approved') return 1;
+    return c.review === 'changes_requested' ? 3 : 2;
+  }
+  if (c.state === 'closed') return c.stateReason === 'completed' ? 4 : 7;
+  return 5;
+}
+
+/** 우선순위 순, 같은 순위에서는 번호가 큰(최근) 것부터. 홈의 보드와 인쇄 표가 같은 순서를 쓴다. 원본은 바꾸지 않는다. */
+export function sortByPriority(items: readonly Contribution[]): Contribution[] {
+  return [...items].sort((a, b) => contributionPriority(a) - contributionPriority(b) || b.number - a.number);
 }
 
 export function tally(items: readonly Contribution[]): Tally {

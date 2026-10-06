@@ -151,6 +151,52 @@ test.describe('외부 기여 보드(움직임 켬)', () => {
       .toBe(0);
   });
 
+  // 도장이 화면 밖에서 찍히면 아무도 보지 못한다. 칩이 보이기 시작하는 첫 프레임에, 칩이 화면 안에 있는지 잰다.
+  test('병합 칩은 자기 줄이 화면 안에 있을 때 찍히기 시작한다', async ({ page }) => {
+    test.skip(mergedItems.length === 0, '병합된 PR이 하나도 없는 날에는 찍을 도장이 없다');
+    type Start = { top: number; bottom: number; vh: number };
+    type Seen = { __starts: Start[] };
+    await page.goto('/');
+    await ready(page);
+    await page.evaluate(() => {
+      const starts: Start[] = [];
+      const pending = new Set(document.querySelectorAll('.cboard__item[data-state="merged"] > .cboard__head > .status'));
+      const tick = () => {
+        for (const chip of pending) {
+          if (Number(getComputedStyle(chip).opacity) === 0) continue;
+          const r = chip.getBoundingClientRect();
+          starts.push({ top: r.top, bottom: r.bottom, vh: innerHeight });
+          pending.delete(chip);
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      (window as unknown as Seen).__starts = starts;
+    });
+    const { top, height } = await board(page).evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return { top: r.top + window.scrollY, height: r.height };
+    });
+    const view = page.viewportSize()?.height ?? 720;
+    // 보통 속도로 스크롤한다. 한 칸 내려갈 때마다 두 프레임을 기다려, 칩이 보이기 시작한 순간의 위치를 한 칸 안의 오차로 잰다.
+    for (let y = top - view / 2; y <= top + height; y += 100) {
+      await page.evaluate(
+        (to) =>
+          new Promise<void>((resolve) => {
+            window.scrollTo(0, to);
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          }),
+        y,
+      );
+    }
+    await expect.poll(() => page.evaluate(() => (window as unknown as Seen).__starts.length), { timeout: 8000 }).toBe(mergedItems.length);
+    const starts = await page.evaluate(() => (window as unknown as Seen).__starts);
+    for (const s of starts) {
+      expect(s.top, `칩이 화면 위 밖에서 찍혔다: ${JSON.stringify(s)}`).toBeGreaterThanOrEqual(0);
+      expect(s.bottom, `칩이 화면 아래 밖에서 찍혔다: ${JSON.stringify(s)}`).toBeLessThanOrEqual(s.vh);
+    }
+  });
+
   // 숫자가 0에서 시작해 줄지 않고 올라가 원래 값으로 끝나는지: 글자가 바뀔 때마다 기록한다.
   test('요약 숫자는 0에서 시작해 줄지 않고 올라가 원래 값으로 끝난다', async ({ page }) => {
     type Seen = { __seen: string[][] };

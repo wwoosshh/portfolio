@@ -1,5 +1,5 @@
 ---
-import { byRepo, prFirst, shortRepo, tally } from '../../lib/contribution-stats';
+import { byRepo, shortRepo, sortByPriority, tally } from '../../lib/contribution-stats';
 import { formatDate } from '../../lib/format';
 import type { Contributions } from '../../lib/schema';
 import type { ProjectEntry } from '../../lib/site';
@@ -60,7 +60,7 @@ const headingId = (repo: string) => `cboard-${repo.replace('/', '--').toLowerCas
             )}
           </header>
           <ul class="cboard__items">
-            {prFirst(g.items).map((c) => (
+            {sortByPriority(g.items).map((c) => (
               <li class="cboard__item" data-reveal data-state={c.state}>
                 <div class="cboard__head">
                   <span class="cboard__kind mono">{c.kind === 'pr' ? 'PR' : '이슈'}</span>
