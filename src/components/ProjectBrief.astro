@@ -1,5 +1,7 @@
 ---
+import { contributions } from '../data/contributions';
 import { formatPeriod } from '../lib/format';
+import { metricsOf } from '../lib/live-metrics';
 import type { Project } from '../lib/schema';
 import { deploymentStatus } from '../lib/status';
 import Evidence from './Evidence.astro';
@@ -13,7 +15,7 @@ interface Props {
 const { project, size } = Astro.props;
 const d = project.data;
 const deploy = deploymentStatus(d.deployment);
-const metrics = d.metrics.slice(0, size === 'half' ? 2 : 1);
+const metrics = metricsOf(project, contributions).slice(0, size === 'half' ? 2 : 1);
 ---
 <article class:list={['brief', `brief--${size}`]} data-project={project.id}>
   <header class="brief__head">

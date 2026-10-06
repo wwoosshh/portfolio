@@ -6,6 +6,7 @@ import Status from '../../components/Status.astro';
 import Tag from '../../components/Tag.astro';
 import Base from '../../layouts/Base.astro';
 import { formatPeriod } from '../../lib/format';
+import { metricsOf } from '../../lib/live-metrics';
 import { loadSite, type ProjectEntry } from '../../lib/site';
 import { deploymentStatus } from '../../lib/status';
 
@@ -117,7 +118,7 @@ const noLinksText =
 
     <section class="detail__section" aria-labelledby="metrics-title">
       <h2 id="metrics-title">핵심 수치</h2>
-      <MetricList metrics={d.metrics} asOf={d.asOf} />
+      <MetricList metrics={metricsOf(project, site.contributions)} asOf={d.asOf} />
     </section>
 
     <div class="prose">

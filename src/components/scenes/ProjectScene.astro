@@ -1,5 +1,7 @@
 ---
+import { contributions } from '../../data/contributions';
 import { formatDate, formatPeriod } from '../../lib/format';
+import { metricsOf } from '../../lib/live-metrics';
 import type { ProjectEntry } from '../../lib/site';
 import Evidence from '../Evidence.astro';
 
@@ -10,6 +12,7 @@ interface Props {
 
 const { project, num } = Astro.props;
 const d = project.data;
+const metrics = metricsOf(project, contributions);
 const href = `/projects/${project.id}/`;
 ---
 <article class="pscene" data-scene="project" data-project={project.id}>
@@ -24,7 +27,7 @@ const href = `/projects/${project.id}/`;
     <p class="pscene__asof mono">{formatDate(d.asOf)} 기준</p>
     <ul class="pscene__metrics">
       {
-        d.metrics.map((m) => (
+        metrics.map((m) => (
           <li class="pscene__metric" data-reveal>
             <span class="pscene__metric-label">{m.label}</span>
             <strong class="pscene__metric-value mono">{m.value}</strong>

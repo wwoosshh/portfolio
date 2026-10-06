@@ -1,7 +1,8 @@
 ---
+import { shortRepo } from '../lib/contribution-stats';
 import { formatDate } from '../lib/format';
 import type { Contribution } from '../lib/schema';
-import { contributionStatus } from '../lib/status';
+import { contributionStatus, relatedStatus } from '../lib/status';
 import Status from './Status.astro';
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
 const { items, asOf } = Astro.props;
 ---
 <div class="contribs">
-  <p class="contribs__asof">{formatDate(asOf)} 기준 · 외부 저장소</p>
+  <p class="contribs__asof">매일 자동 확인 · 마지막 변경 {formatDate(asOf)}</p>
   <ul>
     {
       items.map((c) => (
@@ -25,6 +26,19 @@ const { items, asOf } = Astro.props;
             <span class="contrib__kind">{c.kind === 'pr' ? 'PR' : '이슈'}</span>
           </div>
           <p class="contrib__title">{c.title}</p>
+          {c.related.length > 0 && (
+            <ul class="contrib__related">
+              {c.related.map((r) => (
+                <li>
+                  다른 개발자의 수정 PR{' '}
+                  <a href={r.url} target="_blank" rel="noopener noreferrer">
+                    {shortRepo(r.repo)}#{r.number} <span aria-hidden="true">↗</span>
+                  </a>{' '}
+                  <Status view={relatedStatus(r)} />
+                </li>
+              ))}
+            </ul>
+          )}
         </li>
       ))
     }
@@ -60,5 +74,12 @@ const { items, asOf } = Astro.props;
     font-size: var(--fs-small);
     color: var(--text-2);
     margin-top: var(--sp-1);
+  }
+  .contrib__related {
+    display: grid;
+    gap: var(--sp-1);
+    margin-top: var(--sp-1);
+    font-size: var(--fs-small);
+    color: var(--text-2);
   }
 </style>

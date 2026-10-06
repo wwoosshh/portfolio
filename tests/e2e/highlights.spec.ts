@@ -130,6 +130,7 @@ test.describe('핵심 성과(모바일 폭: 숫자마다 보일 때 재생)', ()
     expect(await last.evaluate((el) => Number(getComputedStyle(el).opacity))).toBe(0);
     await last.evaluate((el) => el.scrollIntoView({ block: 'center' }));
     await expect.poll(() => last.evaluate((el) => Number(getComputedStyle(el).opacity)), { timeout: 4000 }).toBe(1);
-    await expect(last).toHaveText('81', { timeout: 4000 });
+    // 건수는 매일 바뀌므로 데이터에서 계산한 profile의 값을 읽는다.
+    await expect(last).toHaveText(profile.highlights[profile.highlights.length - 1].figure.value, { timeout: 4000 });
   });
 });

@@ -1,4 +1,6 @@
 ---
+import { contributions } from '../../data/contributions';
+import { metricsOf } from '../../lib/live-metrics';
 import type { ProjectEntry } from '../../lib/site';
 import { deploymentStatus } from '../../lib/status';
 import Diagram from '../diagrams/Diagram.astro';
@@ -32,7 +34,7 @@ const { projects } = Astro.props;
                 )}
                 <p class="deck__tagline" data-reveal>{p.data.tagline}</p>
                 <ul class="deck__metrics" data-reveal>
-                  {p.data.metrics.slice(0, 2).map((m) => (
+                  {metricsOf(p, contributions).slice(0, 2).map((m) => (
                     <li class="deck__metric">
                       <span class="deck__metric-label">{m.label}</span>
                       <strong class="mono">{m.value}</strong>

@@ -1,5 +1,8 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import { beforeAll, describe, expect, test } from 'vitest';
+import { contributions } from '../data/contributions';
+import { shortRef } from '../lib/format';
+import { metricsOf } from '../lib/live-metrics';
 import { contributionSchema, projectSchema } from '../lib/schema';
 import ContributionList from './ContributionList.astro';
 import MetricList from './MetricList.astro';
@@ -34,6 +37,9 @@ const featured = {
     aiCollab: 'AI 협업',
   }),
 };
+
+// 기여 데이터에서 계산하는 수치가 없는 대표작(프런트매터의 수치만 쓴다)
+const staticFeatured = { id: 'geul-lang', data: featured.data };
 
 const downCard = {
   id: 'barun-order',
@@ -77,9 +83,9 @@ describe('MetricList', () => {
 
 describe('ProjectCard', () => {
   test('대표작은 상세 링크(data-detail-link)와 첫 근거, 스택 4개를 보여 준다', async () => {
-    const html = await container.renderToString(ProjectCard, { props: { project: featured } });
-    expect(html).toContain('data-project="entail"');
-    expect(html).toMatch(/href="\/projects\/entail\/"[^>]*data-detail-link/);
+    const html = await container.renderToString(ProjectCard, { props: { project: staticFeatured } });
+    expect(html).toContain('data-project="geul-lang"');
+    expect(html).toMatch(/href="\/projects\/geul-lang\/"[^>]*data-detail-link/);
     expect(html).toContain('근거 → vllm#58675');
     expect(html).toContain('자세히 →');
     expect(html).toContain('transformers');
@@ -91,12 +97,23 @@ describe('ProjectCard', () => {
     expect(html).not.toContain('운영 중');
   });
   test('대표 수치의 라벨과 값을 근거 링크 바로 위에 보여 준다', async () => {
-    const html = await container.renderToString(ProjectCard, { props: { project: featured } });
+    const html = await container.renderToString(ProjectCard, { props: { project: staticFeatured } });
     const metric = html.match(/<p class="card__metric"[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? '';
     expect(metric).toContain('GSM8K');
     expect(metric).toContain('379 → 273 / 500');
     expect(metric).toMatch(/GSM8K<\/span> <strong/);
     expect(html.indexOf('class="card__metric"')).toBeLessThan(html.indexOf('class="card__foot"'));
+  });
+  // 건수는 매일 바뀌므로 기대값을 데이터에서 계산한 수치로 잡는다.
+  test('기여 데이터에서 계산한 수치가 있으면 프런트매터의 수치보다 앞에 둔다', async () => {
+    const html = await container.renderToString(ProjectCard, { props: { project: featured } });
+    const lead = metricsOf(featured, contributions)[0];
+    expect(lead.label).toMatch(/^외부 이슈 \(/);
+    const metric = html.match(/<p class="card__metric"[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? '';
+    expect(metric).toContain(lead.label);
+    expect(metric).toContain(lead.value);
+    expect(metric).not.toContain('GSM8K');
+    expect(html).toContain(`근거 → ${shortRef(lead.evidence as string)}`);
   });
   test('수치가 없는 카드는 수치 줄도 근거 줄도 그리지 않는다', async () => {
     const html = await container.renderToString(ProjectCard, { props: { project: bareCard } });
@@ -170,5 +187,73 @@ describe('ContributionList', () => {
     expect(html).toContain('분류됨');
     expect(html).toContain('pytorch#198094');
     expect(html).toContain('이슈');
+  });
+
+  test('머리글은 매일 자동 확인과 마지막 변경 날짜를 알린다', async () => {
+    const html = await container.renderToString(ContributionList, {
+      props: { items: [], asOf: new Date('2026-10-06T02:34:21Z') },
+    });
+    expect(html).toContain('매일 자동 확인 · 마지막 변경 2026-10-06');
+    expect(html).not.toContain('기준 · 외부 저장소');
+  });
+
+  test('다른 개발자의 수정 PR을 상태와 함께 항목 아래에 그린다', async () => {
+    const item = contributionSchema.parse({
+      repo: 'sgl-project/sglang',
+      kind: 'issue',
+      number: 41227,
+      title: '[Bug] rope_theta dropped',
+      state: 'open',
+      url: 'https://github.com/sgl-project/sglang/issues/41227',
+      project: 'entail',
+      createdAt: '2026-09-23T05:00:00Z',
+      related: [
+        {
+          repo: 'sgl-project/sglang',
+          number: 41239,
+          title: 'Fix rope_scaling override',
+          state: 'closed',
+          url: 'https://github.com/sgl-project/sglang/pull/41239',
+          author: 'someone',
+        },
+        {
+          repo: 'sgl-project/sglang',
+          number: 41327,
+          title: 'fix(rope)',
+          state: 'open',
+          url: 'https://github.com/sgl-project/sglang/pull/41327',
+          author: 'another',
+        },
+      ],
+    });
+    const html = await container.renderToString(ContributionList, {
+      props: { items: [item], asOf: new Date('2026-10-06') },
+    });
+    const related = html.match(/<ul class="contrib__related"[^>]*>([\s\S]*?)<\/ul>/)?.[1] ?? '';
+    expect(related.match(/<li/g)).toHaveLength(2);
+    expect(related).toContain('다른 개발자의 수정 PR');
+    expect(related).toMatch(/href="https:\/\/github\.com\/sgl-project\/sglang\/pull\/41239" target="_blank" rel="noopener noreferrer"/);
+    expect(related).toContain('SGLang#41239');
+    expect(related).toContain('↗');
+    expect(related).toContain('닫힘');
+    expect(related).toContain('리뷰 대기');
+    // 글자와 링크, 링크와 상태 사이에 공백이 남는다.
+    expect(related).toMatch(/다른 개발자의 수정 PR\s+<a /);
+    expect(related).toMatch(/<\/a>\s+<span class="status/);
+  });
+
+  test('관련 PR이 없으면 목록을 그리지 않는다', async () => {
+    const item = contributionSchema.parse({
+      repo: 'pytorch/pytorch',
+      kind: 'issue',
+      number: 1,
+      title: 'bug',
+      state: 'open',
+      url: 'https://github.com/pytorch/pytorch/issues/1',
+      project: null,
+      createdAt: '2026-09-22T02:35:00Z',
+    });
+    const html = await container.renderToString(ContributionList, { props: { items: [item], asOf: new Date('2026-10-06') } });
+    expect(html).not.toContain('contrib__related');
   });
 });
