@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { PDFDocument } from 'pdf-lib';
 import raw from '../../src/data/contributions.json' with { type: 'json' };
 import { profile } from '../../src/data/profile';
+import { kstDate } from './dates';
 
 const PHONE = /01[016789][-. ]?\d{3,4}[-. ]?\d{4}/;
 
@@ -61,12 +62,12 @@ test('인쇄: 다른 개발자의 수정 PR은 같은 행에 `다른 개발자 �
 
 test('인쇄: 핵심 성과의 기준일은 기여 데이터의 마지막 변경 날짜다', async ({ page }) => {
   await page.goto('/print/');
-  await expect(page.locator('.print h2').first()).toHaveText(`핵심 성과 · ${raw.asOf.slice(0, 10)} 기준`);
+  await expect(page.locator('.print h2').first()).toHaveText(`핵심 성과 · ${kstDate(raw.asOf)} 기준`);
 });
 
 test('인쇄: 표 아래에 매일 자동 확인과 마지막 변경 날짜가 있다', async ({ page }) => {
   await page.goto('/print/');
-  await expect(page.locator('.print .asof')).toHaveText(`매일 자동 확인 · 마지막 변경 ${raw.asOf.slice(0, 10)}`);
+  await expect(page.locator('.print .asof')).toHaveText(`매일 자동 확인 · 마지막 변경 ${kstDate(raw.asOf)}`);
 });
 
 test('인쇄: 오픈소스가 개인 프로젝트보다 먼저 나오고, 끝에 있던 외부 기여 목록은 없다', async ({ page }) => {

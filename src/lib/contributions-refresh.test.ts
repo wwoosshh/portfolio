@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -120,15 +121,38 @@ describe('normalize', () => {
       }),
     );
     expect(n).toMatchObject({ state: 'merged', mergedAt: '2026-09-30T05:00:00Z', closedAt: '2026-09-30T05:00:00Z' });
+    // 병합 판정에는 Merged 라벨을 썼고, 사이트가 쓰는 라벨이므로 남는다. 나머지는 버린다.
+    expect(n.labels).toEqual(['Merged']);
   });
   test('병합되지 않고 닫힌 PR은 mergedAt이 없다', () => {
     const n = normalize(node({ __typename: 'PullRequest', number: 9, state: 'CLOSED', merged: false, closedAt: '2026-09-30T05:00:00Z' }));
     expect(n).toMatchObject({ state: 'closed', mergedAt: null });
   });
-  test('라벨은 정렬해서 내놓고, 저장소와 번호·주소를 옮긴다', () => {
-    const n = normalize(node({ __typename: 'Issue', number: 10, labels: { nodes: [{ name: 'c' }, { name: 'a' }, { name: 'b' }] } }));
-    expect(n.labels).toEqual(['a', 'b', 'c']);
+  test('저장소와 번호·주소를 옮긴다', () => {
+    const n = normalize(node({ __typename: 'Issue', number: 10 }));
     expect(n).toMatchObject({ repo: 'pytorch/pytorch', number: 10, url: 'https://github.com/pytorch/pytorch/issues/10' });
+  });
+  // PyTorch는 ciflow/*·merging 같은 라벨이 자주 바뀐다. 사이트가 쓰지 않는 라벨까지 저장하면 보이는 변화 없이 매일 커밋과 배포가 생긴다.
+  test('사이트가 쓰는 라벨(Merged, triaged)만 정렬해서 남기고 나머지는 버린다', () => {
+    const names = ['triaged', 'ciflow/trunk', 'Merged', 'merging', 'module: inductor', 'cla signed'];
+    const n = normalize(node({ __typename: 'Issue', number: 10, labels: { nodes: names.map((name) => ({ name })) } }));
+    expect(n.labels).toEqual(['Merged', 'triaged']);
+  });
+  test('Merged 라벨로 병합을 판정한 뒤에 라벨을 거른다(라벨을 먼저 거르면 병합이 닫힘이 된다)', () => {
+    const closedByBot = node({
+      __typename: 'PullRequest',
+      number: 11,
+      state: 'CLOSED',
+      merged: false,
+      closedAt: '2026-09-30T05:00:00Z',
+      labels: { nodes: [{ name: 'ciflow/trunk' }, { name: 'Merged' }, { name: 'merging' }] },
+    });
+    expect(normalize(closedByBot)).toMatchObject({ state: 'merged', labels: ['Merged'] });
+  });
+  test('라벨이 바뀌어도 사이트가 쓰는 라벨이 같으면 같은 내용이다', () => {
+    const labelled = (names: string[]) =>
+      normalize(node({ __typename: 'Issue', number: 12, labels: { nodes: names.map((name) => ({ name })) } }));
+    expect(labelled(['triaged', 'ciflow/trunk']).labels).toEqual(labelled(['triaged', 'merging', 'module: dynamo']).labels);
   });
 });
 
@@ -277,6 +301,12 @@ describe('main', () => {
     await rm(dir, { recursive: true, force: true });
   });
   const read = async () => JSON.parse(await readFile(file, 'utf8')) as Data;
+  /** fetch에 실제로 나간 GraphQL 요청 본문들. */
+  const requests = () =>
+    vi
+      .mocked(fetch)
+      .mock.calls.filter(([input]) => String(input).includes('api.github.com'))
+      .map(([, init]) => JSON.parse(String(init?.body)) as { query: string; variables: { q?: string } });
 
   test('처음에는 기계 필드를 채워 쓰고, 바뀐 것이 없으면 파일을 건드리지 않는다', async () => {
     expect(await main(file)).toBe(true);
@@ -290,6 +320,39 @@ describe('main', () => {
     expect(await readFile(file, 'utf8')).toBe(before);
   });
 
+  // 개인 토큰(repo 범위)으로 로컬에서 돌려도 비공개 저장소의 제목과 주소가 공개 JSON에 들어가면 안 된다.
+  test('검색은 공개 저장소로 한정하고, 작성자 본인과 제외 소유자를 검색에서 뺀다', async () => {
+    await main(file);
+    const search = requests().find((r) => r.query.includes('search('));
+    expect(search?.variables.q).toBe('author:wwoosshh -user:wwoosshh is:public -org:semicollon-club');
+  });
+
+  test('제외 소유자가 작성자이면 -org로 한 번 더 빼지 않는다(대소문자 무시)', async () => {
+    await writeFile(file, JSON.stringify({ ...seed, author: 'WwooSShh', excludeOwners: ['wwoosshh', 'a-org', 'b-org'] }));
+    await main(file);
+    const search = requests().find((r) => r.query.includes('search('));
+    expect(search?.variables.q).toBe('author:WwooSShh -user:WwooSShh is:public -org:a-org -org:b-org');
+  });
+
+  test('GitHub가 거절하면 응답의 message를 오류에 담고, 토큰은 담지 않는다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ message: 'Bad credentials', documentation_url: 'https://docs.github.com/graphql' }, { status: 401 })),
+    );
+    const failure = await main(file).then(
+      () => null,
+      (error: Error) => error,
+    );
+    expect(failure?.message).toContain('401');
+    expect(failure?.message).toContain('Bad credentials');
+    expect(failure?.message).not.toContain('test-token');
+  });
+
+  test('본문이 JSON이 아닌 응답(502 등)도 상태 코드가 보이는 오류가 된다', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('<html>Bad gateway</html>', { status: 502 })));
+    await expect(main(file)).rejects.toThrow(/502/);
+  });
+
   // 이슈 자체는 그대로이고 관련 PR의 상태만 바뀌는 날에도 파일을 갱신해야 한다.
   test('관련 PR의 상태만 바뀌어도 갱신하고 asOf를 새로 쓴다', async () => {
     await main(file);
@@ -300,5 +363,13 @@ describe('main', () => {
     const after = await read();
     expect(after.items[0].related[0].state).toBe('merged');
     expect(after.asOf).not.toBe(before.asOf);
+  });
+});
+
+describe('워크플로', () => {
+  const yml = readFileSync(new URL('../../.github/workflows/refresh-contributions.yml', import.meta.url), 'utf8');
+  test('매일 21:00 UTC(06:00 KST)에 돌고, 10분 안에 끝나지 않으면 멈춘다', () => {
+    expect(yml).toMatch(/cron:\s*'0 21 \* \* \*'/);
+    expect(yml).toMatch(/^\s+timeout-minutes:\s*10\s*$/m);
   });
 });

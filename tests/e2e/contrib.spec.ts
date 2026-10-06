@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import raw from '../../src/data/contributions.json' with { type: 'json' };
+import { kstDate } from './dates';
 
 // 건수는 매일 바뀐다. 기대값은 기여 데이터(JSON)에서 이 파일이 직접 세고, 숫자를 적지 않는다.
 type Item = (typeof raw.items)[number];
@@ -102,7 +103,7 @@ test.describe('외부 기여 보드(움직임 줄임: 최종 상태)', () => {
   test('아래에 매일 자동 확인과 마지막 변경 날짜가 있다', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#oss .cboard__asof')).toContainText('매일 자동 확인');
-    await expect(page.locator('#oss .cboard__asof')).toContainText(`마지막 변경 ${raw.asOf.slice(0, 10)}`);
+    await expect(page.locator('#oss .cboard__asof')).toContainText(`마지막 변경 ${kstDate(raw.asOf)}`);
   });
 });
 
@@ -210,15 +211,17 @@ test('연출이 실패한 방문에서는 남은 인라인 상태가 있어도 �
   });
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-motion', 'failed');
-  const left = await page.evaluate(() => {
+  const result = await page.evaluate(() => {
     const chips = Array.from(document.querySelectorAll<HTMLElement>('.cboard__item[data-state="merged"] > .cboard__head > .status'));
     for (const el of chips) {
       el.style.opacity = '0';
       el.style.transform = 'scale(1.6)';
     }
-    return chips.filter((e) => Number(getComputedStyle(e).opacity) < 1 || getComputedStyle(e).transform !== 'none').length;
+    const left = chips.filter((e) => Number(getComputedStyle(e).opacity) < 1 || getComputedStyle(e).transform !== 'none').length;
+    return { total: chips.length, left };
   });
-  expect(left).toBe(0);
+  // 칩을 하나도 못 찾아 아무것도 검사하지 못한 채 통과하는 일을 막는다.
+  expect(result).toEqual({ total: mergedItems.length, left: 0 });
 });
 
 test('장 순서: intro, highlights, oss, personal로 시작하고 목차가 새 장을 가리킨다', async ({ page }) => {

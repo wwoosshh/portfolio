@@ -33,10 +33,18 @@ export function prState(n: { state: string; merged?: boolean; labels: string[] }
   return 'open';
 }
 
+/**
+ * 사이트가 쓰는 라벨: Merged는 병합 판정(봇이 병합하는 PyTorch)에, triaged는 이슈의 분류 표시에 쓴다.
+ * ciflow/*·merging 같은 나머지 라벨은 자주 바뀌어, 저장하면 보이는 변화 없이 매일 커밋과 배포가 생긴다.
+ */
+const KEPT_LABELS = new Set(['Merged', 'triaged']);
+
 export function normalize(n: GqlNode): Omit<Item, 'project' | 'note' | 'related'> {
-  const labels = n.labels.nodes.map((l) => l.name).sort();
+  const names = n.labels.nodes.map((l) => l.name);
   const isPr = n.__typename === 'PullRequest';
-  const state: State = isPr ? prState({ state: n.state, merged: n.merged, labels }) : n.state === 'OPEN' ? 'open' : 'closed';
+  // 병합 판정은 Merged 라벨로 하므로, 라벨을 거르기 전에 상태를 정한다.
+  const state: State = isPr ? prState({ state: n.state, merged: n.merged, labels: names }) : n.state === 'OPEN' ? 'open' : 'closed';
+  const labels = names.filter((l) => KEPT_LABELS.has(l)).sort();
   return {
     repo: n.repository.nameWithOwner,
     kind: isPr ? 'pr' : 'issue',
@@ -89,8 +97,12 @@ async function gql<T>(query: string, variables: Record<string, unknown> = {}): P
     headers: { authorization: `bearer ${token}`, 'content-type': 'application/json', 'user-agent': 'portfolio-refresh' },
     body: JSON.stringify({ query, variables }),
   });
-  const body = (await res.json()) as { data?: T; errors?: unknown };
-  if (!res.ok || body.errors || !body.data) throw new Error(`GitHub GraphQL 실패(${res.status}): ${JSON.stringify(body.errors ?? null)}`);
+  const body = (await res.json().catch(() => ({}))) as { data?: T; errors?: unknown; message?: string };
+  if (!res.ok || body.errors || !body.data) {
+    // 401·403·한도 초과는 message에, GraphQL 오류는 errors에 담겨 온다. 토큰과 헤더는 오류에 넣지 않는다.
+    const detail = [body.message, body.errors ? JSON.stringify(body.errors) : null].filter(Boolean).join(' ');
+    throw new Error(`GitHub GraphQL 실패(${res.status}): ${detail || '응답에 설명이 없습니다'}`);
+  }
   return body.data;
 }
 
@@ -99,7 +111,10 @@ const NODE_FIELDS = `__typename
   ... on PullRequest { number url title state merged mergedAt closedAt createdAt reviewDecision repository { nameWithOwner } labels(first: 30) { nodes { name } } }`;
 
 async function searchAll(author: string, excludeOwners: string[]): Promise<GqlNode[]> {
-  const q = `author:${author} -user:${author}`;
+  // 공개 저장소만 읽는다. 개인 토큰(repo 범위)으로 로컬에서 돌려도 비공개 저장소의 제목과 주소가 공개 JSON에 들어가지 않게 한다.
+  // 작성자 본인의 저장소(-user)와 제외 소유자(동아리 조직 등)의 저장소(-org)는 검색에서 뺀다.
+  const orgs = excludeOwners.filter((o) => o.toLowerCase() !== author.toLowerCase());
+  const q = [`author:${author}`, `-user:${author}`, 'is:public', ...orgs.map((o) => `-org:${o}`)].join(' ');
   const nodes: GqlNode[] = [];
   let after: string | null = null;
   do {

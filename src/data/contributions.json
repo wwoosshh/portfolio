@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-06T02:34:21.745Z",
+  "asOf": "2026-10-06T03:36:33.754Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -33,13 +33,6 @@
       "review": null,
       "url": "https://github.com/pytorch/pytorch/issues/198094",
       "labels": [
-        "bot-triaged",
-        "module: correctness (silent)",
-        "module: inductor",
-        "module: pt2-dispatcher",
-        "module: reinplacing",
-        "oncall: pt2",
-        "release triage",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:35:00Z",
@@ -58,13 +51,6 @@
       "review": null,
       "url": "https://github.com/pytorch/pytorch/issues/198095",
       "labels": [
-        "bot-triaged",
-        "module: aotdispatch",
-        "module: correctness (silent)",
-        "module: pt2-dispatcher",
-        "oncall: pt2",
-        "release triage",
-        "topic: fuzzer",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:35:01Z",
@@ -83,11 +69,6 @@
       "review": null,
       "url": "https://github.com/pytorch/pytorch/pull/198096",
       "labels": [
-        "ciflow/inductor",
-        "ciflow/torchtitan",
-        "module: inductor",
-        "open source",
-        "release notes: inductor",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:35:03Z",
@@ -106,9 +87,6 @@
       "review": "changes_requested",
       "url": "https://github.com/pytorch/pytorch/pull/198097",
       "labels": [
-        "ciflow/inductor",
-        "open source",
-        "release notes: composability",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:35:05Z",
@@ -127,11 +105,6 @@
       "review": null,
       "url": "https://github.com/pytorch/pytorch/issues/198100",
       "labels": [
-        "bot-triaged",
-        "dynamo-triaged",
-        "module: dynamo",
-        "module: guards",
-        "oncall: pt2",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:56:13Z",
@@ -150,11 +123,6 @@
       "review": null,
       "url": "https://github.com/pytorch/pytorch/issues/198101",
       "labels": [
-        "bot-triaged",
-        "module: correctness (silent)",
-        "module: inductor",
-        "oncall: pt2",
-        "release triage",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:56:14Z",
@@ -173,12 +141,6 @@
       "review": null,
       "url": "https://github.com/pytorch/pytorch/issues/198102",
       "labels": [
-        "bot-triaged",
-        "module: correctness (silent)",
-        "module: functionalization",
-        "module: pt2-dispatcher",
-        "oncall: pt2",
-        "release triage",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:56:15Z",
@@ -197,12 +159,6 @@
       "review": null,
       "url": "https://github.com/pytorch/pytorch/pull/198103",
       "labels": [
-        "ciflow/inductor",
-        "ciflow/torchtitan",
-        "dynamo-triaged",
-        "module: dynamo",
-        "open source",
-        "release notes: dynamo",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:56:17Z",
@@ -221,14 +177,6 @@
       "review": "approved",
       "url": "https://github.com/pytorch/pytorch/pull/198104",
       "labels": [
-        "ciflow/inductor",
-        "ciflow/torchtitan",
-        "ciflow/trunk",
-        "merging",
-        "module: inductor",
-        "open source",
-        "ready for review",
-        "release notes: inductor",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:56:19Z",
@@ -246,10 +194,7 @@
       "stateReason": null,
       "review": null,
       "url": "https://github.com/pytorch/pytorch/pull/198105",
-      "labels": [
-        "open source",
-        "release notes: composability"
-      ],
+      "labels": [],
       "createdAt": "2026-09-22T02:56:22Z",
       "closedAt": "2026-09-25T18:00:36Z",
       "mergedAt": null,
@@ -267,12 +212,6 @@
       "review": null,
       "url": "https://github.com/pytorch/pytorch/issues/198131",
       "labels": [
-        "bot-triaged",
-        "module: correctness (silent)",
-        "module: inductor",
-        "oncall: pt2",
-        "release triage",
-        "topic: fuzzer",
         "triaged"
       ],
       "createdAt": "2026-09-22T05:51:13Z",
@@ -292,12 +231,6 @@
       "url": "https://github.com/pytorch/pytorch/pull/198132",
       "labels": [
         "Merged",
-        "ciflow/inductor",
-        "ciflow/torchtitan",
-        "ciflow/trunk",
-        "module: inductor",
-        "open source",
-        "release notes: inductor",
         "triaged"
       ],
       "createdAt": "2026-09-22T05:51:16Z",

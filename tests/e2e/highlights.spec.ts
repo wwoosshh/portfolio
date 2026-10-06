@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import raw from '../../src/data/contributions.json' with { type: 'json' };
 import { profile } from '../../src/data/profile';
+import { kstDate } from './dates';
 
 test.describe('핵심 성과(움직임 줄임)', () => {
   test.use({ reducedMotion: 'reduce' });
@@ -29,7 +30,7 @@ test.describe('핵심 성과(움직임 줄임)', () => {
 test('핵심 성과 머리글은 기여 데이터의 마지막 변경 날짜와 매일 자동 갱신을 밝힌다', async ({ page }) => {
   await page.goto('/');
   const note = page.locator('#highlights .section-header__note');
-  await expect(note).toContainText(`${raw.asOf.slice(0, 10)} 기준 · 매일 자동 갱신`);
+  await expect(note).toContainText(`${kstDate(raw.asOf)} 기준 · 매일 자동 갱신`);
   await expect(note).not.toContainText('2026-09-30');
 });
 

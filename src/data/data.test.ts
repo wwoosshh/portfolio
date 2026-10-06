@@ -55,3 +55,17 @@ test('대표작 글에는 상태가 바뀌는 문구가 남아 있지 않다', (
     expect(text.match(STALE)?.[0], `${id}.mdx`).toBeUndefined();
   }
 });
+
+// 인쇄본(PDF)은 정적이다. PDF에 실리는 brief가 "자동으로 갱신됩니다"라고만 쓰면 PDF가 스스로 갱신되는 것처럼 읽힌다.
+// 자동 갱신을 말하는 문장은 갱신하는 곳(포트폴리오 사이트)을 밝힌다.
+test('인쇄에 실리는 brief의 자동 갱신 문장은 포트폴리오 사이트가 갱신한다고 밝힌다', () => {
+  for (const id of ['torch-compile-fuzzer', 'entail', 'asahi']) {
+    const text = readFileSync(new URL(`../content/projects/${id}.mdx`, import.meta.url), 'utf8');
+    const brief = text.match(/^brief:\n((?: {2}.*\n)+)/m)?.[1] ?? '';
+    expect(brief, `${id}.mdx의 brief`).not.toBe('');
+    expect(brief, `${id}.mdx`).not.toMatch(/자동으로 갱신됩니다/);
+    for (const sentence of brief.match(/[^.]*자동으로 갱신[^.]*\./g) ?? []) {
+      expect(sentence, `${id}.mdx`).toContain('포트폴리오 사이트');
+    }
+  }
+});
