@@ -14,13 +14,13 @@ export function liveMetrics(projectId: string, data: Contributions): Metric[] {
     return [
       {
         label: 'PyTorch 이슈',
-        value: `${t.issues}건 · 분류 ${t.triagedIssues} · 해결 ${t.resolvedIssues}`,
+        value: `${t.issues}건 · 해결 ${t.resolvedIssues} · 열림 ${t.openIssues}`,
         evidence: 'https://github.com/pytorch/pytorch/issues?q=is%3Aissue+author%3Awwoosshh',
         status: 'ok',
       },
       {
         label: 'PyTorch 수정 PR',
-        value: `병합 ${t.merged} · 리뷰 중 ${t.inReview} · 닫힘 ${t.closedPrs}`,
+        value: `병합 ${t.merged} · 열린 PR ${t.openPrs} · 닫힘 ${t.closedPrs}`,
         evidence: 'https://github.com/pytorch/pytorch/pulls?q=is%3Apr+author%3Awwoosshh',
         status: t.merged > 0 ? 'ok' : 'wait',
       },

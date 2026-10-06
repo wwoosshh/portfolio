@@ -41,7 +41,7 @@ const fixture = (items: Raw[], own: Partial<Contributions['own']> = {}): Contrib
   });
 
 const PT = 'pytorch/pytorch';
-// 퍼저 이슈 3건(분류 2, 해결 1)과 PR 4건(병합 1, 열림 2, 닫힘 1). 뒤의 세 항목은 세지 않는다.
+// 퍼저 이슈 3건(해결 1, 열림 2)과 PR 4건(병합 1, 열림 2, 닫힘 1). 뒤의 세 항목은 세지 않는다.
 const fuzzerItems: Raw[] = [
   item(PT, 'issue', 1, { project: FUZZER, labels: ['triaged'] }),
   item(PT, 'issue', 2, { project: FUZZER, labels: ['triaged'], state: 'closed', stateReason: 'completed' }),
@@ -60,13 +60,13 @@ describe('torch-compile-fuzzer', () => {
     const [issues, prs] = liveMetrics(FUZZER, fixture(fuzzerItems));
     expect(issues).toEqual({
       label: 'PyTorch 이슈',
-      value: '3건 · 분류 2 · 해결 1',
+      value: '3건 · 해결 1 · 열림 2',
       evidence: 'https://github.com/pytorch/pytorch/issues?q=is%3Aissue+author%3Awwoosshh',
       status: 'ok',
     });
     expect(prs).toEqual({
       label: 'PyTorch 수정 PR',
-      value: '병합 1 · 리뷰 중 2 · 닫힘 1',
+      value: '병합 1 · 열린 PR 2 · 닫힘 1',
       evidence: 'https://github.com/pytorch/pytorch/pulls?q=is%3Apr+author%3Awwoosshh',
       status: 'ok',
     });
@@ -75,7 +75,7 @@ describe('torch-compile-fuzzer', () => {
   test('병합된 PR이 없으면 수정 PR 수치는 진행 중', () => {
     const open = fuzzerItems.filter((i) => i.state !== 'merged');
     const prs = liveMetrics(FUZZER, fixture(open))[1];
-    expect(prs).toMatchObject({ value: '병합 0 · 리뷰 중 2 · 닫힘 1', status: 'wait' });
+    expect(prs).toMatchObject({ value: '병합 0 · 열린 PR 2 · 닫힘 1', status: 'wait' });
   });
 });
 

@@ -37,7 +37,7 @@ test('소개와 핵심 성과의 기여 수치는 기여 데이터에서 계산�
   expect(torch.label).toBe(`PyTorch 기여자 · 병합 ${pt.merged}건`);
   expect(torch.detail).toContain(`이슈 ${pt.issues}건`);
   expect(torch.detail).toContain(`수정 PR ${pt.prs}건`);
-  expect(torch.detail).toContain(`병합 ${pt.merged}건, 리뷰 중 ${pt.inReview}건`);
+  expect(torch.detail).toContain(`병합 ${pt.merged}건, 열린 PR ${pt.openPrs}건`);
   expect(torch.figure).toEqual({ value: String(pt.merged), unit: '건 병합' });
   expect(oss.label).toBe(`오픈소스 ${all.repos}곳에 기여`);
   expect(oss.detail).toContain(`이슈 ${all.issues}건, PR ${all.prs}건`);

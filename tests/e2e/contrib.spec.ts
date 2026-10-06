@@ -96,7 +96,7 @@ test.describe('외부 기여 보드(움직임 줄임: 최종 상태)', () => {
   test('요약 숫자는 데이터에서 센 값과 같다', async ({ page }) => {
     await page.goto('/');
     const sum = page.locator('#oss .cboard__sum');
-    await expect(sum.locator('dt')).toHaveText(['병합', '리뷰 중', '이슈', '프로젝트']);
+    await expect(sum.locator('dt')).toHaveText(['병합', '열린 PR', '이슈', '프로젝트']);
     await expect(sum.locator('dd')).toHaveText(expectedSum);
   });
 

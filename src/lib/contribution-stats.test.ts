@@ -36,21 +36,21 @@ describe('tally', () => {
       merged: 1,
       approved: 1,
       changesRequested: 1,
-      inReview: 3,
+      openPrs: 3,
       closedPrs: 1,
       resolvedIssues: 1,
       triagedIssues: 2,
       openIssues: 3,
     });
   });
-  test('리뷰 중에는 승인된 열린 PR도 들어간다', () => {
+  test('열린 PR에는 승인된 열린 PR도 들어간다', () => {
     const t = tally([make({ repo: T, kind: 'pr', number: 1, review: 'approved' }), make({ repo: T, kind: 'pr', number: 2 })]);
-    expect(t.inReview).toBe(2);
+    expect(t.openPrs).toBe(2);
     expect(t.approved).toBe(1);
   });
   test('닫힌 PR의 리뷰 결정은 승인·변경 요청에 세지 않는다', () => {
     const t = tally([make({ repo: T, kind: 'pr', number: 1, state: 'closed', review: 'approved' })]);
-    expect(t).toMatchObject({ approved: 0, changesRequested: 0, inReview: 0, closedPrs: 1 });
+    expect(t).toMatchObject({ approved: 0, changesRequested: 0, openPrs: 0, closedPrs: 1 });
   });
   test('빈 목록은 모두 0이다', () => {
     expect(tally([])).toEqual({
@@ -60,7 +60,7 @@ describe('tally', () => {
       merged: 0,
       approved: 0,
       changesRequested: 0,
-      inReview: 0,
+      openPrs: 0,
       closedPrs: 0,
       resolvedIssues: 0,
       triagedIssues: 0,

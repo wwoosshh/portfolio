@@ -25,7 +25,7 @@ export const profile = profileSchema.parse({
   highlights: [
     {
       label: `PyTorch 기여자 · 병합 ${pt.merged}건`,
-      detail: `torch.compile에서 찾은 버그를 이슈 ${pt.issues}건으로 보고하고 수정 PR ${pt.prs}건을 냈습니다. 병합 ${pt.merged}건, 리뷰 중 ${pt.inReview}건.`,
+      detail: `torch.compile에서 찾은 버그를 이슈 ${pt.issues}건으로 보고하고 수정 PR ${pt.prs}건을 냈습니다. 병합 ${pt.merged}건, 열린 PR ${pt.openPrs}건.`,
       status: 'ok',
       statusText: `merged ${pt.merged}`,
       evidence: 'https://github.com/pytorch/pytorch/pulls?q=is%3Apr+author%3Awwoosshh',

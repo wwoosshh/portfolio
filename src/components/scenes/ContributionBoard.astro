@@ -16,7 +16,7 @@ const total = tally(contributions.items);
 const groups = byRepo(contributions.items);
 const summary = [
   { label: '병합', value: total.merged },
-  { label: '리뷰 중', value: total.inReview },
+  { label: '열린 PR', value: total.openPrs },
   { label: '이슈', value: total.issues },
   { label: '프로젝트', value: total.repos },
 ];

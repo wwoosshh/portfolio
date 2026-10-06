@@ -9,7 +9,7 @@ export interface Tally {
   approved: number;
   changesRequested: number;
   /** 열린 PR 전부. 승인된 PR도 병합되기 전까지는 포함한다. */
-  inReview: number;
+  openPrs: number;
   closedPrs: number;
   resolvedIssues: number;
   triagedIssues: number;
@@ -67,7 +67,7 @@ export function tally(items: readonly Contribution[]): Tally {
     merged: prs.filter((c) => c.state === 'merged').length,
     approved: openPrs.filter((c) => c.review === 'approved').length,
     changesRequested: openPrs.filter((c) => c.review === 'changes_requested').length,
-    inReview: openPrs.length,
+    openPrs: openPrs.length,
     closedPrs: prs.filter((c) => c.state === 'closed').length,
     resolvedIssues: issues.filter((c) => c.state === 'closed' && c.stateReason === 'completed').length,
     triagedIssues: issues.filter((c) => c.labels.includes('triaged')).length,
