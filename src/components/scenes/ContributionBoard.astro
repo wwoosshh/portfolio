@@ -1,7 +1,7 @@
 ---
-import { byRepo, shortRepo, tally } from '../../lib/contribution-stats';
+import { byRepo, prFirst, shortRepo, tally } from '../../lib/contribution-stats';
 import { formatDate } from '../../lib/format';
-import type { Contribution, Contributions } from '../../lib/schema';
+import type { Contributions } from '../../lib/schema';
 import type { ProjectEntry } from '../../lib/site';
 import { contributionStatus, relatedStatus } from '../../lib/status';
 import Status from '../Status.astro';
@@ -20,9 +20,6 @@ const summary = [
   { label: '이슈', value: total.issues },
   { label: '프로젝트', value: total.repos },
 ];
-// 묶음 안에서는 PR을 먼저, 그다음 번호 순서로 둔다.
-const inGroup = (items: Contribution[]) =>
-  [...items].sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'pr' ? -1 : 1) || a.number - b.number);
 const headingId = (repo: string) => `cboard-${repo.replace('/', '--').toLowerCase()}`;
 ---
 <div class="cboard" data-scene="contrib">
@@ -63,7 +60,7 @@ const headingId = (repo: string) => `cboard-${repo.replace('/', '--').toLowerCas
             )}
           </header>
           <ul class="cboard__items">
-            {inGroup(g.items).map((c) => (
+            {prFirst(g.items).map((c) => (
               <li class="cboard__item" data-reveal data-state={c.state}>
                 <div class="cboard__head">
                   <span class="cboard__kind mono">{c.kind === 'pr' ? 'PR' : '이슈'}</span>

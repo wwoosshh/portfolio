@@ -35,6 +35,11 @@ export function shortRepo(repo: string): string {
   return SHORT_NAMES.get(repo) ?? repo.split('/')[1] ?? repo;
 }
 
+/** 한 저장소 안의 순서: PR을 먼저, 같은 종류끼리는 번호가 작은 순. 홈의 보드와 인쇄 표가 같은 순서를 쓴다. */
+export function prFirst(items: readonly Contribution[]): Contribution[] {
+  return [...items].sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'pr' ? -1 : 1) || a.number - b.number);
+}
+
 export function tally(items: readonly Contribution[]): Tally {
   const prs = items.filter((c) => c.kind === 'pr');
   const issues = items.filter((c) => c.kind === 'issue');

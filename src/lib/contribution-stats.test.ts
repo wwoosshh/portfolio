@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { byRepo, shortRepo, tally } from './contribution-stats';
+import { byRepo, prFirst, shortRepo, tally } from './contribution-stats';
 import { contributionSchema, type Contribution } from './schema';
 
 const make = (o: Partial<Contribution> & Pick<Contribution, 'repo' | 'kind' | 'number'>): Contribution =>
@@ -101,6 +101,22 @@ describe('byRepo', () => {
   });
   test('빈 목록은 빈 배열이다', () => {
     expect(byRepo([])).toEqual([]);
+  });
+});
+
+describe('prFirst', () => {
+  test('PR을 먼저, 같은 종류끼리는 번호가 작은 순으로 두고 원본은 바꾸지 않는다', () => {
+    const items = [
+      make({ repo: T, kind: 'issue', number: 1 }),
+      make({ repo: T, kind: 'pr', number: 30 }),
+      make({ repo: T, kind: 'issue', number: 2 }),
+      make({ repo: T, kind: 'pr', number: 10 }),
+    ];
+    expect(prFirst(items).map((c) => `${c.kind}#${c.number}`)).toEqual(['pr#10', 'pr#30', 'issue#1', 'issue#2']);
+    expect(items.map((c) => c.number)).toEqual([1, 30, 2, 10]);
+  });
+  test('빈 목록은 빈 배열이다', () => {
+    expect(prFirst([])).toEqual([]);
   });
 });
 
