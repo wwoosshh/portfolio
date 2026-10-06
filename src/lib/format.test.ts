@@ -17,7 +17,7 @@ describe('기간·날짜', () => {
   test('날짜는 YYYY-MM-DD로 표시한다', () => {
     expect(formatDate(new Date('2026-09-29'))).toBe('2026-09-29');
   });
-  // 갱신은 06:00 KST(21:00 UTC)에 돈다. UTC로 적으면 "마지막 변경"이 하루 전 날짜로 보인다.
+  // 갱신은 06:17 KST(21:17 UTC)에 돈다. UTC로 적으면 "마지막 변경"이 하루 전 날짜로 보인다.
   test('날짜는 한국 시간(Asia/Seoul) 기준이다', () => {
     expect(formatDate(new Date('2026-10-06T21:00:00Z'))).toBe('2026-10-07');
     expect(formatDate(new Date('2026-10-06T14:59:59Z'))).toBe('2026-10-06');

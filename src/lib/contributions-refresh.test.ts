@@ -368,8 +368,77 @@ describe('main', () => {
 
 describe('워크플로', () => {
   const yml = readFileSync(new URL('../../.github/workflows/refresh-contributions.yml', import.meta.url), 'utf8');
-  test('매일 21:00 UTC(06:00 KST)에 돌고, 10분 안에 끝나지 않으면 멈춘다', () => {
-    expect(yml).toMatch(/cron:\s*'0 21 \* \* \*'/);
-    expect(yml).toMatch(/^\s+timeout-minutes:\s*10\s*$/m);
+  // 각 단계의 글(주석은 뺀다). 단계는 6칸 들여 쓴 `- `로 시작한다.
+  const steps = yml.replace(/^\s*#.*$/gm, '').split(/^ {6}- /m).slice(1);
+  const GATE = "if: steps.changed.outputs.changed == 'true'";
+
+  test('매일 21:17 UTC(06:17 KST, 정각의 혼잡을 피함)에 돌고, 20분 안에 끝나지 않으면 멈춘다', () => {
+    expect(yml).toMatch(/cron:\s*'17 21 \* \* \*'/);
+    expect(yml).toMatch(/^\s+timeout-minutes:\s*20\s*$/m);
+  });
+
+  test('단계 순서: 갱신, 변경 확인, 검증, JSON 커밋, 브라우저 설치, PDF, e2e, PDF 커밋', () => {
+    const order = [
+      'scripts/refresh-contributions.ts',
+      'git diff --quiet -- src/data/contributions.json',
+      'npm test && npm run build',
+      'chore(data): 오픈소스 기여 상태 자동 갱신',
+      'npx playwright install --with-deps chromium',
+      'node scripts/make-pdf.mjs',
+      'npx playwright test',
+      'chore(data): 공개 PDF 자동 갱신',
+    ].map((needle) => {
+      const at = steps.findIndex((step) => step.includes(needle));
+      expect(at, needle).toBeGreaterThan(-1);
+      return at;
+    });
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+    expect(new Set(order).size).toBe(order.length); // 단계마다 하나씩
+  });
+
+  test('바뀐 것이 없으면 "변경 없음"을 알리고, 그 뒤의 모든 단계는 바뀐 날에만 돈다', () => {
+    const detect = steps.findIndex((step) => step.includes('id: changed'));
+    expect(detect).toBeGreaterThan(-1);
+    expect(steps[detect]).toContain('echo "변경 없음"');
+    expect(steps[detect]).toContain('changed=false');
+    expect(steps[detect]).toContain('changed=true');
+    const later = steps.slice(detect + 1);
+    expect(later.length).toBeGreaterThan(0);
+    for (const step of later) expect(step, step.split('\n')[0]).toContain(GATE);
+    // 변경 확인 앞의 단계(내려받기, 설치, 갱신)에는 걸지 않는다.
+    for (const step of steps.slice(0, detect)) expect(step).not.toContain(GATE);
+  });
+
+  test('JSON 커밋은 봇 이름으로, 트레일러 없이 올린다', () => {
+    const data = steps.find((step) => step.includes('chore(data): 오픈소스 기여 상태 자동 갱신')) ?? '';
+    expect(data).toContain('git add src/data/contributions.json');
+    expect(data).toContain('github-actions[bot]');
+    expect(data).toContain('git push');
+    expect(yml).not.toMatch(/Co-Authored-By/i);
+  });
+
+  test('PDF는 이미 있는 빌드로 make-pdf를 직접 돌리고(다시 빌드하지 않음), e2e 전에 끝낸다', () => {
+    expect(yml).not.toMatch(/npm run pdf/);
+    const pdf = steps.findIndex((step) => step.includes('node scripts/make-pdf.mjs'));
+    const e2e = steps.findIndex((step) => step.includes('npx playwright test'));
+    // 미리보기 서버는 프로젝트당 하나뿐이라, make-pdf와 Playwright를 한 단계에 묶거나 함께 띄우지 않는다.
+    expect(pdf).not.toBe(e2e);
+    expect(steps[pdf]).not.toContain('playwright test');
+    expect(steps[e2e]).not.toContain('make-pdf');
+  });
+
+  test('브라우저는 Playwright 버전(package-lock.json)을 키로 캐시하고, e2e를 통과한 뒤 바뀐 PDF만 커밋한다', () => {
+    const cache = steps.find((step) => step.includes('actions/cache')) ?? '';
+    expect(cache).toContain('~/.cache/ms-playwright');
+    expect(cache).toMatch(/key:.*steps\.\w+\.outputs\.version/);
+    expect(steps.find((step) => step.includes('version=')) ?? '').toContain('package-lock.json');
+    const pdfCommit = steps.at(-1) ?? '';
+    expect(pdfCommit).toContain('git diff --quiet -- public/portfolio.pdf');
+    expect(pdfCommit).toContain('git add public/portfolio.pdf');
+    expect(pdfCommit).toContain('chore(data): 공개 PDF 자동 갱신');
+  });
+
+  test('PDF나 e2e가 실패하면 작업이 실패하지만 JSON은 이미 올라간 뒤라는 것, PDF는 마지막 성공판이 남는다는 것을 주석으로 적어 둔다', () => {
+    expect(yml).toMatch(/^#.*PDF.*마지막/m);
   });
 });

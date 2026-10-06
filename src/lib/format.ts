@@ -9,7 +9,7 @@ export function formatPeriod(period: { start: string; end?: string }): string {
   return `${formatYearMonth(period.start)} – ${formatYearMonth(period.end)}`;
 }
 
-// 날짜는 한국 시간(Asia/Seoul, UTC+9, 일광절약 없음) 기준으로 적는다. 갱신이 06:00 KST(전날 21:00 UTC)에 돌므로
+// 날짜는 한국 시간(Asia/Seoul, UTC+9, 일광절약 없음) 기준으로 적는다. 갱신이 06:17 KST(전날 21:17 UTC)에 돌므로
 // UTC로 적으면 "마지막 변경"이 하루 전 날짜로 보인다. 날짜만 적힌 값(UTC 자정)은 09:00 KST라 같은 날이다.
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 

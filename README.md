@@ -50,9 +50,11 @@
 
 ## 기여 데이터 자동 갱신
 
-`src/data/contributions.json`은 GitHub Actions 워크플로 `refresh-contributions`(`.github/workflows/refresh-contributions.yml`)가 매일 06:00(KST)에 GitHub와 PyPI에서 읽어 갱신합니다.
+`src/data/contributions.json`은 GitHub Actions 워크플로 `refresh-contributions`(`.github/workflows/refresh-contributions.yml`)가 매일 06:17(KST)에 GitHub와 PyPI에서 읽어 갱신합니다.
 
-- 스크립트(`scripts/refresh-contributions.ts`)는 데이터가 바뀐 경우에만 `main`에 커밋합니다. 바뀐 것이 없거나 읽기에 실패하면 커밋하지 않습니다. 커밋이 올라가면 Vercel이 다시 배포합니다.
+- 스크립트(`scripts/refresh-contributions.ts`)는 데이터가 바뀐 경우에만 파일을 고칩니다. 바뀐 것이 없거나 읽기에 실패하면 커밋하지 않습니다.
+- 바뀐 날에는 워크플로가 이어서 일합니다. 단위 시험·빌드를 통과하면 JSON을 `main`에 커밋하고(Vercel이 다시 배포), 공개 PDF(`public/portfolio.pdf`)를 다시 만든 뒤 전체 e2e를 통과하면 PDF도 커밋합니다.
+- PDF를 만들지 못하거나 e2e가 실패하면 작업이 실패해 메일이 오지만, JSON은 이미 올라가 사이트는 갱신된 뒤입니다. 이때 PDF는 마지막으로 성공한 판이 남고, PDF 자신의 "마지막 변경" 날짜가 그 판의 기준일을 알려 줍니다.
 - 사람이 관리하는 필드는 `project`(찾은 도구), `note`, `related`(다른 개발자의 수정 PR 번호), 최상위 `ignore`·`excludeOwners`뿐입니다. 제목·상태·날짜 같은 나머지는 스크립트가 덮어씁니다.
 - 새로 올린 외부 이슈·PR은 작성자 검색으로 자동 추가됩니다. 이때 `project`는 `null`입니다. 검색은 공개 저장소(`is:public`)로 한정하므로, 개인 토큰으로 로컬에서 돌려도 비공개 저장소의 제목과 주소는 들어가지 않습니다.
 - 라벨은 사이트가 쓰는 `Merged`·`triaged`만 저장합니다. 나머지 라벨이 바뀌어도 커밋은 생기지 않습니다.
