@@ -1,4 +1,4 @@
-import type { Contribution } from './schema';
+import type { Contribution, Engagement } from './schema';
 
 // 화면에 보이는 기여 수치는 모두 여기서 계산한다. 숫자를 글에 직접 적지 않는다.
 export interface Tally {
@@ -32,6 +32,7 @@ const SHORT_NAMES = new Map([
   ['vllm-project/vllm', 'vLLM'],
   ['sgl-project/sglang', 'SGLang'],
   ['Comfy-Org/ComfyUI', 'ComfyUI'],
+  ['apache/tvm', 'TVM'],
 ]);
 
 export function shortRepo(repo: string): string {
@@ -110,4 +111,65 @@ export function printRows(items: readonly Contribution[], cap = 16): { rows: Con
   }
   const rows = groups.flatMap((g) => sortByPriority(g.items).filter((c) => chosen.has(c)));
   return { rows, rest: items.length - rows.length };
+}
+
+/** 다른 개발자의 PR·이슈에 남긴 참여 수치. 한 항목에 리뷰와 댓글이 모두 있으면 양쪽에 센다. */
+export interface EngagementTally {
+  /** 참여한 PR·이슈 수. */
+  threads: number;
+  /** 리뷰를 남긴 PR 수. */
+  reviews: number;
+  approved: number;
+  changesRequested: number;
+  /** 댓글을 남긴 PR·이슈 수. */
+  commented: number;
+  repos: number;
+}
+
+export function engagementTally(list: readonly Engagement[]): EngagementTally {
+  return {
+    threads: list.length,
+    reviews: list.filter((e) => e.review !== null).length,
+    approved: list.filter((e) => e.review === 'approved').length,
+    changesRequested: list.filter((e) => e.review === 'changes_requested').length,
+    commented: list.filter((e) => e.comments > 0).length,
+    repos: new Set(list.map((e) => e.repo)).size,
+  };
+}
+
+/** 홈 보드와 인쇄본이 같은 요약을 쓴다. 0인 부분은 쓰지 않는다. */
+export function engagementSummary(t: EngagementTally): string {
+  const parts: string[] = [];
+  if (t.reviews > 0) {
+    parts.push(`PR 리뷰 ${t.reviews}건`);
+    if (t.approved > 0) parts.push(`승인 ${t.approved}건`);
+    if (t.changesRequested > 0) parts.push(`변경 요청 ${t.changesRequested}건`);
+  }
+  if (t.commented > 0) parts.push(`댓글 단 이슈·PR ${t.commented}건`);
+  return parts.join(' · ');
+}
+
+/** 0 승인 리뷰 · 1 변경 요청 리뷰 · 2 의견 리뷰 · 3 PR 댓글 · 4 이슈 댓글. 판정을 남긴 리뷰가 가장 무거운 기여라 먼저 보인다. */
+function engagementPriority(e: Engagement): number {
+  if (e.review === 'approved') return 0;
+  if (e.review === 'changes_requested') return 1;
+  if (e.review === 'commented') return 2;
+  return e.kind === 'pr' ? 3 : 4;
+}
+
+/** 우선순위 순, 같은 순위에서는 최근 활동부터. 원본은 바꾸지 않는다. */
+export function sortEngagements(list: readonly Engagement[]): Engagement[] {
+  return [...list].sort(
+    (a, b) =>
+      engagementPriority(a) - engagementPriority(b) ||
+      byCodePoint(b.lastAt, a.lastAt) ||
+      byCodePoint(a.repo, b.repo) ||
+      b.number - a.number,
+  );
+}
+
+/** 홈 보드에 보일 참여 항목. 목록이 길어져도 장면이 끝없이 길어지지 않게 cap개까지만 보이고, 나머지 수를 돌려준다. */
+export function visibleEngagements(list: readonly Engagement[], cap = 12): { shown: Engagement[]; rest: number } {
+  const sorted = sortEngagements(list);
+  return { shown: sorted.slice(0, cap), rest: Math.max(0, sorted.length - cap) };
 }

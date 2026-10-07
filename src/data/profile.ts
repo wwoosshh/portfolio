@@ -1,4 +1,4 @@
-import { byRepo, shortRepo, tally } from '../lib/contribution-stats';
+import { byRepo, engagementTally, shortRepo, tally } from '../lib/contribution-stats';
 import { profileSchema } from '../lib/schema';
 import { contributions } from './contributions';
 
@@ -7,6 +7,7 @@ const pt = tally(contributions.items.filter((c) => c.repo === 'pytorch/pytorch')
 const all = tally(contributions.items);
 const repoNames = byRepo(contributions.items).map((g) => shortRepo(g.repo));
 const { asahi } = contributions.own;
+const { reviews: reviewed } = engagementTally(contributions.engagements);
 
 export const profile = profileSchema.parse({
   name: '우성현',
@@ -33,7 +34,7 @@ export const profile = profileSchema.parse({
     },
     {
       label: `오픈소스 ${all.repos}곳에 기여`,
-      detail: `${repoNames.join('·')}에 이슈 ${all.issues}건, PR ${all.prs}건을 올렸습니다.`,
+      detail: `${repoNames.join('·')}에 이슈 ${all.issues}건, PR ${all.prs}건을 올렸습니다.${reviewed > 0 ? ` 다른 개발자의 PR ${reviewed}건을 리뷰했습니다.` : ''}`,
       status: 'ok',
       statusText: `issues ${all.issues} · PRs ${all.prs}`,
       evidence: 'https://github.com/search?q=author%3Awwoosshh+-user%3Awwoosshh+-org%3Asemicollon-club&type=issues',

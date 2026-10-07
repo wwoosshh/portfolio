@@ -1,6 +1,17 @@
 import { describe, expect, test } from 'vitest';
-import { byRepo, contributionPriority, printRows, shortRepo, sortByPriority, tally } from './contribution-stats';
-import { contributionSchema, type Contribution } from './schema';
+import {
+  byRepo,
+  contributionPriority,
+  engagementSummary,
+  engagementTally,
+  printRows,
+  shortRepo,
+  sortByPriority,
+  sortEngagements,
+  tally,
+  visibleEngagements,
+} from './contribution-stats';
+import { contributionSchema, engagementSchema, type Contribution, type Engagement } from './schema';
 
 const make = (o: Partial<Contribution> & Pick<Contribution, 'repo' | 'kind' | 'number'>): Contribution =>
   contributionSchema.parse({
@@ -277,8 +288,75 @@ describe('shortRepo', () => {
     expect(shortRepo('vllm-project/vllm')).toBe('vLLM');
     expect(shortRepo('sgl-project/sglang')).toBe('SGLang');
     expect(shortRepo('Comfy-Org/ComfyUI')).toBe('ComfyUI');
+    expect(shortRepo('apache/tvm')).toBe('TVM');
   });
   test('그 밖의 저장소는 / 뒤의 이름이다', () => {
     expect(shortRepo('huggingface/transformers')).toBe('transformers');
+  });
+});
+
+const engage = (o: Partial<Engagement> & Pick<Engagement, 'repo' | 'kind' | 'number'>): Engagement =>
+  engagementSchema.parse({
+    title: 'title',
+    state: 'open',
+    url: `https://github.com/${o.repo}/${o.kind === 'pr' ? 'pull' : 'issues'}/${o.number}`,
+    author: 'someone',
+    review: null,
+    comments: 1,
+    firstAt: '2026-10-01T00:00:00Z',
+    lastAt: '2026-10-01T00:00:00Z',
+    link: `https://github.com/${o.repo}/${o.kind === 'pr' ? 'pull' : 'issues'}/${o.number}#issuecomment-${o.number}`,
+    ...o,
+  });
+
+const V = 'apache/tvm';
+const engaged: Engagement[] = [
+  engage({ repo: V, kind: 'issue', number: 1, lastAt: '2026-10-05T00:00:00Z' }),
+  engage({ repo: V, kind: 'pr', number: 2, lastAt: '2026-10-02T00:00:00Z' }),
+  engage({ repo: V, kind: 'pr', number: 3, review: 'commented', comments: 0 }),
+  engage({ repo: V, kind: 'pr', number: 4, review: 'approved', comments: 2, lastAt: '2026-10-03T00:00:00Z' }),
+  engage({ repo: V, kind: 'pr', number: 5, review: 'changes_requested' }),
+  engage({ repo: T, kind: 'issue', number: 6, lastAt: '2026-10-06T00:00:00Z' }),
+  engage({ repo: V, kind: 'pr', number: 7, review: 'approved', comments: 0, lastAt: '2026-10-07T00:00:00Z' }),
+];
+
+describe('engagementTally', () => {
+  test('리뷰한 PR, 판정별 수, 댓글을 단 이슈·PR, 저장소 수를 센다', () => {
+    expect(engagementTally(engaged)).toEqual({ threads: 7, reviews: 4, approved: 2, changesRequested: 1, commented: 5, repos: 2 });
+  });
+  test('비어 있으면 모두 0이다', () => {
+    expect(engagementTally([])).toEqual({ threads: 0, reviews: 0, approved: 0, changesRequested: 0, commented: 0, repos: 0 });
+  });
+});
+
+describe('engagementSummary', () => {
+  test('리뷰와 판정, 댓글 수를 한 줄로 쓴다', () => {
+    expect(engagementSummary(engagementTally(engaged))).toBe('PR 리뷰 4건 · 승인 2건 · 변경 요청 1건 · 댓글 단 이슈·PR 5건');
+  });
+  test('0인 부분은 쓰지 않는다', () => {
+    expect(engagementSummary(engagementTally([engaged[0]]))).toBe('댓글 단 이슈·PR 1건');
+    expect(engagementSummary(engagementTally([engaged[6]]))).toBe('PR 리뷰 1건 · 승인 1건');
+  });
+});
+
+describe('sortEngagements', () => {
+  test('승인 리뷰, 변경 요청, 의견 리뷰, PR 댓글, 이슈 댓글 순이고 같은 순위에서는 최근 활동이 먼저다', () => {
+    expect(sortEngagements(engaged).map((e) => e.number)).toEqual([7, 4, 5, 3, 2, 6, 1]);
+  });
+  test('원본은 바꾸지 않는다', () => {
+    const before = engaged.map((e) => e.number);
+    sortEngagements(engaged);
+    expect(engaged.map((e) => e.number)).toEqual(before);
+  });
+});
+
+describe('visibleEngagements', () => {
+  test('우선순위 순으로 cap개까지 보이고, 나머지 수를 알려 준다', () => {
+    const { shown, rest } = visibleEngagements(engaged, 3);
+    expect(shown.map((e) => e.number)).toEqual([7, 4, 5]);
+    expect(rest).toBe(4);
+  });
+  test('cap보다 적으면 모두 보인다', () => {
+    expect(visibleEngagements(engaged)).toEqual({ shown: sortEngagements(engaged), rest: 0 });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { contributionStatus, deploymentStatus, relatedStatus, view } from './status';
+import { contributionStatus, deploymentStatus, engagementStatus, engagementTarget, relatedStatus, view } from './status';
 
 type Input = Parameters<typeof contributionStatus>[0];
 const status = (o: Partial<Input> & Pick<Input, 'kind' | 'state'>) =>
@@ -58,6 +58,27 @@ describe('다른 개발자의 수정 PR 상태', () => {
   });
   test('열린 PR은 리뷰 대기', () => {
     expect(relatedStatus({ state: 'open' })).toEqual(view('wait', '리뷰 대기'));
+  });
+});
+
+describe('다른 개발자의 작업에 남긴 참여', () => {
+  test('승인한 리뷰', () => {
+    expect(engagementStatus({ kind: 'pr', review: 'approved' })).toEqual(view('ok', '리뷰 · 승인'));
+  });
+  test('변경을 요청한 리뷰', () => {
+    expect(engagementStatus({ kind: 'pr', review: 'changes_requested' })).toEqual(view('wait', '리뷰 · 변경 요청'));
+  });
+  test('의견만 남긴 리뷰', () => {
+    expect(engagementStatus({ kind: 'pr', review: 'commented' })).toEqual(view('off', '리뷰 의견'));
+  });
+  test('리뷰 없이 남긴 댓글은 PR 댓글이나 이슈 댓글', () => {
+    expect(engagementStatus({ kind: 'pr', review: null })).toEqual(view('off', 'PR 댓글'));
+    expect(engagementStatus({ kind: 'issue', review: null })).toEqual(view('off', '이슈 댓글'));
+  });
+  test('대상은 연 사람, 종류, 지금 상태로 쓴다', () => {
+    expect(engagementTarget({ author: 'tintin1942', kind: 'pr', state: 'open' })).toBe('tintin1942의 PR · 열림');
+    expect(engagementTarget({ author: 'a', kind: 'pr', state: 'merged' })).toBe('a의 PR · 병합됨');
+    expect(engagementTarget({ author: 'b', kind: 'issue', state: 'closed' })).toBe('b의 이슈 · 닫힘');
   });
 });
 

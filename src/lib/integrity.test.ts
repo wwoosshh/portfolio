@@ -65,6 +65,28 @@ describe('checkIntegrity', () => {
     ).toEqual([]);
   });
 
+  // 리뷰·댓글 참여(engagements)는 다른 사람의 PR·이슈라 직접 연 항목(items)과 겹칠 수 없다.
+  test('참여 목록의 중복, ignore에 남은 항목, 직접 연 항목과 겹치는 항목을 잡는다', () => {
+    expect(
+      checkIntegrity({
+        projects,
+        contributions: [issue(1, 'entail')],
+        engagements: [
+          { repo: 'apache/tvm', number: 5 },
+          { repo: 'apache/tvm', number: 5 },
+          { repo: 'apache/tvm', number: 6 },
+          { repo: 'pytorch/pytorch', number: 1 },
+        ],
+        ignore: ['apache/tvm#6'],
+        skills,
+      }),
+    ).toEqual([
+      '참여 apache/tvm#5: 중복 항목',
+      '참여 apache/tvm#6: ignore에 적힌 항목이 engagements에 남아 있음',
+      '참여 pytorch/pytorch#1: 직접 연 항목(items)과 겹침',
+    ]);
+  });
+
   test('없는 프로젝트를 가리키는 기술을 잡는다', () => {
     const badSkills = [{ group: 'AI/ML', items: [{ name: 'Rust', projects: ['ghost'] }] }];
     expect(checkIntegrity({ projects, contributions: [], ignore, skills: badSkills })).toEqual([

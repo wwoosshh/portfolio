@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { tally } from '../lib/contribution-stats';
+import { engagementTally, tally } from '../lib/contribution-stats';
 import { contributions } from './contributions';
 import { profile } from './profile';
 
@@ -42,6 +42,10 @@ test('소개와 핵심 성과의 기여 수치는 기여 데이터에서 계산�
   expect(oss.label).toBe(`오픈소스 ${all.repos}곳에 기여`);
   expect(oss.detail).toContain(`이슈 ${all.issues}건, PR ${all.prs}건`);
   expect(oss.figure).toEqual({ value: String(all.repos), unit: '개 프로젝트' });
+  // 다른 개발자의 PR을 리뷰한 수도 같은 데이터(engagements)에서 계산한다. 리뷰가 없으면 문장을 쓰지 않는다.
+  const { reviews } = engagementTally(contributions.engagements);
+  if (reviews > 0) expect(oss.detail).toContain(`다른 개발자의 PR ${reviews}건을 리뷰했습니다`);
+  else expect(oss.detail).not.toContain('리뷰했습니다');
   expect(agent.detail).toContain(`병합된 PR ${asahi.mergedPrs}건`);
   expect(agent.figure).toEqual({ value: String(asahi.mergedPrs), unit: '건 병합' });
   expect(agent.evidence).toBe(asahi.url);

@@ -11,8 +11,14 @@ export interface Item {
   labels: string[]; createdAt: string; closedAt: string | null; mergedAt: string | null;
   note?: string; related: RelatedRef[];
 }
+/** 다른 개발자의 PR·이슈에 남긴 리뷰와 댓글. 사람이 관리하는 필드가 없어 매일 통째로 새로 쓴다. */
+export interface Engagement {
+  repo: string; kind: 'pr' | 'issue'; number: number; title: string; state: State; url: string;
+  author: string; review: 'approved' | 'changes_requested' | 'commented' | null;
+  comments: number; firstAt: string; lastAt: string; link: string;
+}
 export interface Data {
-  asOf: string; author: string; excludeOwners: string[]; ignore: string[]; items: Item[];
+  asOf: string; author: string; excludeOwners: string[]; ignore: string[]; items: Item[]; engagements?: Engagement[];
   own: { asahi?: { mergedPrs: number; mineMergedPrs: number; url: string }; entail?: { pypiReleases: number; pypiLatest: string; url: string } };
 }
 export interface GqlNode {
@@ -20,7 +26,13 @@ export interface GqlNode {
   number: number; url: string; title: string; state: string;
   stateReason?: string | null; merged?: boolean; mergedAt?: string | null;
   closedAt: string | null; createdAt: string; reviewDecision?: string | null;
+  author?: { login: string } | null;
   repository: { nameWithOwner: string }; labels: { nodes: { name: string }[] };
+}
+/** 한 PR·이슈의 댓글(모든 사람)과 리뷰(작성자로 걸러 받지만 다시 거른다). */
+export interface Thread {
+  comments: { author: { login: string } | null; createdAt: string; url: string }[];
+  reviews: { author: { login: string } | null; state: string; submittedAt: string | null; url: string }[];
 }
 
 const DATA_PATH = fileURLToPath(new URL('../src/data/contributions.json', import.meta.url));
@@ -78,6 +90,49 @@ export function mergeItems(existing: Item[], fresh: Omit<Item, 'project' | 'note
   return [...out.values()].sort((a, b) => byCodePoint(a.repo, b.repo) || a.number - b.number);
 }
 
+/** 제출된 리뷰만 센다. PENDING은 아직 남에게 보이지 않는 초안이다. DISMISSED는 판정이 지워졌어도 리뷰한 사실은 남는다. */
+const SUBMITTED = new Set(['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED', 'DISMISSED']);
+const DECISIVE = new Set(['APPROVED', 'CHANGES_REQUESTED']);
+
+/**
+ * 다른 개발자의 PR·이슈에 내가 남긴 리뷰와 댓글을 한 항목으로 줄인다. 내 것이 하나도 없으면 null이다.
+ * 판정은 마지막 승인·변경 요청을 따르고, 의견만 남겼으면 commented다.
+ * 링크는 판정을 담은 리뷰로, 판정이 없으면 마지막 리뷰로, 리뷰가 없으면 첫 댓글로 간다.
+ */
+export function toEngagement(n: GqlNode, thread: Thread, login: string): Engagement | null {
+  const mine = (a: { login: string } | null) => a?.login.toLowerCase() === login.toLowerCase();
+  const comments = thread.comments.filter((c) => mine(c.author)).sort((a, b) => byCodePoint(a.createdAt, b.createdAt));
+  const reviews = thread.reviews
+    .flatMap((r) => (mine(r.author) && SUBMITTED.has(r.state) && r.submittedAt ? [{ ...r, submittedAt: r.submittedAt }] : []))
+    .sort((a, b) => byCodePoint(a.submittedAt, b.submittedAt));
+  if (comments.length === 0 && reviews.length === 0) return null;
+  const decisive = reviews.filter((r) => DECISIVE.has(r.state)).at(-1);
+  const times = [...comments.map((c) => c.createdAt), ...reviews.map((r) => r.submittedAt)].sort(byCodePoint);
+  const { repo, kind, number, title, state, url } = normalize(n);
+  return {
+    repo,
+    kind,
+    number,
+    title,
+    state,
+    url,
+    author: n.author?.login ?? 'ghost',
+    review: decisive ? (decisive.state === 'APPROVED' ? 'approved' : 'changes_requested') : reviews.length > 0 ? 'commented' : null,
+    comments: comments.length,
+    firstAt: times[0],
+    lastAt: times[times.length - 1],
+    link: (decisive ?? reviews.at(-1))?.url ?? comments[0].url,
+  };
+}
+
+/** 새로 찾은 값으로 바꾸고, 검색에서 빠진 기존 항목은 남긴다(검색 색인이 늦거나 흔들려도 목록이 줄지 않게). ignore는 양쪽에서 뺀다. */
+export function mergeEngagements(existing: Engagement[], fresh: Engagement[], ignore: string[]): Engagement[] {
+  const skip = new Set(ignore);
+  const out = new Map<string, Engagement>();
+  for (const e of [...existing, ...fresh]) if (!skip.has(key(e.repo, e.number))) out.set(key(e.repo, e.number), e);
+  return [...out.values()].sort((a, b) => byCodePoint(a.repo, b.repo) || a.number - b.number);
+}
+
 export function sameContent(a: Data, b: Data): boolean {
   const strip = ({ asOf: _asOf, ...rest }: Data) => rest;
   return JSON.stringify(strip(a)) === JSON.stringify(strip(b));
@@ -109,14 +164,15 @@ async function gql<T>(query: string, variables: Record<string, unknown> = {}): P
 }
 
 const NODE_FIELDS = `__typename
-  ... on Issue { number url title state stateReason createdAt closedAt repository { nameWithOwner } labels(first: 30) { nodes { name } } }
-  ... on PullRequest { number url title state merged mergedAt closedAt createdAt reviewDecision repository { nameWithOwner } labels(first: 30) { nodes { name } } }`;
+  ... on Issue { number url title state stateReason createdAt closedAt author { login } repository { nameWithOwner } labels(first: 30) { nodes { name } } }
+  ... on PullRequest { number url title state merged mergedAt closedAt createdAt reviewDecision author { login } repository { nameWithOwner } labels(first: 30) { nodes { name } } }`;
 
-async function searchAll(author: string, excludeOwners: string[]): Promise<GqlNode[]> {
+/** filter(author:·reviewed-by:·commenter: 등)로 PR·이슈를 찾는다. */
+async function search(filter: string, author: string, excludeOwners: string[]): Promise<GqlNode[]> {
   // 공개 저장소만 읽는다. 개인 토큰(repo 범위)으로 로컬에서 돌려도 비공개 저장소의 제목과 주소가 공개 JSON에 들어가지 않게 한다.
   // 작성자 본인의 저장소(-user)와 제외 소유자(동아리 조직 등)의 저장소(-org)는 검색에서 뺀다.
   const orgs = excludeOwners.filter((o) => o.toLowerCase() !== author.toLowerCase());
-  const q = [`author:${author}`, `-user:${author}`, 'is:public', ...orgs.map((o) => `-org:${o}`)].join(' ');
+  const q = [filter, `-user:${author}`, 'is:public', ...orgs.map((o) => `-org:${o}`)].join(' ');
   const nodes: GqlNode[] = [];
   let after: string | null = null;
   do {
@@ -129,6 +185,51 @@ async function searchAll(author: string, excludeOwners: string[]): Promise<GqlNo
   } while (after);
   const owners = new Set(excludeOwners.map((o) => o.toLowerCase()));
   return nodes.filter((n) => n.repository && !owners.has(n.repository.nameWithOwner.split('/')[0].toLowerCase()));
+}
+
+const THREAD_QUERY = `query($owner: String!, $name: String!, $number: Int!, $login: String!, $after: String) {
+  repository(owner: $owner, name: $name) {
+    issueOrPullRequest(number: $number) {
+      ... on Issue { comments(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { author { login } createdAt url } } }
+      ... on PullRequest {
+        comments(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { author { login } createdAt url } }
+        reviews(first: 100, author: $login) { nodes { author { login } state submittedAt url } }
+      }
+    }
+  }
+}`;
+
+/** 한 PR·이슈의 댓글을 끝까지 읽고, 내 리뷰를 함께 읽는다. */
+async function threadOf(repo: string, number: number, login: string): Promise<Thread> {
+  const [owner, name] = repo.split('/');
+  const thread: Thread = { comments: [], reviews: [] };
+  let after: string | null = null;
+  do {
+    type Page = { comments: { pageInfo: { hasNextPage: boolean; endCursor: string | null }; nodes: Thread['comments'] }; reviews?: { nodes: Thread['reviews'] } };
+    const data: { repository: { issueOrPullRequest: Page | null } | null } = await gql(THREAD_QUERY, { owner, name, number, login, after });
+    const page = data.repository?.issueOrPullRequest;
+    if (!page) throw new Error(`참여한 ${key(repo, number)}을 찾지 못했습니다`);
+    thread.comments.push(...page.comments.nodes);
+    if (after === null) thread.reviews.push(...(page.reviews?.nodes ?? []));
+    after = page.comments.pageInfo.hasNextPage ? page.comments.pageInfo.endCursor : null;
+  } while (after);
+  return thread;
+}
+
+/** 다른 개발자의 PR 중 내가 리뷰한 것과, PR·이슈 중 내가 댓글을 단 것. 두 검색에 모두 걸린 항목은 한 번만 읽는다. */
+async function collectEngagements(author: string, excludeOwners: string[]): Promise<Engagement[]> {
+  const found = new Map<string, GqlNode>();
+  for (const role of ['reviewed-by', 'commenter']) {
+    for (const n of await search(`${role}:${author} -author:${author}`, author, excludeOwners)) {
+      found.set(key(n.repository.nameWithOwner, n.number), n);
+    }
+  }
+  const out: Engagement[] = [];
+  for (const n of found.values()) {
+    const e = toEngagement(n, await threadOf(n.repository.nameWithOwner, n.number, author), author);
+    if (e) out.push(e);
+  }
+  return out;
 }
 
 async function refreshRelated(items: Item[]): Promise<void> {
@@ -171,17 +272,20 @@ export async function main(path = DATA_PATH): Promise<boolean> {
   const data = JSON.parse(text) as Data;
   // mergeItems는 기존 related 객체를 그대로 넘기고 refreshRelated가 그것을 제자리에서 바꾼다. 비교할 원본은 따로 읽어 둔다.
   const original = JSON.parse(text) as Data;
-  const fresh = (await searchAll(data.author, data.excludeOwners)).map(normalize);
+  const fresh = (await search(`author:${data.author}`, data.author, data.excludeOwners)).map(normalize);
   const items = mergeItems(data.items, fresh, data.ignore);
   await refreshRelated(items);
-  const next: Data = { ...data, items, own: await ownStats(data.author) };
+  const engagements = mergeEngagements(data.engagements ?? [], await collectEngagements(data.author, data.excludeOwners), data.ignore);
+  // 키 순서를 고정한다. 펼쳐 쓰면 처음 생긴 engagements가 own 뒤로 간다.
+  const { asOf, author, excludeOwners, ignore } = data;
+  const next: Data = { asOf, author, excludeOwners, ignore, items, engagements, own: await ownStats(data.author) };
   if (sameContent(original, next)) {
     console.log('변경 없음');
     return false;
   }
   next.asOf = new Date().toISOString();
   await writeFile(path, `${JSON.stringify(next, null, 2)}\n`);
-  console.log(`갱신함: 항목 ${items.length}개`);
+  console.log(`갱신함: 항목 ${items.length}개, 참여 ${engagements.length}개`);
   return true;
 }
 
