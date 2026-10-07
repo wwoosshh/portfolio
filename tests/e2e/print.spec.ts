@@ -3,7 +3,7 @@ import { PDFDocument } from 'pdf-lib';
 import raw from '../../src/data/contributions.json' with { type: 'json' };
 import { contributions } from '../../src/data/contributions';
 import { profile } from '../../src/data/profile';
-import { byRepo, printRows } from '../../src/lib/contribution-stats';
+import { byRepo, engagementSummary, engagementTally, printRows, sortEngagements } from '../../src/lib/contribution-stats';
 import { kstDate } from './dates';
 
 const PHONE = /01[016789][-. ]?\d{3,4}[-. ]?\d{4}/;
@@ -17,6 +17,7 @@ const SHORT = new Map([
   ['vllm-project/vllm', 'vLLM'],
   ['sgl-project/sglang', 'SGLang'],
   ['Comfy-Org/ComfyUI', 'ComfyUI'],
+  ['apache/tvm', 'TVM'],
 ]);
 type Related = { number: number; url: string };
 const relatedOf = (c: (typeof raw.items)[number]): Related[] => (c as { related?: Related[] }).related ?? [];
@@ -89,6 +90,18 @@ test('인쇄: 다른 개발자의 수정 PR은 같은 행에 `다른 개발자 �
       ).toBe(true);
     }
   }
+});
+
+test('인쇄: 다른 개발자의 PR·이슈에 남긴 리뷰·댓글은 표 아래 한 줄로 요약하고, 없으면 줄이 없다', async ({ page }) => {
+  await page.goto('/print/');
+  const line = page.locator('.print .engage');
+  const list = contributions.engagements;
+  if (list.length === 0) {
+    await expect(line).toHaveCount(0);
+    return;
+  }
+  const names = [...new Set(sortEngagements(list).map((e) => SHORT.get(e.repo) ?? e.repo.split('/')[1]))];
+  await expect(line).toHaveText(`다른 개발자의 작업 참여: ${engagementSummary(engagementTally(list))} (${names.join(', ')})`);
 });
 
 test('인쇄: 핵심 성과의 기준일은 기여 데이터의 마지막 변경 날짜다', async ({ page }) => {

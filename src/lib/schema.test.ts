@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { contributionSchema, profileSchema, projectSchema } from './schema';
+import { contributionSchema, engagementSchema, profileSchema, projectSchema } from './schema';
 
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
   result.success ? [] : (result.error?.issues ?? []).map((i) => i.message);
@@ -222,6 +222,55 @@ describe('contributionSchema', () => {
       url: 'https://github.com/pytorch/pytorch/issues/198096',
     });
     expect(messages(result)).toContain('이슈는 merged 상태일 수 없습니다');
+  });
+});
+
+describe('engagementSchema', () => {
+  const reviewed = {
+    repo: 'apache/tvm',
+    kind: 'pr',
+    number: 20331,
+    title: 'Preserve out_dtype in matmul rewrite passes',
+    state: 'open',
+    url: 'https://github.com/apache/tvm/pull/20331',
+    author: 'tintin1942',
+    review: 'approved',
+    comments: 0,
+    firstAt: '2026-10-07T03:51:00Z',
+    lastAt: '2026-10-07T03:51:00Z',
+    link: 'https://github.com/apache/tvm/pull/20331#pullrequestreview-1',
+  };
+  const commented = {
+    ...reviewed,
+    kind: 'issue',
+    number: 20558,
+    url: 'https://github.com/apache/tvm/issues/20558',
+    author: 'reporter',
+    review: null,
+    comments: 1,
+    link: 'https://github.com/apache/tvm/issues/20558#issuecomment-1',
+  };
+
+  test('리뷰한 PR과 댓글을 단 이슈를 받는다', () => {
+    expect(engagementSchema.safeParse(reviewed).success).toBe(true);
+    expect(engagementSchema.safeParse(commented).success).toBe(true);
+  });
+  test('리뷰도 댓글도 없으면 받지 않는다', () => {
+    expect(engagementSchema.safeParse({ ...reviewed, review: null, comments: 0 }).success).toBe(false);
+  });
+  test('이슈에는 리뷰가 없고 병합 상태도 없다', () => {
+    expect(engagementSchema.safeParse({ ...commented, review: 'approved' }).success).toBe(false);
+    expect(engagementSchema.safeParse({ ...commented, state: 'merged' }).success).toBe(false);
+  });
+  test('주소는 저장소·종류·번호와 맞아야 한다', () => {
+    expect(engagementSchema.safeParse({ ...reviewed, url: 'https://github.com/apache/tvm/issues/20331' }).success).toBe(false);
+  });
+  test('링크는 그 항목 안의 리뷰나 댓글이다', () => {
+    expect(engagementSchema.safeParse({ ...reviewed, link: 'https://github.com/apache/tvm/pull/9#pullrequestreview-1' }).success).toBe(false);
+    expect(engagementSchema.safeParse({ ...reviewed, link: 'https://github.com/apache/tvm/pull/20331' }).success).toBe(false);
+  });
+  test('처음 시각이 마지막 시각보다 늦을 수 없다', () => {
+    expect(engagementSchema.safeParse({ ...reviewed, firstAt: '2026-10-08T00:00:00Z' }).success).toBe(false);
   });
 });
 

@@ -26,6 +26,7 @@ export async function loadSite(): Promise<Site> {
   const errors = checkIntegrity({
     projects: all.map((p) => ({ id: p.id, tier: p.data.tier })),
     contributions: contributions.items,
+    engagements: contributions.engagements,
     ignore: contributions.ignore,
     skills: profile.skills,
   });

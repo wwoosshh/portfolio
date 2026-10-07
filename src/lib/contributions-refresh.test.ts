@@ -5,14 +5,18 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   main,
+  mergeEngagements,
   mergeItems,
   normalize,
   prState,
   relatedQuery,
   sameContent,
+  toEngagement,
   type Data,
+  type Engagement,
   type GqlNode,
   type Item,
+  type Thread,
 } from '../../scripts/refresh-contributions';
 
 const node = (o: Partial<GqlNode> & Pick<GqlNode, '__typename' | 'number'>): GqlNode => ({
@@ -220,6 +224,156 @@ describe('sameContent', () => {
   });
 });
 
+describe('toEngagement', () => {
+  const pr = node({
+    __typename: 'PullRequest',
+    number: 20331,
+    url: 'https://github.com/apache/tvm/pull/20331',
+    title: 'Preserve out_dtype',
+    repository: { nameWithOwner: 'apache/tvm' },
+    author: { login: 'tintin1942' },
+  });
+  const issue = node({
+    __typename: 'Issue',
+    number: 20558,
+    url: 'https://github.com/apache/tvm/issues/20558',
+    title: 'LLVM codegen aborts',
+    repository: { nameWithOwner: 'apache/tvm' },
+    author: { login: 'reporter' },
+  });
+  const me = { login: 'wwoosshh' };
+  const other = { login: 'someone' };
+  const comment = (author: { login: string } | null, at: string, id: number, base = issue.url) => ({ author, createdAt: at, url: `${base}#issuecomment-${id}` });
+  const review = (state: string, at: string | null, id: number, author: { login: string } | null = me) => ({
+    author,
+    state,
+    submittedAt: at,
+    url: `${pr.url}#pullrequestreview-${id}`,
+  });
+  const thread = (o: Partial<Thread>): Thread => ({ comments: [], reviews: [], ...o });
+
+  test('내 댓글만 세고, 처음·마지막 시각과 첫 댓글 링크를 남긴다', () => {
+    const e = toEngagement(
+      issue,
+      thread({
+        comments: [
+          comment(other, '2026-10-06T09:00:00Z', 1),
+          comment(me, '2026-10-06T10:06:00Z', 2),
+          comment(null, '2026-10-06T11:00:00Z', 3),
+          comment(me, '2026-10-07T05:51:00Z', 4),
+        ],
+      }),
+      'wwoosshh',
+    );
+    expect(e).toEqual<Engagement>({
+      repo: 'apache/tvm',
+      kind: 'issue',
+      number: 20558,
+      title: 'LLVM codegen aborts',
+      state: 'open',
+      url: 'https://github.com/apache/tvm/issues/20558',
+      author: 'reporter',
+      review: null,
+      comments: 2,
+      firstAt: '2026-10-06T10:06:00Z',
+      lastAt: '2026-10-07T05:51:00Z',
+      link: 'https://github.com/apache/tvm/issues/20558#issuecomment-2',
+    });
+  });
+
+  test('로그인 이름은 대소문자를 가리지 않는다', () => {
+    const e = toEngagement(issue, thread({ comments: [comment({ login: 'WwooSShh' }, '2026-10-06T10:06:00Z', 2)] }), 'wwoosshh');
+    expect(e?.comments).toBe(1);
+  });
+
+  test('리뷰 판정은 마지막 승인·변경 요청을 따르고, 링크는 그 리뷰로 간다', () => {
+    const e = toEngagement(
+      pr,
+      thread({
+        comments: [comment(me, '2026-10-07T03:18:00Z', 7, pr.url)],
+        reviews: [review('CHANGES_REQUESTED', '2026-10-07T03:20:00Z', 1), review('APPROVED', '2026-10-07T05:30:00Z', 2), review('COMMENTED', '2026-10-07T06:00:00Z', 3)],
+      }),
+      'wwoosshh',
+    );
+    expect(e).toMatchObject({
+      kind: 'pr',
+      author: 'tintin1942',
+      review: 'approved',
+      comments: 1,
+      firstAt: '2026-10-07T03:18:00Z',
+      lastAt: '2026-10-07T06:00:00Z',
+      link: `${pr.url}#pullrequestreview-2`,
+    });
+  });
+
+  test('의견만 남긴 리뷰는 commented이고 링크는 마지막 리뷰다', () => {
+    const e = toEngagement(pr, thread({ reviews: [review('COMMENTED', '2026-10-07T03:00:00Z', 1), review('COMMENTED', '2026-10-07T04:00:00Z', 2)] }), 'wwoosshh');
+    expect(e).toMatchObject({ review: 'commented', comments: 0, link: `${pr.url}#pullrequestreview-2` });
+  });
+
+  test('제출하지 않은 리뷰(PENDING)와 다른 사람의 리뷰는 세지 않는다', () => {
+    const e = toEngagement(
+      pr,
+      thread({
+        comments: [comment(me, '2026-10-07T03:18:00Z', 7, pr.url)],
+        reviews: [review('PENDING', null, 1), review('APPROVED', '2026-10-07T05:30:00Z', 2, other)],
+      }),
+      'wwoosshh',
+    );
+    expect(e).toMatchObject({ review: null, comments: 1, link: `${pr.url}#issuecomment-7` });
+  });
+
+  test('내 리뷰도 댓글도 없으면(지웠거나 검색이 잘못 찾은 경우) null', () => {
+    expect(toEngagement(issue, thread({ comments: [comment(other, '2026-10-06T09:00:00Z', 1)] }), 'wwoosshh')).toBeNull();
+  });
+
+  test('PR 상태는 normalize와 같은 병합 판정을 쓴다', () => {
+    const merged = { ...pr, state: 'CLOSED', labels: { nodes: [{ name: 'Merged' }] } };
+    expect(toEngagement(merged, thread({ reviews: [review('APPROVED', '2026-10-07T05:30:00Z', 2)] }), 'wwoosshh')?.state).toBe('merged');
+  });
+
+  test('작성자 계정이 지워졌으면 ghost', () => {
+    const e = toEngagement({ ...issue, author: null }, thread({ comments: [comment(me, '2026-10-06T10:06:00Z', 2)] }), 'wwoosshh');
+    expect(e?.author).toBe('ghost');
+  });
+});
+
+describe('mergeEngagements', () => {
+  const eng = (repo: string, number: number, o: Partial<Engagement> = {}): Engagement => ({
+    repo,
+    kind: 'issue',
+    number,
+    title: 'title',
+    state: 'open',
+    url: `https://github.com/${repo}/issues/${number}`,
+    author: 'someone',
+    review: null,
+    comments: 1,
+    firstAt: '2026-10-01T00:00:00Z',
+    lastAt: '2026-10-01T00:00:00Z',
+    link: `https://github.com/${repo}/issues/${number}#issuecomment-1`,
+    ...o,
+  });
+
+  test('새로 찾은 값으로 바꾸고, 검색에서 빠진 기존 항목은 남긴다', () => {
+    const out = mergeEngagements([eng('apache/tvm', 1), eng('apache/tvm', 2)], [eng('apache/tvm', 1, { comments: 3 })], []);
+    expect(out.map((e) => [e.number, e.comments])).toEqual([
+      [1, 3],
+      [2, 1],
+    ]);
+  });
+
+  test('ignore에 적힌 항목은 양쪽에서 뺀다', () => {
+    const out = mergeEngagements([eng('apache/tvm', 1)], [eng('apache/tvm', 2)], ['apache/tvm#1', 'apache/tvm#2']);
+    expect(out).toEqual([]);
+  });
+
+  test('저장소(문자 코드 순), 번호 순으로 정렬한다', () => {
+    const out = mergeEngagements([], [eng('pytorch/pytorch', 3), eng('apache/tvm', 9), eng('apache/tvm', 2)], []);
+    expect(out.map((e) => `${e.repo}#${e.number}`)).toEqual(['apache/tvm#2', 'apache/tvm#9', 'pytorch/pytorch#3']);
+  });
+});
+
 describe('relatedQuery', () => {
   test('r0, r1 … 별칭으로 저장소마다 PR을 묻고, 소유자와 이름은 JSON 문자열로 감싼다', () => {
     const q = relatedQuery([
@@ -260,15 +414,65 @@ describe('main', () => {
     own: {},
   };
 
+  // 다른 사람의 PR(내가 리뷰)과 이슈(내가 댓글). 리뷰한 PR은 댓글 검색에도 걸린다.
+  const reviewedPr = {
+    __typename: 'PullRequest',
+    number: 20331,
+    url: 'https://github.com/apache/tvm/pull/20331',
+    title: 'Preserve out_dtype',
+    state: 'OPEN',
+    merged: false,
+    mergedAt: null,
+    reviewDecision: null,
+    createdAt: '2026-09-13T00:00:00Z',
+    closedAt: null,
+    author: { login: 'tintin1942' },
+    repository: { nameWithOwner: 'apache/tvm' },
+    labels: { nodes: [] },
+  };
+  const commentedIssue = {
+    __typename: 'Issue',
+    number: 20558,
+    url: 'https://github.com/apache/tvm/issues/20558',
+    title: 'LLVM codegen aborts',
+    state: 'OPEN',
+    stateReason: null,
+    createdAt: '2026-10-06T00:00:00Z',
+    closedAt: null,
+    author: { login: 'reporter' },
+    repository: { nameWithOwner: 'apache/tvm' },
+    labels: { nodes: [] },
+  };
+  const threads: Record<number, unknown> = {
+    20331: {
+      comments: { pageInfo: { hasNextPage: false, endCursor: null }, nodes: [] },
+      reviews: { nodes: [{ author: { login: 'wwoosshh' }, state: 'APPROVED', submittedAt: '2026-10-07T03:51:00Z', url: 'https://github.com/apache/tvm/pull/20331#pullrequestreview-1' }] },
+    },
+    20558: {
+      comments: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [
+          { author: { login: 'reporter' }, createdAt: '2026-10-06T01:00:00Z', url: 'https://github.com/apache/tvm/issues/20558#issuecomment-1' },
+          { author: { login: 'wwoosshh' }, createdAt: '2026-10-06T10:06:00Z', url: 'https://github.com/apache/tvm/issues/20558#issuecomment-2' },
+        ],
+      },
+    },
+  };
+
   // 관련 PR의 상태만 바꿔 가며 GitHub·PyPI 응답을 흉내 낸다.
   let relatedState: 'OPEN' | 'MERGED' = 'OPEN';
   const fakeFetch = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
     if (String(input).includes('pypi.org')) {
       return Response.json({ info: { version: '2.4.0' }, releases: { '2.4.0': [{ yanked: false }], '2.3.0': [{ yanked: true }], '2.2.0': [] } });
     }
-    const { query } = JSON.parse(String(init?.body)) as { query: string };
+    const { query, variables } = JSON.parse(String(init?.body)) as { query: string; variables: { q?: string; number?: number } };
     if (query.includes('search(')) {
-      return Response.json({ data: { search: { pageInfo: { hasNextPage: false, endCursor: null }, nodes: [issue] } } });
+      const q = variables.q ?? '';
+      const nodes = q.startsWith('author:') ? [issue] : q.startsWith('reviewed-by:') ? [reviewedPr] : [reviewedPr, commentedIssue];
+      return Response.json({ data: { search: { pageInfo: { hasNextPage: false, endCursor: null }, nodes } } });
+    }
+    if (query.includes('issueOrPullRequest')) {
+      return Response.json({ data: { repository: { issueOrPullRequest: threads[variables.number ?? 0] } } });
     }
     if (query.includes('r0:')) {
       const pullRequest = {
@@ -317,7 +521,7 @@ describe('main', () => {
     const first = await read();
     expect(first.items[0]).toMatchObject({ project: 'entail', state: 'open', related: [{ number: 58679, state: 'open', author: 'someone' }] });
     expect(first.own).toMatchObject({ asahi: { mergedPrs: 3, mineMergedPrs: 2 }, entail: { pypiReleases: 1, pypiLatest: '2.4.0' } });
-    expect(Object.keys(first)).toEqual(['asOf', 'author', 'excludeOwners', 'ignore', 'items', 'own']);
+    expect(Object.keys(first)).toEqual(['asOf', 'author', 'excludeOwners', 'ignore', 'items', 'engagements', 'own']);
 
     const before = await readFile(file, 'utf8');
     expect(await main(file)).toBe(false);
@@ -329,6 +533,56 @@ describe('main', () => {
     await main(file);
     const search = requests().find((r) => r.query.includes('search('));
     expect(search?.variables.q).toBe('author:wwoosshh -user:wwoosshh is:public -org:semicollon-club');
+  });
+
+  test('리뷰·댓글 검색도 공개 저장소로 한정하고, 내가 연 항목과 제외 소유자를 뺀다', async () => {
+    await main(file);
+    const qs = requests()
+      .filter((r) => r.query.includes('search('))
+      .map((r) => r.variables.q);
+    expect(qs).toEqual([
+      'author:wwoosshh -user:wwoosshh is:public -org:semicollon-club',
+      'reviewed-by:wwoosshh -author:wwoosshh -user:wwoosshh is:public -org:semicollon-club',
+      'commenter:wwoosshh -author:wwoosshh -user:wwoosshh is:public -org:semicollon-club',
+    ]);
+  });
+
+  test('다른 사람의 PR·이슈에 남긴 리뷰와 댓글을 engagements에 한 번씩 쓴다', async () => {
+    await main(file);
+    const { engagements } = await read();
+    expect(engagements).toEqual([
+      {
+        repo: 'apache/tvm',
+        kind: 'pr',
+        number: 20331,
+        title: 'Preserve out_dtype',
+        state: 'open',
+        url: 'https://github.com/apache/tvm/pull/20331',
+        author: 'tintin1942',
+        review: 'approved',
+        comments: 0,
+        firstAt: '2026-10-07T03:51:00Z',
+        lastAt: '2026-10-07T03:51:00Z',
+        link: 'https://github.com/apache/tvm/pull/20331#pullrequestreview-1',
+      },
+      {
+        repo: 'apache/tvm',
+        kind: 'issue',
+        number: 20558,
+        title: 'LLVM codegen aborts',
+        state: 'open',
+        url: 'https://github.com/apache/tvm/issues/20558',
+        author: 'reporter',
+        review: null,
+        comments: 1,
+        firstAt: '2026-10-06T10:06:00Z',
+        lastAt: '2026-10-06T10:06:00Z',
+        link: 'https://github.com/apache/tvm/issues/20558#issuecomment-2',
+      },
+    ]);
+    // 항목마다 내 리뷰·댓글을 한 번씩만 읽는다(두 검색에 모두 걸린 PR도 한 번).
+    const threadReads = requests().filter((r) => r.query.includes('issueOrPullRequest'));
+    expect(threadReads).toHaveLength(2);
   });
 
   test('제외 소유자가 작성자이면 -org로 한 번 더 빼지 않는다(대소문자 무시)', async () => {

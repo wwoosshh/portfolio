@@ -1,7 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
 import raw from '../../src/data/contributions.json' with { type: 'json' };
 import { contributions } from '../../src/data/contributions';
-import { byRepo, sortByPriority } from '../../src/lib/contribution-stats';
+import {
+  byRepo,
+  engagementSummary,
+  engagementTally,
+  shortRepo,
+  sortByPriority,
+  visibleEngagements,
+} from '../../src/lib/contribution-stats';
+import { engagementStatus, engagementTarget } from '../../src/lib/status';
 import { kstDate } from './dates';
 
 // 건수는 매일 바뀐다. 기대값은 기여 데이터(JSON)에서 이 파일이 직접 세고, 숫자를 적지 않는다.
@@ -120,6 +128,41 @@ test.describe('외부 기여 보드(움직임 줄임: 최종 상태)', () => {
     await page.goto('/');
     await expect(page.locator('#oss .cboard__asof')).toContainText('매일 자동 확인');
     await expect(page.locator('#oss .cboard__asof')).toContainText(`마지막 변경 ${kstDate(raw.asOf)}`);
+  });
+
+  // 다른 개발자의 PR·이슈에 남긴 리뷰와 댓글. 직접 연 기여의 요약 숫자에는 섞이지 않는다(위 요약 시험이 items만 센다).
+  test('리뷰·댓글 참여는 별도 칸에 요약과 함께 우선순위 순으로 있고, 없으면 칸이 없다', async ({ page }) => {
+    await page.goto('/');
+    const box = page.locator('#oss .cboard__eng');
+    const list = contributions.engagements;
+    if (list.length === 0) {
+      await expect(box).toHaveCount(0);
+      return;
+    }
+    await expect(box.locator('h4')).toHaveText('다른 개발자의 작업에 참여');
+    await expect(box.locator('.cboard__eng-sum')).toHaveText(engagementSummary(engagementTally(list)));
+    const { shown, rest } = visibleEngagements(list);
+    const rows = box.locator('.cboard__eng-item');
+    await expect(rows).toHaveCount(shown.length);
+    const hrefs = await rows.locator('a.cboard__ref').evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+    expect(hrefs).toEqual(shown.map((e) => e.url));
+    for (const e of shown) {
+      const row = rows.filter({ has: page.locator(`a[href="${e.url}"]`) });
+      const label = `${shortRepo(e.repo)} ${e.kind === 'pr' ? 'PR' : '이슈'}`;
+      await expect(row.locator('.cboard__kind'), e.url).toHaveText(label);
+      await expect(row.locator('.status'), e.url).toHaveText(new RegExp(engagementStatus(e).text));
+      await expect(row.locator('.cboard__text'), e.url).toHaveText(e.title);
+      await expect(row.locator('.cboard__eng-meta'), e.url).toContainText(engagementTarget(e));
+      // 내 리뷰·댓글로 바로 가는 링크. 링크 이름만 읽어도 어느 항목인지 안다(↗는 이름에서 빠진다).
+      const mine = row.locator('a.cboard__eng-link');
+      await expect(mine, e.url).toHaveAttribute('href', e.link);
+      await expect(mine, e.url).toHaveAttribute('rel', 'noopener noreferrer');
+      await expect(mine, e.url).toHaveAccessibleName(`내 ${e.review ? '리뷰' : '댓글'} 보기 (${label} #${e.number})`);
+      await expect(row.locator('a.cboard__ref'), e.url).toHaveAccessibleName(`${label} #${e.number}`);
+    }
+    const restLine = box.locator('.cboard__eng-rest');
+    if (rest === 0) await expect(restLine).toHaveCount(0);
+    else await expect(restLine).toContainText(`외 ${rest}건`);
   });
 });
 

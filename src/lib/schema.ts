@@ -148,6 +148,48 @@ export const contributionSchema = z
     }
   });
 
+/** 다른 개발자의 PR·이슈에 남긴 리뷰와 댓글. 직접 연 PR·이슈는 items에 있다. 모든 필드를 매일 기계가 채운다. */
+export const engagementSchema = z
+  .strictObject({
+    repo: repoName,
+    kind: z.enum(['pr', 'issue']),
+    number: z.number().int().positive(),
+    title: z.string().min(1),
+    state: contributionStateSchema,
+    url: httpUrl,
+    // 그 PR·이슈를 연 사람.
+    author: z.string().min(1),
+    // 내 리뷰의 마지막 판정. 의견만 남긴 리뷰는 commented, 리뷰 없이 댓글만 남겼으면 null.
+    review: z.enum(['approved', 'changes_requested', 'commented']).nullable(),
+    // 내가 남긴 대화 댓글 수. 리뷰 본문과 코드 줄 댓글은 리뷰에 들어 있어 세지 않는다.
+    comments: z.number().int().nonnegative(),
+    firstAt: z.iso.datetime(),
+    lastAt: z.iso.datetime(),
+    // 내 리뷰나 댓글로 바로 가는 주소.
+    link: httpUrl,
+  })
+  .superRefine((e, ctx) => {
+    if (e.kind === 'issue' && e.state === 'merged') {
+      ctx.addIssue({ code: 'custom', path: ['state'], message: '이슈는 merged 상태일 수 없습니다' });
+    }
+    if (e.kind === 'issue' && e.review !== null) {
+      ctx.addIssue({ code: 'custom', path: ['review'], message: '이슈에는 리뷰가 없습니다' });
+    }
+    if (e.review === null && e.comments === 0) {
+      ctx.addIssue({ code: 'custom', path: ['comments'], message: '리뷰나 댓글이 하나는 있어야 합니다' });
+    }
+    const expected = `https://github.com/${e.repo}/${e.kind === 'pr' ? 'pull' : 'issues'}/${e.number}`;
+    if (e.url !== expected) {
+      ctx.addIssue({ code: 'custom', path: ['url'], message: `URL은 ${expected} 이어야 합니다` });
+    }
+    if (!e.link.startsWith(`${expected}#`)) {
+      ctx.addIssue({ code: 'custom', path: ['link'], message: '링크는 그 항목 안의 리뷰나 댓글이어야 합니다' });
+    }
+    if (e.firstAt > e.lastAt) {
+      ctx.addIssue({ code: 'custom', path: ['firstAt'], message: '처음 시각이 마지막 시각보다 늦습니다' });
+    }
+  });
+
 export const contributionsSchema = z.strictObject({
   // 마지막으로 내용이 바뀐 시각. 매일 확인하지만 바뀐 것이 없으면 그대로다.
   asOf: z.coerce.date(),
@@ -155,6 +197,7 @@ export const contributionsSchema = z.strictObject({
   excludeOwners: z.array(z.string().min(1)).default([]),
   ignore: z.array(z.string().regex(/^[\w.-]+\/[\w.-]+#\d+$/)).default([]),
   items: z.array(contributionSchema),
+  engagements: z.array(engagementSchema).default([]),
   own: z.strictObject({
     asahi: z.strictObject({
       mergedPrs: z.number().int().nonnegative(),
@@ -244,6 +287,7 @@ export const profileSchema = z.strictObject({
 
 export type Project = z.infer<typeof projectSchema>;
 export type Contribution = z.infer<typeof contributionSchema>;
+export type Engagement = z.infer<typeof engagementSchema>;
 export type Contributions = z.infer<typeof contributionsSchema>;
 export type Profile = z.infer<typeof profileSchema>;
 export type Evidence = z.infer<typeof evidenceSchema>;

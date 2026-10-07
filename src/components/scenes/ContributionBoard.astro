@@ -1,9 +1,17 @@
 ---
-import { byRepo, shortRepo, sortByPriority, tally } from '../../lib/contribution-stats';
+import {
+  byRepo,
+  engagementSummary,
+  engagementTally,
+  shortRepo,
+  sortByPriority,
+  tally,
+  visibleEngagements,
+} from '../../lib/contribution-stats';
 import { formatDate } from '../../lib/format';
-import type { Contribution, Contributions } from '../../lib/schema';
+import type { Contribution, Contributions, Engagement } from '../../lib/schema';
 import type { ProjectEntry } from '../../lib/site';
-import { contributionStatus, relatedStatus } from '../../lib/status';
+import { contributionStatus, engagementStatus, engagementTarget, relatedStatus } from '../../lib/status';
 import Status from '../Status.astro';
 
 interface Props {
@@ -21,7 +29,20 @@ const summary = [
   { label: '프로젝트', value: total.repos },
 ];
 const headingId = (repo: string) => `cboard-${repo.replace('/', '--').toLowerCase()}`;
-const kindLabel = (c: Contribution) => (c.kind === 'pr' ? 'PR' : '이슈');
+const kindLabel = (c: Pick<Contribution, 'kind'>) => (c.kind === 'pr' ? 'PR' : '이슈');
+
+// 다른 개발자의 PR·이슈에 남긴 리뷰와 댓글. 직접 연 기여(위 묶음과 요약 숫자)와 섞지 않는다.
+const engaged = visibleEngagements(contributions.engagements);
+const engagedSummary = engagementSummary(engagementTally(contributions.engagements));
+const engagedLabel = (e: Engagement) => `${shortRepo(e.repo)} ${kindLabel(e)}`;
+const { author, excludeOwners } = contributions;
+const engagedScope = [
+  `involves:${author}`,
+  `-author:${author}`,
+  `-user:${author}`,
+  ...excludeOwners.filter((o) => o.toLowerCase() !== author.toLowerCase()).map((o) => `-org:${o}`),
+];
+const engagedSearch = `https://github.com/search?q=${encodeURIComponent(engagedScope.join(' '))}&type=issues`;
 ---
 <div class="cboard" data-scene="contrib">
   <h3 class="cboard__title" data-reveal>외부 프로젝트 기여</h3>
@@ -91,6 +112,46 @@ const kindLabel = (c: Contribution) => (c.kind === 'pr' ? 'PR' : '이슈');
       ))
     }
   </div>
+  {
+    engaged.shown.length > 0 && (
+      <section class="cboard__eng panel" aria-labelledby="cboard-eng">
+        <header class="cboard__eng-head" data-reveal>
+          <h4 id="cboard-eng">다른 개발자의 작업에 참여</h4>
+          <p class="cboard__eng-sum">{engagedSummary}</p>
+        </header>
+        <ul class="cboard__eng-list">
+          {engaged.shown.map((e) => (
+            <li class="cboard__eng-item" data-reveal data-review={e.review ?? 'none'}>
+              <div class="cboard__head">
+                <span class="cboard__kind mono">{engagedLabel(e)}</span>
+                <Status view={engagementStatus(e)} />
+                <a class="cboard__ref mono" href={e.url} target="_blank" rel="noopener noreferrer">
+                  <span class="sr-only">{engagedLabel(e)}{' '}</span>#{e.number} <span aria-hidden="true">↗</span>
+                </a>
+              </div>
+              <p class="cboard__text">{e.title}</p>
+              <p class="cboard__eng-meta">
+                {engagementTarget(e)}
+                {' · '}
+                <a class="cboard__eng-link" href={e.link} target="_blank" rel="noopener noreferrer">
+                  내 {e.review ? '리뷰' : '댓글'} 보기<span class="sr-only"> ({engagedLabel(e)} #{e.number})</span>{' '}
+                  <span aria-hidden="true">↗</span>
+                </a>
+              </p>
+            </li>
+          ))}
+        </ul>
+        {engaged.rest > 0 && (
+          <p class="cboard__eng-rest">
+            외 {engaged.rest}건 ·{' '}
+            <a href={engagedSearch} target="_blank" rel="noopener noreferrer">
+              GitHub에서 모두 보기 <span aria-hidden="true">↗</span>
+            </a>
+          </p>
+        )}
+      </section>
+    )
+  }
   <p class="cboard__asof mono" data-reveal>매일 자동 확인 · 마지막 변경 {formatDate(contributions.asOf)}</p>
 </div>
 
@@ -207,6 +268,51 @@ const kindLabel = (c: Contribution) => (c.kind === 'pr' ? 'PR' : '이슈');
   .cboard__asof {
     font-size: var(--fs-mono);
     color: var(--text-3);
+  }
+  /* 다른 개발자의 작업에 남긴 리뷰·댓글. 직접 연 기여 묶음과 같은 카드 모양을 쓰되, 승인한 리뷰만 테두리로 구분한다. */
+  .cboard__eng {
+    display: grid;
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+  }
+  .cboard__eng-head {
+    display: grid;
+    gap: var(--sp-1);
+  }
+  .cboard__eng h4 {
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .cboard__eng-sum {
+    font-size: var(--fs-small);
+    color: var(--text-2);
+  }
+  .cboard__eng-list {
+    display: grid;
+    gap: var(--sp-2);
+  }
+  .cboard__eng-item {
+    display: grid;
+    align-content: start;
+    gap: var(--sp-1);
+    padding: var(--sp-3);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+  }
+  .cboard__eng-item[data-review='approved'] {
+    border-color: var(--ok-line);
+  }
+  .cboard__eng-meta,
+  .cboard__eng-rest {
+    font-size: var(--fs-small);
+    color: var(--text-2);
+  }
+  @media (min-width: 1024px) {
+    .cboard__eng-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
   /* 묶음마다 길이가 크게 달라 행을 맞추면 짧은 묶음 옆이 비므로, 3개 이상일 때는 두 단으로 흘린다. */
   @media (min-width: 1024px) {
