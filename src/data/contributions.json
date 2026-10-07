@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-06T03:36:33.754Z",
+  "asOf": "2026-10-07T00:41:37.166Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -21,6 +21,22 @@
       "closedAt": null,
       "mergedAt": null,
       "project": "entail",
+      "related": []
+    },
+    {
+      "repo": "apache/tvm",
+      "kind": "pr",
+      "number": 20570,
+      "title": "[FIX][LLVM] Support bool Add/Sub/Mul in LLVM codegen",
+      "state": "open",
+      "stateReason": null,
+      "review": "review_required",
+      "url": "https://github.com/apache/tvm/pull/20570",
+      "labels": [],
+      "createdAt": "2026-10-06T10:29:09Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": null,
       "related": []
     },
     {
@@ -118,15 +134,15 @@
       "kind": "issue",
       "number": 198101,
       "title": "[inductor] Consumer of a dtype view of an input is computed after a later in-place mutation of that input (y = x.view(int32) * 2; y.sub_(-4); x[:, 2:5] = 2; return y.view(int64))",
-      "state": "open",
-      "stateReason": null,
+      "state": "closed",
+      "stateReason": "completed",
       "review": null,
       "url": "https://github.com/pytorch/pytorch/issues/198101",
       "labels": [
         "triaged"
       ],
       "createdAt": "2026-09-22T02:56:14Z",
-      "closedAt": null,
+      "closedAt": "2026-10-06T04:18:26Z",
       "mergedAt": null,
       "project": "torch-compile-fuzzer",
       "related": []
@@ -172,16 +188,17 @@
       "kind": "pr",
       "number": 198104,
       "title": "[inductor] Realize consumers of aliasing buffers before a mutation of the aliased buffer",
-      "state": "open",
+      "state": "merged",
       "stateReason": null,
       "review": "approved",
       "url": "https://github.com/pytorch/pytorch/pull/198104",
       "labels": [
+        "Merged",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:56:19Z",
-      "closedAt": null,
-      "mergedAt": null,
+      "closedAt": "2026-10-06T04:18:27Z",
+      "mergedAt": "2026-10-06T04:18:27Z",
       "project": "torch-compile-fuzzer",
       "related": []
     },
