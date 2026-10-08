@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-07T06:48:46.106Z",
+  "asOf": "2026-10-08T00:59:49.555Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -21,6 +21,38 @@
       "closedAt": null,
       "mergedAt": null,
       "project": "entail",
+      "related": []
+    },
+    {
+      "repo": "UKGovernmentBEIS/inspect_ai",
+      "kind": "pr",
+      "number": 5735,
+      "title": "Fix sample and task compose files not named compose.yaml being silently dropped",
+      "state": "closed",
+      "stateReason": null,
+      "review": "review_required",
+      "url": "https://github.com/UKGovernmentBEIS/inspect_ai/pull/5735",
+      "labels": [],
+      "createdAt": "2026-10-07T08:51:17Z",
+      "closedAt": "2026-10-07T08:51:32Z",
+      "mergedAt": null,
+      "project": null,
+      "related": []
+    },
+    {
+      "repo": "UKGovernmentBEIS/inspect_ai",
+      "kind": "pr",
+      "number": 5736,
+      "title": "Fix sample and task compose files not named compose.yaml being silently dropped",
+      "state": "open",
+      "stateReason": null,
+      "review": "review_required",
+      "url": "https://github.com/UKGovernmentBEIS/inspect_ai/pull/5736",
+      "labels": [],
+      "createdAt": "2026-10-07T08:58:13Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": null,
       "related": []
     },
     {
@@ -66,6 +98,22 @@
       "url": "https://github.com/apache/tvm/pull/20588",
       "labels": [],
       "createdAt": "2026-10-07T06:22:44Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": null,
+      "related": []
+    },
+    {
+      "repo": "apache/tvm",
+      "kind": "pr",
+      "number": 20589,
+      "title": "[Fix][Relax] Skip FuseOps groups that have no call to fuse",
+      "state": "open",
+      "stateReason": null,
+      "review": "review_required",
+      "url": "https://github.com/apache/tvm/pull/20589",
+      "labels": [],
+      "createdAt": "2026-10-07T07:06:57Z",
       "closedAt": null,
       "mergedAt": null,
       "project": null,
@@ -349,6 +397,20 @@
   ],
   "engagements": [
     {
+      "repo": "UKGovernmentBEIS/inspect_ai",
+      "kind": "issue",
+      "number": 5727,
+      "title": "A sample's compose file not named \"`compose.yaml`\" is silently dropped under a docker-compatible `--sandbox` provider",
+      "state": "open",
+      "url": "https://github.com/UKGovernmentBEIS/inspect_ai/issues/5727",
+      "author": "alexander-turner",
+      "review": null,
+      "comments": 1,
+      "firstAt": "2026-10-07T07:42:28Z",
+      "lastAt": "2026-10-07T07:42:28Z",
+      "link": "https://github.com/UKGovernmentBEIS/inspect_ai/issues/5727#issuecomment-6033363371"
+    },
+    {
       "repo": "apache/tvm",
       "kind": "pr",
       "number": 20330,
@@ -403,6 +465,20 @@
       "firstAt": "2026-10-07T05:26:37Z",
       "lastAt": "2026-10-07T06:43:16Z",
       "link": "https://github.com/apache/tvm/pull/20487#pullrequestreview-5438592840"
+    },
+    {
+      "repo": "apache/tvm",
+      "kind": "pr",
+      "number": 20508,
+      "title": "[Fix][Relax] Dequantize fp8 as a float, not an integer",
+      "state": "open",
+      "url": "https://github.com/apache/tvm/pull/20508",
+      "author": "andrewfish0",
+      "review": null,
+      "comments": 1,
+      "firstAt": "2026-10-07T05:26:53Z",
+      "lastAt": "2026-10-07T05:26:53Z",
+      "link": "https://github.com/apache/tvm/pull/20508#issuecomment-6031594724"
     },
     {
       "repo": "apache/tvm",
