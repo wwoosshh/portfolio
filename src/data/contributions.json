@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-08T00:59:49.555Z",
+  "asOf": "2026-10-09T01:13:35.203Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -475,9 +475,9 @@
       "url": "https://github.com/apache/tvm/pull/20508",
       "author": "andrewfish0",
       "review": null,
-      "comments": 1,
+      "comments": 2,
       "firstAt": "2026-10-07T05:26:53Z",
-      "lastAt": "2026-10-07T05:26:53Z",
+      "lastAt": "2026-10-08T02:13:35Z",
       "link": "https://github.com/apache/tvm/pull/20508#issuecomment-6031594724"
     },
     {
