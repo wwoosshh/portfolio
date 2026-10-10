@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-09T01:13:35.203Z",
+  "asOf": "2026-10-10T00:49:40.075Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -43,7 +43,7 @@
       "repo": "UKGovernmentBEIS/inspect_ai",
       "kind": "pr",
       "number": 5736,
-      "title": "Fix sample and task compose files not named compose.yaml being silently dropped",
+      "title": "fix: sample and task compose files not named compose.yaml being silently dropped",
       "state": "open",
       "stateReason": null,
       "review": "review_required",
