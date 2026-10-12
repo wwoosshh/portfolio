@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-10T00:49:40.075Z",
+  "asOf": "2026-10-12T00:31:51.935Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -474,11 +474,11 @@
       "state": "open",
       "url": "https://github.com/apache/tvm/pull/20508",
       "author": "andrewfish0",
-      "review": null,
+      "review": "approved",
       "comments": 2,
       "firstAt": "2026-10-07T05:26:53Z",
-      "lastAt": "2026-10-08T02:13:35Z",
-      "link": "https://github.com/apache/tvm/pull/20508#issuecomment-6031594724"
+      "lastAt": "2026-10-11T08:55:46Z",
+      "link": "https://github.com/apache/tvm/pull/20508#pullrequestreview-5482657452"
     },
     {
       "repo": "apache/tvm",
