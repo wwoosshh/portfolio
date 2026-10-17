@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-15T23:41:15.610Z",
+  "asOf": "2026-10-17T23:07:31.361Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -196,15 +196,15 @@
       "kind": "issue",
       "number": 198100,
       "title": "[dynamo] x.contiguous().unsqueeze_(d) / x.to(x.dtype).unsqueeze_(d) crashes guard creation with IndexError: list index out of range (in-place view through a no-op alias of the input)",
-      "state": "open",
-      "stateReason": null,
+      "state": "closed",
+      "stateReason": "completed",
       "review": null,
       "url": "https://github.com/pytorch/pytorch/issues/198100",
       "labels": [
         "triaged"
       ],
       "createdAt": "2026-09-22T02:56:13Z",
-      "closedAt": null,
+      "closedAt": "2026-10-17T04:54:24Z",
       "mergedAt": null,
       "project": "torch-compile-fuzzer",
       "related": []
@@ -250,16 +250,17 @@
       "kind": "pr",
       "number": 198103,
       "title": "[dynamo] Graph break on an in-place view of a no-op alias of a graph input",
-      "state": "open",
+      "state": "merged",
       "stateReason": null,
       "review": "approved",
       "url": "https://github.com/pytorch/pytorch/pull/198103",
       "labels": [
+        "Merged",
         "triaged"
       ],
       "createdAt": "2026-09-22T02:56:17Z",
-      "closedAt": null,
-      "mergedAt": null,
+      "closedAt": "2026-10-17T04:54:25Z",
+      "mergedAt": "2026-10-17T04:54:25Z",
       "project": "torch-compile-fuzzer",
       "related": []
     },
