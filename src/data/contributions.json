@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-17T23:07:31.361Z",
+  "asOf": "2026-10-20T00:19:21.273Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -46,7 +46,7 @@
       "title": "fix: sample and task compose files not named compose.yaml being silently dropped",
       "state": "open",
       "stateReason": null,
-      "review": "review_required",
+      "review": "changes_requested",
       "url": "https://github.com/UKGovernmentBEIS/inspect_ai/pull/5736",
       "labels": [],
       "createdAt": "2026-10-07T08:58:13Z",
