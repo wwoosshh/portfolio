@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-20T23:52:11.763Z",
+  "asOf": "2026-10-22T23:59:34.430Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -397,6 +397,20 @@
     }
   ],
   "engagements": [
+    {
+      "repo": "EleutherAI/lm-evaluation-harness",
+      "kind": "issue",
+      "number": 3357,
+      "title": "Lack of reproducability despite set batch size, seed, greedy sampling",
+      "state": "open",
+      "url": "https://github.com/EleutherAI/lm-evaluation-harness/issues/3357",
+      "author": "fxmarty-amd",
+      "review": null,
+      "comments": 1,
+      "firstAt": "2026-10-22T06:08:13Z",
+      "lastAt": "2026-10-22T06:08:13Z",
+      "link": "https://github.com/EleutherAI/lm-evaluation-harness/issues/3357#issuecomment-6334026019"
+    },
     {
       "repo": "UKGovernmentBEIS/inspect_ai",
       "kind": "issue",
