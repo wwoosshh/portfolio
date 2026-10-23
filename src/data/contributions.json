@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-22T23:59:34.430Z",
+  "asOf": "2026-10-23T23:51:38.145Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -338,6 +338,22 @@
       "related": []
     },
     {
+      "repo": "rafska/awesome-local-llm",
+      "kind": "pr",
+      "number": 317,
+      "title": "Add GeulPU to Inference engines",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/rafska/awesome-local-llm/pull/317",
+      "labels": [],
+      "createdAt": "2026-10-23T04:48:34Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": null,
+      "related": []
+    },
+    {
       "repo": "sgl-project/sglang",
       "kind": "issue",
       "number": 41227,
@@ -369,6 +385,22 @@
           "state": "closed"
         }
       ]
+    },
+    {
+      "repo": "vince-lam/awesome-local-llms",
+      "kind": "issue",
+      "number": 100,
+      "title": "Suggest repo: wwoosshh/GeulPUv2",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/vince-lam/awesome-local-llms/issues/100",
+      "labels": [],
+      "createdAt": "2026-10-23T04:50:22Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": null,
+      "related": []
     },
     {
       "repo": "vllm-project/vllm",
