@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-23T23:51:38.145Z",
+  "asOf": "2026-10-31T00:47:16.136Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -162,7 +162,7 @@
       "title": "[inductor] Do not reinplace into a graph input that a later, unrelated mutation overwrites",
       "state": "open",
       "stateReason": null,
-      "review": null,
+      "review": "changes_requested",
       "url": "https://github.com/pytorch/pytorch/pull/198096",
       "labels": [
         "triaged"
