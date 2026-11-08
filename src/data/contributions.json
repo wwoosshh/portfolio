@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-31T00:47:16.136Z",
+  "asOf": "2026-11-08T00:34:50.959Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -391,13 +391,13 @@
       "kind": "issue",
       "number": 100,
       "title": "Suggest repo: wwoosshh/GeulPUv2",
-      "state": "open",
-      "stateReason": null,
+      "state": "closed",
+      "stateReason": "completed",
       "review": null,
       "url": "https://github.com/vince-lam/awesome-local-llms/issues/100",
       "labels": [],
       "createdAt": "2026-10-23T04:50:22Z",
-      "closedAt": null,
+      "closedAt": "2026-11-07T04:34:55Z",
       "mergedAt": null,
       "project": null,
       "related": []
