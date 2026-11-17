@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-12T02:16:02.250Z",
+  "asOf": "2026-11-17T03:52:05.581Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -12,13 +12,13 @@
       "kind": "issue",
       "number": 16490,
       "title": "Dynamic VRAM: a ModelSamplingDiscrete schedule leaks into later runs of the same checkpoint (buffers restored by attribute path), giving wrong or black images reported as success",
-      "state": "open",
-      "stateReason": null,
+      "state": "closed",
+      "stateReason": "completed",
       "review": null,
       "url": "https://github.com/Comfy-Org/ComfyUI/issues/16490",
       "labels": [],
       "createdAt": "2026-09-23T05:49:51Z",
-      "closedAt": null,
+      "closedAt": "2026-11-16T23:25:13Z",
       "mergedAt": null,
       "project": "entail",
       "related": []
