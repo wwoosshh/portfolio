@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-17T03:52:05.581Z",
+  "asOf": "2026-11-22T01:17:17.979Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -114,6 +114,22 @@
       "url": "https://github.com/apache/tvm/pull/20589",
       "labels": [],
       "createdAt": "2026-10-07T07:06:57Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "project": null,
+      "related": []
+    },
+    {
+      "repo": "manuelgscom/inside-llm",
+      "kind": "issue",
+      "number": 3,
+      "title": "Optional GeulPU backend: the same numbers on every run and GPU (fork ready, PR if you want it)",
+      "state": "open",
+      "stateReason": null,
+      "review": null,
+      "url": "https://github.com/manuelgscom/inside-llm/issues/3",
+      "labels": [],
+      "createdAt": "2026-11-21T14:57:25Z",
       "closedAt": null,
       "mergedAt": null,
       "project": null,
