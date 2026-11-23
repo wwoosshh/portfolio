@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-22T01:17:17.979Z",
+  "asOf": "2026-11-23T01:41:31.107Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -124,13 +124,13 @@
       "kind": "issue",
       "number": 3,
       "title": "Optional GeulPU backend: the same numbers on every run and GPU (fork ready, PR if you want it)",
-      "state": "open",
-      "stateReason": null,
+      "state": "closed",
+      "stateReason": "not_planned",
       "review": null,
       "url": "https://github.com/manuelgscom/inside-llm/issues/3",
       "labels": [],
       "createdAt": "2026-11-21T14:57:25Z",
-      "closedAt": null,
+      "closedAt": "2026-11-22T22:20:12Z",
       "mergedAt": null,
       "project": null,
       "related": []
