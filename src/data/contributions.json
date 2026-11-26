@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-24T05:19:33.031Z",
+  "asOf": "2026-11-26T03:33:06.612Z",
   "author": "wwoosshh",
   "excludeOwners": [
     "wwoosshh",
@@ -602,8 +602,8 @@
   ],
   "own": {
     "asahi": {
-      "mergedPrs": 81,
-      "mineMergedPrs": 79,
+      "mergedPrs": 85,
+      "mineMergedPrs": 83,
       "url": "https://github.com/semicollon-club/asahi/pulls?q=is%3Apr+is%3Amerged+base%3Amain"
     },
     "entail": {
